@@ -45,7 +45,7 @@ private:
     void addProcessSquare(const Process &process);
     bool isUniqueId(int id);
     void addId(int id);
-    void addProcessSquare(const Process& process, int index);
+    void addProcessSquare(const Process& process, int index,const QString &color = "background-color: green;");
     void compileBoxes();
     QString getExecutableName(const QString &buildDirPath);
     QVBoxLayout *toolboxLayout;

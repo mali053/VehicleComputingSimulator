@@ -58,19 +58,19 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(workspace);
     centralWidget->setLayout(mainLayout);
 
-    int i = 0;
-    Process mainProcess(i, "Main", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(mainProcess, i);
-    addId(i++);
-    Process hsmProcess(i, "HSM", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(hsmProcess, i);
-    addId(i++);
-    Process logsDbProcess(i, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(logsDbProcess, i);
-    addId(i++);
-    Process busManagerProcess(i, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(busManagerProcess, i);
-    addId(i++);
+    int id = 0;
+    Process mainProcess(id, "Main", "../src/dummy_program1", "QEMUPlatform");
+    addProcessSquare(mainProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addId(id++);
+    Process hsmProcess(id, "HSM", "../src/dummy_program2", "QEMUPlatform");
+    addProcessSquare(hsmProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addId(id++);
+    Process logsDbProcess(id, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
+    addProcessSquare(logsDbProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addId(id++);
+    Process busManagerProcess(id, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
+    addProcessSquare(busManagerProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addId(id++);
 }
 
 MainWindow::~MainWindow() 
@@ -114,9 +114,9 @@ void MainWindow::addProcessSquare(const Process& process)
     squares.push_back(square);
 }
 
-void MainWindow::addProcessSquare(const Process& process, int index) 
+void MainWindow::addProcessSquare(const Process& process, int index,const QString &color) 
 {
-    DraggableSquare *square = new DraggableSquare(workspace);
+    DraggableSquare *square = new DraggableSquare(workspace,color,350,200);
     square->setProcess(process);
 
     int x = (index % 2) * (square->width() + 10);

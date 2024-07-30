@@ -11,7 +11,7 @@ class DraggableSquare : public QWidget
     Q_OBJECT
 
 public:
-    explicit DraggableSquare(QWidget *parent = nullptr);
+    explicit DraggableSquare(QWidget *parent = nullptr,const QString &color = "background-color: green;",int width=100,int height=100);
     void setProcess(const Process &process);
     const Process getProcess() const;
 

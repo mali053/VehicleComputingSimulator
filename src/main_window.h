@@ -64,6 +64,8 @@ private:
     QProcess *process2;
     QTimer *timer;
     QLabel *imageLabel;
+    QVector<QProcess*> runningProcesses;
+
 };
 
 #endif // MAIN_WINDOW_H

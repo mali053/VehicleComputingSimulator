@@ -177,31 +177,28 @@ void MainWindow::startProcesses()
     compileBoxes();
 }
 
-void MainWindow::endProcesses()
-{
+void MainWindow::endProcesses() {
     logOutput->append("Ending processes...");
+
     if (timer) {
         timer->stop();
         delete timer;
         timer = nullptr;
     }
+
     timeInput->show();
     timeLabel->show();
     timeInput->clear();
-    for (const DraggableSquare* square : squares) {
-        QString cmakePath = square->getProcess().getCMakeProject();
-        logOutput->append("Compiling " + cmakePath);
-        // Define the build directory path
-        QDir cmakeDir(cmakePath);
-        QString buildDirPath = cmakeDir.absoluteFilePath("build");
-        QProcess endProcess(this);
-        endProcess.setWorkingDirectory(buildDirPath);
-        if (endProcess.state() != QProcess::NotRunning) {
+
+    for (QProcess* process : runningProcesses) {
+        if (process->state() != QProcess::NotRunning) {
             logOutput->append("Ending process...");
-            endProcess.terminate();
-            endProcess.waitForFinished();
+            process->terminate();
+            process->waitForFinished();
         }
+        delete process;
     }
+    runningProcesses.clear();
 }
 
 void MainWindow::showTimerInput() 
@@ -264,12 +261,18 @@ QString MainWindow::getExecutableName(const QString &buildDirPath)
     return QString();
 }
 
-void MainWindow::compileBoxes() 
-{
+void MainWindow::compileBoxes() {
+    // Clear previous running processes
+    for (QProcess* process : runningProcesses) {
+        process->terminate();
+        process->waitForFinished();
+        delete process;
+    }
+    runningProcesses.clear();
 
     // Iterate over each directory and compile
     for (const DraggableSquare* square : squares) {
-        QString cmakePath=square->getProcess().getCMakeProject();
+        QString cmakePath = square->getProcess().getCMakeProject();
         logOutput->append("Compiling " + cmakePath);
 
         // Define the build directory path
@@ -279,60 +282,61 @@ void MainWindow::compileBoxes()
         // Create the build directory if it doesn't exist
         QDir buildDir(buildDirPath);
         if (!buildDir.exists()) {
-            // Remove all files and subdirectories in the build directory
-            QFileInfoList fileList = buildDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
-            foreach (const QFileInfo &fileInfo, fileList) {
-                if (fileInfo.isDir()) {
-                    QDir dir(fileInfo.absoluteFilePath());
-                    dir.removeRecursively();
-                } else {
-                    QFile::remove(fileInfo.absoluteFilePath());
-                }
-            }
-        } else {
-            // Create the build directory if it doesn't exist
             if (!buildDir.mkpath(".")) {
                 logOutput->append("Failed to create build directory " + buildDirPath);
                 continue;
             }
         }
-        
-        QProcess cmakeProcess(this);
-        cmakeProcess.setWorkingDirectory(buildDirPath);
-        cmakeProcess.start("cmake", QStringList() << "..");
-        if (!cmakeProcess.waitForFinished()) {
+        // Clean the build directory
+        QProcess cleanProcess(this);
+        cleanProcess.setWorkingDirectory(buildDirPath);
+        cleanProcess.start("rm", QStringList() << "-rf" << "*");
+        if (!cleanProcess.waitForFinished()) {
+            logOutput->append("Failed to clean build directory " + buildDirPath);
+            continue;
+        }
+        QProcess* cmakeProcess = new QProcess(this);
+        cmakeProcess->setWorkingDirectory(buildDirPath);
+        cmakeProcess->start("cmake", QStringList() << "..");
+        if (!cmakeProcess->waitForFinished()) {
             logOutput->append("Failed to run cmake in " + buildDirPath);
+            delete cmakeProcess;
             continue;
         }
-        logOutput->append(cmakeProcess.readAllStandardOutput());
-        logOutput->append(cmakeProcess.readAllStandardError());
+        logOutput->append(cmakeProcess->readAllStandardOutput());
+        logOutput->append(cmakeProcess->readAllStandardError());
+        delete cmakeProcess;
 
-        QProcess makeProcess(this);
-        makeProcess.setWorkingDirectory(buildDirPath);
-        makeProcess.start("make", QStringList());
-        if (!makeProcess.waitForFinished()) {
+        QProcess* makeProcess = new QProcess(this);
+        makeProcess->setWorkingDirectory(buildDirPath);
+        makeProcess->start("make", QStringList());
+        if (!makeProcess->waitForFinished()) {
             logOutput->append("Failed to compile " + buildDirPath);
+            delete makeProcess;
             continue;
         }
-        logOutput->append(makeProcess.readAllStandardOutput());
-        logOutput->append(makeProcess.readAllStandardError());
-
+        logOutput->append(makeProcess->readAllStandardOutput());
+        logOutput->append(makeProcess->readAllStandardError());
+        delete makeProcess;
 
         logOutput->append("Successfully compiled " + buildDirPath);
 
-
         // Run the compiled program
-        QString exeFile=getExecutableName(buildDirPath);
+        QString exeFile = getExecutableName(buildDirPath);
         QString executablePath = buildDir.absoluteFilePath(exeFile);
-        QProcess runProcess(this);
-        runProcess.setWorkingDirectory(buildDirPath);
-        runProcess.start(executablePath, QStringList());
-        if (!runProcess.waitForFinished()) {
-            logOutput->append("Failed to run the program in " + buildDirPath);
-            continue;
-        }
-        logOutput->append(runProcess.readAllStandardOutput());
-        logOutput->append(runProcess.readAllStandardError());
+        QProcess* runProcess = new QProcess(this);
+        runProcess->setWorkingDirectory(buildDirPath);
+
+        connect(runProcess, &QProcess::readyReadStandardOutput, [this, runProcess]() {
+            logOutput->append(runProcess->readAllStandardOutput());
+        });
+
+        connect(runProcess, &QProcess::readyReadStandardError, [this, runProcess]() {
+            logOutput->append(runProcess->readAllStandardError());
+        });
+
+        runProcess->start(executablePath, QStringList());
+        runningProcesses.append(runProcess);
     }
 }
 

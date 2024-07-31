@@ -10,6 +10,7 @@ public:
     void setPsn(int psn);
     void setTotalPacketSum(int totalPacketSum);
     void setData(const void* inputData, size_t size);
+    void resetData();
     
 private:
     int PSN = 0;

@@ -1,29 +1,27 @@
 cmake_minimum_required(VERSION 3.10)
-
-# Project name
-project(BasicApi)
-
-# Setting standards
-
+project(basicApi)
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-# Adding libraries and includes
-include_directories(${CMAKE_SOURCE_DIR})
-
-# Adding source files
-set(COMMON_SOURCES
-    communication.cpp
-    myClass.cpp
-    Packet.cpp
+# Add source files
+set(SOURCES
+    src/Packet.cpp
+    src/communication.cpp
+    test/testCommunication.cpp
 )
-
-# Creating an executable file for user1
-add_executable(user1 user1.cpp ${COMMON_SOURCES})
-
-# Creating an executable file for user2
-add_executable(user2 user2.cpp ${COMMON_SOURCES})
-
-# Linking with the pthread library
-target_link_libraries(user1 pthread)
-target_link_libraries(user2 pthread)
+# Include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sockets)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/test)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googletest/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../googletest/googlemock/include)
+# Find and link pthread
+find_package(Threads REQUIRED)
+# Add GTest and GMock
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../googletest googletest-build)
+# Add the test executable
+add_executable(testCommunication ${SOURCES})
+target_link_libraries(testCommunication gtest gmock gtest_main gmock_main Threads::Threads)
+# Enable testing
+enable_testing()
+# Add tests
+add_test(NAME testCommunication COMMAND testCommunication)

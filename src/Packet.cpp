@@ -29,3 +29,8 @@ void Packet::setData(const void* inputData, size_t size)
 {
     std::memcpy(this->data, inputData, size);
 }
+
+void Packet::resetData()
+{
+    memset(data, '\0', communication::PACKET_SIZE);
+}

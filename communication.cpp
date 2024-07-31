@@ -1,4 +1,5 @@
 #include "communication.h"
+#include "Packet.h"
 #include <cstring>
 #include <iostream>
 #include <thread>
@@ -6,53 +7,108 @@
 #include <unistd.h>
 #include <algorithm>
 #include <fstream>
+#include <vector>
+#include <functional>
 
 #define IP_ADDRESS "127.0.0.1"
 #define BACKLOG 3
 
 // Constants for packet size and state file names
 
-const size_t communication::PACKET_SIZE = 16;
 const char* communication::STATE_FILE = "comm_state3.txt";
 const char* communication::LOCK_FILE = "comm_state3.lock";
 std::mutex communication::state_file_mutex;
 
+// Send acknowledgment messages
+void communication::sendAck(int socketFd, AckType ackType)
+{
+    const char* ackMessage = (ackType == AckType::ACK) ? "ACK" : "NACK";
+    send(socketFd, ackMessage, strlen(ackMessage), 0);
+
+    // Trigger the acknowledgment callback
+    if (ackCallback) {
+        ackCallback(ackType);
+    }
+}
+
+// Set the callback for data received
+void communication::setDataHandler(std::function<void(const std::vector<uint8_t>&)> callback)
+{
+    dataHandler = callback;
+}
+
+// Set the callback for acknowledgment received
+void communication::setAckCallback(std::function<void(AckType)> callback)
+{
+    ackCallback = callback;
+}
+
 // Receive messages from a socket
 void communication::receiveMessages(int socketFd)
 {
-    uint8_t buffer[PACKET_SIZE] = {0};
-    std::cout << "before the while in receive func" << std::endl; // Before entering the loop in the receive function
-    
+    Packet packet;
+    std::vector<uint8_t> receivedData;
     while (true) {
-        int valread = recv(socketFd, buffer, PACKET_SIZE, 0);
+        int valread = recv(socketFd, &packet, sizeof(Packet), 0);
         if (valread <= 0) {
             std::cerr << "Connection closed or error occurred" << std::endl; // Connection closed or an error occurred
             break;
         }
 
-        std::cout << "Received packet: ";
+        // Append the received data to the vector
         for (int i = 0; i < valread; ++i) {
-            std::cout << static_cast<int>(buffer[i]) << " ";
+            if (i < sizeof(packet.getData())) {
+                receivedData.push_back(packet.getData()[i]);
+            }
         }
-        std::cout << std::endl;
+
+        // Notify the user via callback function
+        if (dataHandler) {
+            dataHandler(receivedData);
+        }
+
+        // Check if all packets have been received
+        if (packet.getPsn() == packet.getTotalPacketSum()) {
+            sendAck(socketFd, AckType::ACK);
+        }
     }
 }
 
-// Send messages through a socket
+//Send message in a socket
 void communication::sendMessage(int socketFd, void* data, size_t dataLen)
 {
-    uint8_t buffer[PACKET_SIZE] = {0};
+    Packet packet;
+    int psn = 0;
     size_t offset = 0;
-    
+    size_t totalPackets = (dataLen + PACKET_SIZE - 1) / PACKET_SIZE;
+
     while (offset < dataLen) {
         size_t packetLen = std::min(dataLen - offset, PACKET_SIZE);
-        std::memcpy(buffer, static_cast<uint8_t*>(data) + offset, packetLen);
-        int sendAns = send(socketFd, buffer, packetLen, 0);
+        packet.setData(static_cast<uint8_t*>(data) + offset, packetLen);
+        packet.setPsn(psn++);
+        packet.setTotalPacketSum(totalPackets - 1);
+
+        int sendAns = send(socketFd, &packet, sizeof(Packet), 0);
         if(sendAns < 0){
             std::cerr << "The send failed" << std::endl; // The send failed
             break;
         }
         offset += packetLen;
+    }
+
+    // Wait for acknowledgment
+    char buffer[4];
+    int valread = recv(socketFd, buffer, sizeof(buffer), 0);
+    if (valread > 0) {
+        buffer[valread] = '\0'; // Null-terminate the received string
+        AckType receivedAck = (strcmp(buffer, "ACK") == 0) ? AckType::ACK : AckType::NACK;
+
+        // Trigger the acknowledgment callback
+        if (ackCallback) {
+            ackCallback(receivedAck);
+        }
+    } else {
+        std::cerr << "Failed to receive acknowledgment" << std::endl;
     }
 }
 
@@ -61,6 +117,7 @@ void communication::initializeState(int& portNumber, int& peerPort)
 {
     std::lock_guard<std::mutex> lock(state_file_mutex);
     std::ifstream infile(STATE_FILE);
+
     if (!infile) {  // If the file doesn't exist - means this is the first process
         portNumber = PORT2;
         peerPort = PORT1;
@@ -208,6 +265,5 @@ int communication::initConnection()
     }
 
     recvThread.detach();
-    std::cout << "Connection initialized" << std::endl;
     return clientSock;
 }

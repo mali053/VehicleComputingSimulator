@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QComboBox>
 
 ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
 {
@@ -27,9 +28,10 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(cmakeProjectEdit);
 
     QLabel *qemuPlatformLabel = new QLabel("QEMU Platform:");
-    qemuPlatformEdit = new QLineEdit(this);
+    qemuPlatformCombo = new QComboBox(this);
+    qemuPlatformCombo->addItems({"x86_64", "arm", "aarch64"});
     layout->addWidget(qemuPlatformLabel);
-    layout->addWidget(qemuPlatformEdit);
+    layout->addWidget(qemuPlatformCombo);
 
     QRegExp regex("[a-zA-Z0-9]*"); // Allows only English letters and numbers
     QRegExpValidator *validator = new QRegExpValidator(regex, this);
@@ -39,7 +41,7 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
 
     nameEdit->setValidator(validator);
     cmakeProjectEdit->setValidator(cmakeProjectValidator);
-    qemuPlatformEdit->setValidator(validator);
+    // qemuPlatformEdit->setValidator(validator);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *okButton = new QPushButton("OK", this);
@@ -71,23 +73,21 @@ QString ProcessDialog::getCMakeProject() const
 
 QString ProcessDialog::getQEMUPlatform() const
 {
-    return qemuPlatformEdit->text();
+    return qemuPlatformCombo->currentText();
 }
 
 bool ProcessDialog::isValid() const
 {
     return !idEdit->text().isEmpty() && !nameEdit->text().isEmpty() &&
-           !cmakeProjectEdit->text().isEmpty() && !qemuPlatformEdit->text().isEmpty();
+           !cmakeProjectEdit->text().isEmpty() && !qemuPlatformCombo->currentText().isEmpty();
 }
 
 void ProcessDialog::validateAndAccept()
 {
-    if (isValid())
-    {
+    if (isValid()) {
         accept();
     }
-    else
-    {
+    else {
         QMessageBox::warning(this, "Input Error", "Please fill in all fields correctly.");
     }
 }

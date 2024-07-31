@@ -116,7 +116,7 @@ void MainWindow::addProcessSquare(const Process& process)
 
 void MainWindow::addProcessSquare(const Process& process, int index,const QString &color) 
 {
-    DraggableSquare *square = new DraggableSquare(workspace,color,350,200);
+    DraggableSquare *square = new DraggableSquare(workspace,color,120,120);
     square->setProcess(process);
 
     int x = (index % 2) * (square->width() + 10);
@@ -175,75 +175,33 @@ void MainWindow::startProcesses()
 
 
     compileBoxes();
-
-    // if (process1 && process1->state() != QProcess::NotRunning) {
-    //     logOutput->append("Process1 is already running.");
-    //     return;
-    // }
-
-    // if (process2 && process2->state() != QProcess::NotRunning) {
-    //     logOutput->append("Process2 is already running.");
-    //     return;
-    // }
-
-    // process1 = new QProcess(this);
-    // process2 = new QProcess(this);
-
-    // QDir dir1("../src/dummy_program1/build");
-    // QDir dir2("../src/dummy_program2/build");
-
-    // connect(process1, &QProcess::readyReadStandardOutput, this, &MainWindow::readProcess1Output);
-    // connect(process2, &QProcess::readyReadStandardOutput, this, &MainWindow::readProcess2Output);
-
-    // logOutput->append("Starting process1 from: " + dir1.absoluteFilePath("dummy_program"));
-    // logOutput->append("Starting process2 from: " + dir2.absoluteFilePath("dummy_program"));
-
-    // process1->start(dir1.absoluteFilePath("dummy_program"), QStringList());
-    // process2->start(dir2.absoluteFilePath("dummy_program"), QStringList());
-
-    // if (!process1->waitForStarted() || !process2->waitForStarted()) {
-    //     logOutput->append("Failed to start one or both processes.");
-    //     delete process1;
-    //     delete process2;
-    //     process1 = nullptr;
-    //     process2 = nullptr;
-    //     return;
-    // }
-
-    // logOutput->append("Both processes started successfully.");
 }
 
-void MainWindow::endProcesses() 
+void MainWindow::endProcesses()
 {
     logOutput->append("Ending processes...");
-
-    if (process1 && process1->state() != QProcess::NotRunning) {
-        logOutput->append("Ending process1...");
-        process1->terminate();
-        process1->waitForFinished();
-        delete process1;
-        process1 = nullptr;
-    }
-
-    if (process2 && process2->state() != QProcess::NotRunning) {
-        logOutput->append("Ending process2...");
-        process2->terminate();
-        process2->waitForFinished();
-        delete process2;
-        process2 = nullptr;
-    }
-
-    logOutput->append("All processes ended.");
-
     if (timer) {
         timer->stop();
         delete timer;
         timer = nullptr;
     }
-
     timeInput->show();
     timeLabel->show();
     timeInput->clear();
+    for (const DraggableSquare* square : squares) {
+        QString cmakePath = square->getProcess().getCMakeProject();
+        logOutput->append("Compiling " + cmakePath);
+        // Define the build directory path
+        QDir cmakeDir(cmakePath);
+        QString buildDirPath = cmakeDir.absoluteFilePath("build");
+        QProcess endProcess(this);
+        endProcess.setWorkingDirectory(buildDirPath);
+        if (endProcess.state() != QProcess::NotRunning) {
+            logOutput->append("Ending process...");
+            endProcess.terminate();
+            endProcess.waitForFinished();
+        }
+    }
 }
 
 void MainWindow::showTimerInput() 
@@ -282,8 +240,8 @@ void MainWindow::openImageDialog()
     }
 }
 
-
-QString MainWindow::getExecutableName(const QString &buildDirPath) {
+QString MainWindow::getExecutableName(const QString &buildDirPath) 
+{
     QDir buildDir(buildDirPath);
 
     // List all files in the build directory
@@ -306,8 +264,8 @@ QString MainWindow::getExecutableName(const QString &buildDirPath) {
     return QString();
 }
 
-
-void MainWindow::compileBoxes() {
+void MainWindow::compileBoxes() 
+{
 
     // Iterate over each directory and compile
     for (const DraggableSquare* square : squares) {
@@ -321,12 +279,24 @@ void MainWindow::compileBoxes() {
         // Create the build directory if it doesn't exist
         QDir buildDir(buildDirPath);
         if (!buildDir.exists()) {
+            // Remove all files and subdirectories in the build directory
+            QFileInfoList fileList = buildDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
+            foreach (const QFileInfo &fileInfo, fileList) {
+                if (fileInfo.isDir()) {
+                    QDir dir(fileInfo.absoluteFilePath());
+                    dir.removeRecursively();
+                } else {
+                    QFile::remove(fileInfo.absoluteFilePath());
+                }
+            }
+        } else {
+            // Create the build directory if it doesn't exist
             if (!buildDir.mkpath(".")) {
                 logOutput->append("Failed to create build directory " + buildDirPath);
                 continue;
             }
         }
-
+        
         QProcess cmakeProcess(this);
         cmakeProcess.setWorkingDirectory(buildDirPath);
         cmakeProcess.start("cmake", QStringList() << "..");
@@ -363,24 +333,8 @@ void MainWindow::compileBoxes() {
         }
         logOutput->append(runProcess.readAllStandardOutput());
         logOutput->append(runProcess.readAllStandardError());
-        
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // Include the generated moc file

@@ -229,13 +229,32 @@ void MainWindow::openImageDialog()
     if (!imagePath.isEmpty()) {
         QPixmap pixmap(imagePath);
         if (!pixmap.isNull()) {
-            QPalette palette;
-            palette.setBrush(this->backgroundRole(), QBrush(pixmap.scaled(this->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation)));
-            this->setPalette(palette);
-            this->setAutoFillBackground(true);
+            // Clear the workspace before adding the new image
+            QLayout *layout = workspace->layout();
+            if (layout) {
+                QLayoutItem *item;
+                while ((item = layout->takeAt(0)) != nullptr) {
+                    delete item->widget();  // Delete the widget
+                    delete item;            // Delete the layout item
+                }
+            }
+
+            // Create a new QLabel to display the image as background
+            QLabel *backgroundLabel = new QLabel(workspace);
+            backgroundLabel->setPixmap(pixmap.scaled(workspace->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+            backgroundLabel->setGeometry(workspace->rect()); // Fit QLabel to the size of the workspace
+            backgroundLabel->setScaledContents(true);
+            backgroundLabel->setAttribute(Qt::WA_TranslucentBackground); // Ensure the image appears only as background
+            backgroundLabel->lower(); // Move QLabel below other content in the workspace
+            backgroundLabel->show();
+
+            // Add a new layout to the workspace
+            QVBoxLayout *newLayout = new QVBoxLayout(workspace);
+            workspace->setLayout(newLayout);
         }
     }
 }
+
 
 QString MainWindow::getExecutableName(const QString &buildDirPath) 
 {

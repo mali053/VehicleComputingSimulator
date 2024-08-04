@@ -22,6 +22,7 @@
 #include "draggable_square.h"
 #include "process_dialog.h"
 #include "simulation_data_manager.h"
+#include "log_handler.h"
 
 class MainWindow : public QMainWindow
 {
@@ -68,7 +69,7 @@ private:
     QVector<QProcess*> runningProcesses;
     QString currentImagePath;
     SimulationDataManager *dataManager;
-
+    LogHandler logHandler;
 };
 
 #endif // MAIN_WINDOW_H

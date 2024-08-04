@@ -194,6 +194,10 @@ void MainWindow::endProcesses() {
 
     dataManager->saveSimulationData("simulation_data.bson", squares, currentImagePath);
 
+    QString filePath = "log_file.log";
+    logHandler.readLogFile(filePath);
+    logHandler.analyzeLogEntries(this,"simulation_data.bson");
+
     for (QProcess* process : runningProcesses) {
         if (process->state() != QProcess::NotRunning) {
             logOutput->append("Ending process...");

@@ -19,6 +19,7 @@ public:
     QJsonObject loadSimulationData(const std::string &fileName);
     
     void printJson(QJsonObject jsonObject);
+    // QVector<int> findProcessCoordinatesById(int processId, const QString &fileName);
 
 private:
 

@@ -58,6 +58,8 @@ MainWindow::MainWindow(QWidget *parent)
     mainLayout->addWidget(workspace);
     centralWidget->setLayout(mainLayout);
 
+    dataManager = new SimulationDataManager(this);
+
     int id = 0;
     Process mainProcess(id, "Main", "../src/dummy_program1", "QEMUPlatform");
     addProcessSquare(mainProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
@@ -190,6 +192,8 @@ void MainWindow::endProcesses() {
     timeLabel->show();
     timeInput->clear();
 
+    dataManager->saveSimulationData("simulation_data.bson", squares, currentImagePath);
+
     for (QProcess* process : runningProcesses) {
         if (process->state() != QProcess::NotRunning) {
             logOutput->append("Ending process...");
@@ -227,6 +231,7 @@ void MainWindow::openImageDialog()
 {
     QString imagePath = QFileDialog::getOpenFileName(this, tr("Select Image"), "", tr("Image Files (*.png *.jpg *.jpeg)"));
     if (!imagePath.isEmpty()) {
+        currentImagePath = imagePath;
         QPixmap pixmap(imagePath);
         if (!pixmap.isNull()) {
             // Clear the workspace before adding the new image

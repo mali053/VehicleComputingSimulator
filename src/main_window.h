@@ -21,6 +21,7 @@
 #include "process.h"
 #include "draggable_square.h"
 #include "process_dialog.h"
+#include "simulation_data_manager.h"
 
 class MainWindow : public QMainWindow
 {
@@ -50,7 +51,7 @@ private:
     QString getExecutableName(const QString &buildDirPath);
     QVBoxLayout *toolboxLayout;
     QWidget *workspace;
-    std::vector<DraggableSquare*> squares;
+    QVector<DraggableSquare*> squares;
     QMap<int, QPoint> squarePositions; 
     QSet<int> usedIds;
     QSize originalSize;
@@ -65,6 +66,8 @@ private:
     QTimer *timer;
     QLabel *imageLabel;
     QVector<QProcess*> runningProcesses;
+    QString currentImagePath;
+    SimulationDataManager *dataManager;
 
 };
 

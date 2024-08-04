@@ -14,6 +14,7 @@ public:
     explicit DraggableSquare(QWidget *parent = nullptr,const QString &color = "background-color: green;",int width=100,int height=100);
     void setProcess(const Process &process);
     const Process getProcess() const;
+    const QPoint getDragStartPosition() const;
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

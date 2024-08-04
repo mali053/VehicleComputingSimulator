@@ -12,11 +12,22 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+# Find the BSON library
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(BSON REQUIRED libbson-1.0)
+
 # Add the main application files
+add_executable(DraggableSquares 
+                src/main.cpp 
+                src/draggable_square.cpp 
+                src/process.cpp 
+                src/process_dialog.cpp 
+                src/main_window.cpp
+                src/simulation_data_manager.cpp
+)
 
-add_executable(DraggableSquares src/main.cpp src/draggable_square.cpp src/process.cpp src/process_dialog.cpp src/main_window.cpp)
+# Include BSON directories
+target_include_directories(DraggableSquares PRIVATE ${BSON_INCLUDE_DIRS})
 
-# Use the Qt5 Widgets module
-target_link_libraries(DraggableSquares Qt5::Core Qt5::Gui Qt5::Widgets)
-
-
+# Link the BSON library
+target_link_libraries(DraggableSquares ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)

@@ -35,6 +35,11 @@ const Process DraggableSquare::getProcess() const
     return process;
 }
 
+const QPoint DraggableSquare::getDragStartPosition() const
+{
+    return dragStartPosition;
+}
+
 void DraggableSquare::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {

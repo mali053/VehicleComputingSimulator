@@ -1,12 +1,17 @@
 #include <QMessageBox>
 #include <QHBoxLayout>
-#include "process.h"
-#include "main_window.h"
 #include <QFileInfo>
 #include <QDebug>
+#include <QPixmap>
+#include <QFileDialog>
+#include <QTimer>
+#include "process.h"
+#include "main_window.h"
+#include "draggable_square.h"
+#include "process_dialog.h"
 
 MainWindow::MainWindow(QWidget *parent) 
-    : QMainWindow(parent), process1(nullptr), process2(nullptr), timer(nullptr) 
+    : QMainWindow(parent), timer(nullptr) 
 {
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
@@ -21,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
     timeInput = new QLineEdit(this);
     timeLabel = new QLabel("Enter time in seconds:", this);
     logOutput = new QTextEdit(this);
-    QPushButton *chooseButton = new QPushButton("choose img", this);
+    QPushButton *chooseButton = new QPushButton("Choose Image", this);
 
     timeLabel->hide();
     timeInput->hide();
@@ -32,6 +37,7 @@ MainWindow::MainWindow(QWidget *parent)
     QPushButton *addProcessButton = new QPushButton("Add Process", toolbox);
     toolboxLayout->addWidget(addProcessButton);
     toolboxLayout->addStretch();
+
     connect(addProcessButton, &QPushButton::clicked, this, &MainWindow::createNewProcess);
     connect(startButton, &QPushButton::clicked, this, &MainWindow::startProcesses);
     connect(endButton, &QPushButton::clicked, this, &MainWindow::endProcesses);
@@ -62,25 +68,26 @@ MainWindow::MainWindow(QWidget *parent)
 
     int id = 0;
     Process mainProcess(id, "Main", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(mainProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(mainProcess, id, "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
     addId(id++);
     Process hsmProcess(id, "HSM", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(hsmProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(hsmProcess, id, "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
     addId(id++);
     Process logsDbProcess(id, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(logsDbProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(logsDbProcess, id, "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
     addId(id++);
     Process busManagerProcess(id, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(busManagerProcess, id,"background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(busManagerProcess, id, "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #0000FF, stop: 1 #800080);");
     addId(id++);
 }
+
 
 MainWindow::~MainWindow() 
 {
     qDeleteAll(squares);
-    if (process1) delete process1;
-    if (process2) delete process2;
-    if (timer) delete timer;
+    if (timer) {
+        delete timer;
+    }
 }
 
 void MainWindow::createNewProcess() 
@@ -89,7 +96,7 @@ void MainWindow::createNewProcess()
 
     if (dialog.exec() == QDialog::Accepted && dialog.isValid()) {
         int id = dialog.getId();
-        if (id <= 10) {
+        if (id <= 4) {
             QMessageBox::warning(this, "Invalid ID", "The ID must be greater than 10.");
             return;
         }
@@ -103,11 +110,11 @@ void MainWindow::createNewProcess()
     }
 }
 
-void MainWindow::addProcessSquare(const Process& process) 
+void MainWindow::addProcessSquare(const Process &process) 
 {
     DraggableSquare *square = new DraggableSquare(workspace);
     square->setProcess(process);
-
+    square->setId(process.getId());
     QPoint pos = squarePositions.value(process.getId(), QPoint(0, 0));
     square->move(pos);
     square->show();
@@ -116,11 +123,13 @@ void MainWindow::addProcessSquare(const Process& process)
     squares.push_back(square);
 }
 
-void MainWindow::addProcessSquare(const Process& process, int index,const QString &color) 
+void MainWindow::addProcessSquare(const Process &process, int index, const QString &color) 
 {
+    DraggableSquare *square = new DraggableSquare(workspace,color,sizeSquare,sizeSquare);
+
     DraggableSquare *square = new DraggableSquare(workspace,color,120,120);
     square->setProcess(process);
-
+    square->setId(process.getId());
     int x = (index % 2) * (square->width() + 10);
     int y = (index / 2) * (square->height() + 10);
     QPoint pos = squarePositions.value(process.getId(), QPoint(x, y));
@@ -129,7 +138,6 @@ void MainWindow::addProcessSquare(const Process& process, int index,const QStrin
 
     squarePositions[process.getId()] = pos;
     squares.push_back(square);
-
 }
 
 bool MainWindow::isUniqueId(int id) 
@@ -176,7 +184,8 @@ void MainWindow::startProcesses()
     compileBoxes();
 }
 
-void MainWindow::endProcesses() {
+void MainWindow::endProcesses() 
+{
     logOutput->append("Ending processes...");
 
     if (timer) {
@@ -219,16 +228,6 @@ void MainWindow::timerTimeout()
     endProcesses();
 }
 
-void MainWindow::readProcess1Output() 
-{
-    logOutput->append("Process1: " + process1->readAllStandardOutput());
-}
-
-void MainWindow::readProcess2Output() 
-{
-    logOutput->append("Process2: " + process2->readAllStandardOutput());
-}
-
 void MainWindow::openImageDialog() 
 {
     QString imagePath = QFileDialog::getOpenFileName(this, tr("Select Image"), "", tr("Image Files (*.png *.jpg *.jpeg)"));
@@ -241,18 +240,18 @@ void MainWindow::openImageDialog()
             if (layout) {
                 QLayoutItem *item;
                 while ((item = layout->takeAt(0)) != nullptr) {
-                    delete item->widget();  // Delete the widget
-                    delete item;            // Delete the layout item
+                    delete item->widget();
+                    delete item;
                 }
             }
 
             // Create a new QLabel to display the image as background
             QLabel *backgroundLabel = new QLabel(workspace);
             backgroundLabel->setPixmap(pixmap.scaled(workspace->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-            backgroundLabel->setGeometry(workspace->rect()); // Fit QLabel to the size of the workspace
+            backgroundLabel->setGeometry(workspace->rect());
             backgroundLabel->setScaledContents(true);
-            backgroundLabel->setAttribute(Qt::WA_TranslucentBackground); // Ensure the image appears only as background
-            backgroundLabel->lower(); // Move QLabel below other content in the workspace
+            backgroundLabel->setAttribute(Qt::WA_TranslucentBackground);
+            backgroundLabel->lower();
             backgroundLabel->show();
 
             // Add a new layout to the workspace
@@ -262,28 +261,41 @@ void MainWindow::openImageDialog()
     }
 }
 
-
 QString MainWindow::getExecutableName(const QString &buildDirPath) 
 {
     QDir buildDir(buildDirPath);
 
-    // List all files in the build directory
+    // Check if the directory exists
+    if (!buildDir.exists()) {
+        qWarning() << "Error: The directory" << buildDirPath << "does not exist.";
+        QMessageBox::critical(this, "Directory Error", "The specified build directory does not exist.");
+        return QString();
+    }
+
     QStringList files = buildDir.entryList(QDir::Files | QDir::NoSymLinks);
 
-    // Iterate over the files to find the executable
+    // If the directory is empty or has no files
+    if (files.isEmpty()) {
+        qWarning() << "Error: No files found in the directory" << buildDirPath << ".";
+        QMessageBox::critical(this, "File Error", "No files found in the specified build directory.");
+        return QString();
+    }
+
     foreach (const QString &file, files) {
         QFileInfo fileInfo(buildDir.filePath(file));
-        
-        // Check if the file has no extension (common on Linux) or is an executable (on Windows)
+
+        // Skip files with a suffix (i.e., non-executables)
         if (!fileInfo.suffix().isEmpty()) continue;
 
-        // Check if the file has execute permissions (Unix-based systems)
+        // If the file is executable, return its name
         if (fileInfo.isExecutable()) {
             return fileInfo.fileName();
         }
     }
 
-    // If no executable file is found, return an empty string
+    // No executable found
+    qWarning() << "Error: No executable file found in the directory" << buildDirPath << ".";
+    QMessageBox::critical(this, "Executable Not Found", "No executable file found in the specified build directory.");
     return QString();
 }
 
@@ -292,20 +304,15 @@ void MainWindow::compileBoxes() {
     for (QProcess* process : runningProcesses) {
         process->terminate();
         process->waitForFinished();
-        delete process;
     }
     runningProcesses.clear();
 
-    // Iterate over each directory and compile
-    for (const DraggableSquare* square : squares) {
+    for (const DraggableSquare *square : squares) {
         QString cmakePath = square->getProcess().getCMakeProject();
         logOutput->append("Compiling " + cmakePath);
 
-        // Define the build directory path
         QDir cmakeDir(cmakePath);
         QString buildDirPath = cmakeDir.absoluteFilePath("build");
-
-        // Create the build directory if it doesn't exist
         QDir buildDir(buildDirPath);
         if (!buildDir.exists()) {
             if (!buildDir.mkpath(".")) {
@@ -350,7 +357,7 @@ void MainWindow::compileBoxes() {
         // Run the compiled program
         QString exeFile = getExecutableName(buildDirPath);
         QString executablePath = buildDir.absoluteFilePath(exeFile);
-        QProcess* runProcess = new QProcess(this);
+        QProcess *runProcess = new QProcess(this);
         runProcess->setWorkingDirectory(buildDirPath);
 
         connect(runProcess, &QProcess::readyReadStandardOutput, [this, runProcess]() {
@@ -365,6 +372,36 @@ void MainWindow::compileBoxes() {
         runningProcesses.append(runProcess);
     }
 }
+
+void MainWindow::editSquare(int id) 
+{
+    logOutput->append(QString("Edit square with ID: %1").arg(id));
+}
+
+void MainWindow::deleteSquare(int id) 
+{
+    qDebug() << "Deleting square with ID:" << id;
+
+    auto it = std::find_if(squares.begin(), squares.end(), [id](DraggableSquare *square) {
+        return square && square->getProcess().getId() == id;
+    });
+
+    if (it != squares.end()) {
+        DraggableSquare *toDelete = *it;
+        it = squares.erase(it);
+
+        if (toDelete) {
+            toDelete->deleteLater();
+            qDebug() << "Square with ID:" << id << "deleted.";
+        }
+    } else {
+        qDebug() << "Square with ID:" << id << "not found.";
+    }
+
+    usedIds.remove(id);
+    squarePositions.remove(id);
+}
+
 
 
 // Include the generated moc file

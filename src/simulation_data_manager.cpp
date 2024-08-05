@@ -124,35 +124,3 @@ void SimulationDataManager::printJson(QJsonObject jsonObject)
     std::cout << jsonBytes.toStdString() << std::endl;
 }
 
-// QVector<int> SimulationDataManager::findProcessCoordinatesById(int processId, const QString &fileName) {
-//     QFile file(fileName);
-//     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-//         qWarning() << "Cannot open file:" << fileName;
-//         return {};
-//     }
-
-//     QByteArray jsonData = file.readAll();
-//     file.close();
-
-//     QJsonDocument jsonDoc = QJsonDocument::fromJson(jsonData);
-//     if (jsonDoc.isNull()) {
-//         qWarning() << "Invalid JSON document";
-//         return {};
-//     }
-
-//     QJsonObject rootObject = jsonDoc.object();
-//     QJsonArray processesArray = rootObject["processes"].toArray();
-
-//     for (const QJsonValue &processValue : processesArray) {
-//         QJsonObject processObject = processValue.toObject();
-//         if (processObject["id"].toInt() == processId) {
-//             QJsonObject coordinateObject = processObject["coordinate"].toObject();
-//             int x = coordinateObject["x"].toInt();
-//             int y = coordinateObject["y"].toInt();
-//             return {x, y};
-//         }
-//     }
-
-//     qWarning() << "Process ID not found:" << processId;
-//     return {};
-// }

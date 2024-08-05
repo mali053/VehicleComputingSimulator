@@ -13,6 +13,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include "draggable_square.h"
+#include "simulation_data_manager.h" 
 #include <QDir>
 
 // קריאת נתונים מקובץ
@@ -58,7 +59,7 @@ void LogHandler::sortLogEntries() {
     std::sort(logEntries.begin(), logEntries.end());
 }
 
-void LogHandler::analyzeLogEntries(QMainWindow* mainWindow, const QString& fileName) {
+void LogHandler::analyzeLogEntries(QMainWindow* mainWindow, const QString& jsonFileName) {
     //     // יצירת חלון להציג את זמן הלוג
     //     QWidget *timeWidget = new QWidget(mainWindow);
     //     QVBoxLayout *layout = new QVBoxLayout(timeWidget);
@@ -109,6 +110,35 @@ void LogHandler::analyzeLogEntries(QMainWindow* mainWindow, const QString& fileN
     //     qDebug() << "Analyzing log entries";
 
     // Iterate through log entries and update colors based on communication
+        // קריאה מהקובץ JSON כדי לקבל מידע על תהליכים
+    SimulationDataManager dataManager;
+    QJsonObject jsonObject = dataManager.loadSimulationData(jsonFileName.toStdString());
+    
+    if (jsonObject.isEmpty()) {
+        qWarning() << "Failed to load JSON data";
+        return;
+    }
+
+    // עדכון מפת התהליכים לפי מידע מהקובץ JSON
+    QJsonArray processesArray = jsonObject["processes"].toArray();
+    for (const QJsonValue& value : processesArray) {
+        QJsonObject processObject = value.toObject();
+        int id = processObject["id"].toInt();
+        QString name = processObject["name"].toString();
+        QString cmakeProject = processObject["CMakeProject"].toString();
+        QString qemuPlatform = processObject["QEMUPlatform"].toString();
+        int x = processObject["coordinate"].toObject()["x"].toInt();
+        int y = processObject["coordinate"].toObject()["y"].toInt();
+        int width = processObject["width"].toInt();
+        int height = processObject["height"].toInt();
+
+        Process process(id, name, cmakeProject, qemuPlatform);
+        DraggableSquare* square = new DraggableSquare(mainWindow, "", width, height);
+        square->setProcess(process);
+        square->move(x, y);
+        processSquares[id] = square;
+    }
+    ///////////////////////////////////-----------------------------\\\\\\\\\\\\\\\\\\\\\\\\\\\
     qDebug() << "befor the loop";
     qDebug() << "Size of logEntries:" << logEntries.size();
     for (const auto& logEntry : logEntries) {

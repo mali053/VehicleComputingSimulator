@@ -12,9 +12,14 @@ class DraggableSquare : public QWidget
 
 public:
     explicit DraggableSquare(QWidget *parent = nullptr,const QString &color = "background-color: green;",int width=100,int height=100);
+    DraggableSquare(const DraggableSquare &other); // Copy constructor
+    DraggableSquare &operator=(const DraggableSquare &other); // Copy assignment operator
+    
     void setProcess(const Process &process);
     const Process getProcess() const;
     const QPoint getDragStartPosition() const;
+    void setSquareColor(const QString &color);
+    
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

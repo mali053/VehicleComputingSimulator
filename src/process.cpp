@@ -5,6 +5,10 @@ Process::Process(int id, const QString &name, const QString &cmakeProject, const
 {
 }
 
+// Copy constructor
+Process::Process(const Process &other)
+    : id(other.id), name(other.name), cmakeProject(other.cmakeProject), qemuPlatform(other.qemuPlatform) {}
+
 Process::Process()
     : id(-1), name(""), cmakeProject(""), qemuPlatform("") 
 {

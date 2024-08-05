@@ -8,6 +8,7 @@ class Process
 public:
     Process(int id, const QString &name, const QString &cmakeProject, const QString &qemuPlatform);
     Process();
+    Process(const Process &other); // Copy constructor
 
     int getId() const;
     QString getName() const;

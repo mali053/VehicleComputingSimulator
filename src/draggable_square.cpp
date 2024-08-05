@@ -9,6 +9,9 @@
 #include <QLabel>
 #include <QString>
 
+void DraggableSquare::setSquareColor(const QString &color) {
+    setStyleSheet(color);
+}
 // Update the constructor definition to match the declaration
 DraggableSquare::DraggableSquare(QWidget *parent, const QString &color, int width, int height) 
     : QWidget(parent), label(new QLabel(this))
@@ -18,6 +21,35 @@ DraggableSquare::DraggableSquare(QWidget *parent, const QString &color, int widt
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(label);
     setLayout(layout);
+}
+
+
+// Copy constructor
+DraggableSquare::DraggableSquare(const DraggableSquare &other)
+    : QWidget(other.parentWidget()), dragStartPosition(other.dragStartPosition), initialPosition(other.initialPosition),
+      label(new QLabel(other.label->text(), this)), process(other.process) // Copy QLabel's text
+{
+    setFixedSize(other.width(), other.height());
+    setStyleSheet(other.styleSheet());
+}
+
+// Copy assignment operator
+DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
+{
+    if (this == &other) {
+        return *this;
+    }
+
+    dragStartPosition = other.dragStartPosition;
+    initialPosition = other.initialPosition;
+    delete label;
+    label = new QLabel(other.label->text(), this); // Copy QLabel's text
+    process = other.process;
+
+    setFixedSize(other.width(), other.height());
+    setStyleSheet(other.styleSheet());
+
+    return *this;
 }
 
 void DraggableSquare::setProcess(const Process &process)

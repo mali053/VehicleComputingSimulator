@@ -1,4 +1,3 @@
-
 #ifndef LOGHANDLER_H
 #define LOGHANDLER_H
 
@@ -9,6 +8,7 @@
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QJsonObject>
+#include "draggable_square.h"
 
 
 class LogHandler {
@@ -26,13 +26,15 @@ public:
 
     };
 
-    void readLogFile(const QString &fileName);
+    void readLogFile(const QString& fileName);
     void sortLogEntries();
-    void analyzeLogEntries(QMainWindow *mainWindow,const QString &fileName); 
+    void analyzeLogEntries(QMainWindow* mainWindow, const QString& fileName);
     void draw(int xSrc, int ySrc, int xDest, int yDest);
-    QVector<int> findProcessCoordinatesById(int processId, const QString &fileName);
+    QVector<int> findProcessCoordinatesById(int processId, const QString& fileName);
 private:
     QVector<LogEntry> logEntries;
+    QMap<int, DraggableSquare*> processSquares; // Track process squares by their IDs
+    QMap<int, QMap<int, int>> communicationCounts; // Track communication counts between process pairs
 };
 
 #endif // LOGHANDLER_H

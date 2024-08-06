@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
 RUN apt-get update && \
-    apt-get install -y cmake g++ git wget libgtest-dev lsb-release gnupg ca-certificates
+    apt-get install -y cmake g++ git wget libgtest-dev
 
 # Install Google Test
 RUN cd /usr/src/gtest && \
@@ -24,9 +24,9 @@ COPY . .
 RUN mkdir -p build && \
     rm -rf build/*
 
-# Run CMake with SYCL and build the project
+# Run CMake and build the project
 RUN cd build && \
-    cmake -DCMAKE_CXX_COMPILER=clang++ .. && \
+    cmake .. && \
     make
 
 # Run the tests

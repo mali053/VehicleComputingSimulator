@@ -8,6 +8,10 @@
 # gtest files
 /gtest/
 
+#clangd
+.cache
+.clang-format
+
 # VS Code files
 .vscode/
 
@@ -55,7 +59,3 @@ Desktop.ini
 
 # linux operating system files
 *~
-
-#clangd library
-.cache
-.clang-format

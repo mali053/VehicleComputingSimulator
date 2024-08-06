@@ -1,0 +1,46 @@
+{
+	"Sensors": [
+		{
+			"id": "5",
+			"name": "Speed"
+		},
+		{
+			"id": "8",
+			"name": "Tire Pressure"
+		}
+	],
+	"Conditions": [
+		{
+			"if": [
+				{
+					"id": "5",
+					"state": "high"
+				}
+			],
+			"send": [
+				{
+					"id": "5",
+					"msg": "slow down"
+				}
+			]
+		},
+		{
+			"if": [
+				{
+					"id": "8",
+					"state": "high pressure"
+				}
+			],
+			"send": [
+				{
+					"id": "5",
+					"msg": "slow down"
+				},
+				{
+					"id": "8",
+					"msg": "warning"
+				}
+			]
+		}
+	]
+}

@@ -9,6 +9,9 @@ TEST(ExampleTest, BasicAssertions) {
 TEST(ExampleTest2, BasicAssertions) {
    EXPECT_EQ(1 , 2);
 }
+TEST(ExampleTest3, BasicAssertions) {
+	EXPECT_EQ(1 - 3, 2);
+}
 
 int main(int argc, char** argv) {
    ::testing::InitGoogleTest(&argc, argv);

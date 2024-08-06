@@ -17,10 +17,10 @@ set(SOURCE_FILES "")
 list(APPEND SOURCE_FILES ${Q_FILES} ${ANS_FILES})
 
 # Add library
-add_library(Input src/input.cpp "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp" )
+add_library(Input src/input.cpp "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"   )
 
 # Add executable
-add_executable(CMakeProject ${SOURCE_FILES} "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp" )
+add_executable(CMakeProject ${SOURCE_FILES} "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"   )
 
 target_link_libraries(CMakeProject PRIVATE Input)
 
@@ -39,17 +39,17 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 file(GLOB TEST_FILES "Tests/*.cpp")
 
 # Add test executable
-add_executable(RunTests ${TEST_FILES} )
+add_executable(RunTests ${TEST_FILES}  )
 
 # Link GTest and project library
-target_link_libraries(RunTests gtest gtest_main Input)
+target_link_libraries(RunTests gtest gtest_main Input ws2_32 msvcprtd)
 
 # Set runtime library to be the same for all targets
 if (MSVC)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-    set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MT")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MT")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MD")
+    set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} /MD")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /MD")
 endif()
 
 # Enable testing
@@ -70,3 +70,6 @@ if (UNIX)
         target_link_libraries(CMakeProject -fsanitize=address)
     endif()
 endif()
+
+# Copy json_to_read.json to the build directory
+configure_file(${CMAKE_SOURCE_DIR}/json_to_read.json ${CMAKE_BINARY_DIR}/json_to_read.json COPYONLY)

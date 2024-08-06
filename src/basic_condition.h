@@ -14,7 +14,7 @@ public:
 	// C-tor that gets an id and initializes the conditionId
 	BasicCondition(int id) : conditionId(id) {};
 
-	// Functions for print myself
+	// Functions for print
 	void print() const override;
 	void printNice() const override;
 };

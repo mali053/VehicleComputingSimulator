@@ -10,10 +10,13 @@ enum operatorTypes {
 	le  // <=
 };
 
-
-set<int> Sensor::changeValueOfField(string field, string value)
+//
+set<int> Sensor::updateStatusAndGetTrueRoots(string field, string value)
 {
+	// To store IDs of conditions that become true after the update
 	set<int> result;
+
+	// Update the field value in the sensor
 	this->fields[field].first = value;
 
 	unordered_map<string, operatorTypes> map = {
@@ -25,6 +28,8 @@ set<int> Sensor::changeValueOfField(string field, string value)
 		{"<=", operatorTypes::le}
 	};
 
+	// Evaluate each condition related to the field
+
 	for (BasicCondition* bc : this->fields[field].second) {
 
 		bool flag = false, prevStatus = bc->status;
@@ -32,6 +37,7 @@ set<int> Sensor::changeValueOfField(string field, string value)
 
 		operatorTypes myOperator = map[bc->operatorType];
 
+		// Set the new status based on the operator and the value
 		switch (myOperator) {
 		case b: {
 			flag = value > bcValue;
@@ -61,28 +67,31 @@ set<int> Sensor::changeValueOfField(string field, string value)
 			break;
 		}
 
+		// Update the condition's status
 		bc->status = flag;
 
 		optional<bool> currentParent = nullopt, isRootTrue = nullopt;
-		
+
+		// If the condition's status has changed
 		if (flag != prevStatus) {
-			
+			// If no parents, add to result if condition is true
 			if (bc->parents.size() == 0) {
 				if (bc->status)
 					result.insert(bc->conditionId);
 			}
 			else {
+				// Update parent conditions and check if the root condition is true
 				for (OperatorNode* parent : bc->parents) {
 					(bc->status) ? parent->countTrueConditions++ : parent->countTrueConditions--;
 					currentParent = parent->updateTree();
 					if (currentParent != nullopt)
 						isRootTrue = currentParent;
 				}
-				
+				//Add the id of the full condition to the result if the root condition is true
 				if (isRootTrue)
 					result.insert(bc->conditionId);
-			}	
-			
+			}
+
 		}
 	}
 	return result;

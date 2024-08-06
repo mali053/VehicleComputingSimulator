@@ -1,7 +1,8 @@
 #pragma once
 #include "sensor.h"
 
-class speedSensor: public Sensor
+// Examples for sensors - speed sensor and tire pressure sensor
+class SpeedSensor: public Sensor
 {
 public:
 	//Executes a specified action for the speedSensor.

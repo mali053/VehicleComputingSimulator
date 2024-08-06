@@ -1,6 +1,6 @@
 #include "input.h"
 #include "sensor.h"
-#include "speedSensor.h"
+#include "speed_sensor.h"
 
 // Function that builds the sensors according to the json file
 void Input::s_buildSensors(vector<Sensor*>& sensors)
@@ -17,7 +17,7 @@ void Input::s_buildSensors(vector<Sensor*>& sensors)
 		// Create parallel sensors
 		switch (sensorType) {
 		case SensorsTypes::Speed: {
-			sensorPtr = new speedSensor(stoi(sensor["id"]));
+			sensorPtr = new SpeedSensor(stoi(sensor["id"]));
 			break;
 		}
 		case SensorsTypes::TirePressure: {
@@ -39,7 +39,7 @@ void Input::s_buildSensors(vector<Sensor*>& sensors)
 json& Input::s_readData()
 {
 	// Read the json file
-	std::ifstream f("C:\\Users\\משתמש\\Desktop\\תכנות\\בוטקאמפ\\Project\\CMakeProject\\json_to_read.json");
+	std::ifstream f("json_to_read.json");
 
 	// Check if the input is correct
 	if (!f.is_open()) {

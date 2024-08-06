@@ -1,6 +1,6 @@
 #include "basic_condition.h"
 
-// Functions for print myself
+// Implement the functions for print- print myself
 
 void BasicCondition::print() const
 {

@@ -91,3 +91,25 @@ void ProcessDialog::validateAndAccept()
         QMessageBox::warning(this, "Input Error", "Please fill in all fields correctly.");
     }
 }
+void ProcessDialog::setId(int id)
+{
+    idEdit->setText(QString::number(id));
+}
+
+void ProcessDialog::setName(const QString &name)
+{
+    nameEdit->setText(name);
+}
+
+void ProcessDialog::setCMakeProject(const QString &cmakeProject)
+{
+    cmakeProjectEdit->setText(cmakeProject);
+}
+
+void ProcessDialog::setQEMUPlatform(const QString &qemuPlatform)
+{
+    int index = qemuPlatformCombo->findText(qemuPlatform);
+    if (index != -1) {
+        qemuPlatformCombo->setCurrentIndex(index);
+    }
+}

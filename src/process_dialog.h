@@ -20,6 +20,10 @@ public:
     QString getCMakeProject() const;
     QString getQEMUPlatform() const;
     bool isValid() const;
+    void setId(int id);
+    void setName(const QString &name);
+    void setCMakeProject(const QString &cmakeProject);
+    void setQEMUPlatform(const QString &qemuPlatform);
 
 private slots:
     void validateAndAccept();

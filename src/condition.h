@@ -3,7 +3,7 @@
 #include <iostream>
 using namespace std;
 
-class OperatorNode;
+class Node;
 
 // Abstract class that present a node in the tree
 class Condition {
@@ -11,7 +11,7 @@ public:
 	// status: contains what is the boolean value of this subtree
 	bool status = false;
 	// parents: contains pointers to all parents I'm their son- reduce same subtrees in the tree
-	vector<OperatorNode*> parents;
+	vector<Node*> parents;
 
 	virtual ~Condition() {}
 

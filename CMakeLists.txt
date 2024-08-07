@@ -17,10 +17,10 @@ set(SOURCE_FILES "")
 list(APPEND SOURCE_FILES ${Q_FILES} ${ANS_FILES})
 
 # Add library
-add_library(Input src/input.cpp "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"   )
+add_library(Input src/input.cpp "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"    "src/enums.h")
 
 # Add executable
-add_executable(CMakeProject ${SOURCE_FILES} "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"   )
+add_executable(CMakeProject ${SOURCE_FILES} "src/full_condition.cpp" "src/and_operator.h" "src/operator_node.h" "src/operator_node.cpp" "src/full_condition.h" "src/basic_condition.h" "src/basic_condition.cpp" "src/or_operator.h" "src/or_operator.cpp"    "src/enums.h")
 
 target_link_libraries(CMakeProject PRIVATE Input)
 
@@ -39,7 +39,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 file(GLOB TEST_FILES "Tests/*.cpp")
 
 # Add test executable
-add_executable(RunTests ${TEST_FILES}  )
+add_executable(RunTests ${TEST_FILES}   "src/enums.h")
 
 # Link GTest and project library
 target_link_libraries(RunTests gtest gtest_main Input ws2_32 msvcprtd)

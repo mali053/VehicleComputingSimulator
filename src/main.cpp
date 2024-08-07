@@ -1,41 +1,43 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include "sensor.h"
 #include "input.h"
 #include "full_condition.h"
+#include "global_properties.h"
 using namespace std;
 
-vector<Sensor*> g_sensors;
+GlobalProperties& g_instanceGP = GlobalProperties::getInstance();
 
 // Fuction that activates all actions in the vector 
 void sendToActions(map<int, string> actions) {
 	for (pair<int, string> action : actions) {
-		Sensor* destinationSensor = *find_if(g_sensors.begin(), g_sensors.end(), [action](Sensor* s) {return s->id == action.first; });
+        Sensor* destinationSensor = g_instanceGP.sensors[action.first];
 		destinationSensor->doAction(action.second);
 	}
 }
 
 int main()
 {
-	// Build the sensors according the json file
-	Input::s_buildSensors(g_sensors);
+    map<int, string> map1 = { {5, "slow down"}, {8, "ccc"} };
+    map<int, string> map2 = { {8, "good!!!"} };
 
-
-	map<int, string> map = { {5, "slow down"}, {8, "ccc"} };
 
 #pragma region Conditions examples
 
-	//FullCondition* cond = new FullCondition("[5]=(code,500)", map, g_sensors);
-	
-	//FullCondition* cond = new FullCondition("|([5]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[5]&(|(=(code,500),<(status,\"high\")),>(msg,\"aaa\")))", map, g_sensors);
-	
-	//&([5]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[8]=(code,800))
+    //FullCondition* cond = new FullCondition("[5]=(code,500)", map, g_sensors);
+
+    //FullCondition* cond = new FullCondition("|([5]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[5]&(|(=(code,500),<(status,\"high\")),>(msg,\"aaa\")))", map, g_sensors);
+
+    //"&([5]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[8]=(code,800))"
 
 #pragma endregion
-	
-	// Build the condition tree
-	FullCondition* cond = new FullCondition("|([5]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[5]&(|(=(code,500),<(status,\"high\")),>(msg,\"aaa\")))", map, g_sensors);
 
+    // Build the condition tree
+    FullCondition cond("|([5]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[5]&(|(=(code,500),<(status,\"high\")),>(msg,\"aaa\")))", map1);
+    g_instanceGP.conditions.insert({ cond.id, cond});
+    FullCondition c2("[5]|(=(code,500),<(status,\"high\"))", map2);
+    g_instanceGP.conditions.insert({ c2.id, c2 });
 
     // --Test updates in the sensors--
 
@@ -52,15 +54,14 @@ int main()
         int id = ids[i];
 
         // Find the sensor with the given ID
-        auto it = find_if(g_sensors.begin(), g_sensors.end(),
-            [id](Sensor* s) { return s->id == id; });
+        Sensor* sensor = g_instanceGP.sensors[id];
 
         // If the sensor is found, change its field value and process the results
-        if (it != g_sensors.end()) {
-            set<int> result = (*it)->updateStatusAndGetTrueRoots(fields[i], values[i]);
+        if (sensor != nullptr) {
+            sensor->updateTrueRoots(fields[i], values[i]);
             cout << "After update in sensor " << ids[i] << ": " << fields[i] << " " << values[i] << endl;
-            for (int cId : result)
-                sendToActions(cond[cId].actions);
+            for (int cId : g_instanceGP.trueConditions)
+                sendToActions(g_instanceGP.conditions[cId].actions);
         }
     }
 	

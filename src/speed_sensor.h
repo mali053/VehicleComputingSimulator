@@ -6,7 +6,7 @@ class SpeedSensor: public Sensor
 {
 public:
 	//Executes a specified action for the speedSensor.
-	speedSensor(int id) : Sensor(id) { }
+	SpeedSensor(int id) : Sensor(id) { }
 
 	virtual void doAction(string action);
 };

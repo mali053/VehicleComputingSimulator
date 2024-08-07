@@ -1,4 +1,5 @@
 #include "or_operator.h"
+
 //Updates the status according to the type of operator
 void OrOperator::updateStatus()
 {

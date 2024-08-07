@@ -1,10 +1,9 @@
 #include "operator_node.h"
 
 // Function that updates the status of all nodes that should change
-optional<bool> OperatorNode::updateTree()
+void OperatorNode::updateTree()
 {
-    bool prevStatus = this->status; 
-    optional<bool> isRootTrue = nullopt, currentParent = nullopt; 
+    bool prevStatus = this->status;
 
     // Update the status of the current node
     this->updateStatus();
@@ -13,21 +12,11 @@ optional<bool> OperatorNode::updateTree()
 
     // Check if the status changed
     if (prevStatus != this->status) {
-        
-        // If it is the root - return the status
-        if (parents.size() == 0)
-            return this->status;
-
-        // Else - go over all the parents and update them
-        for (OperatorNode* parent : this->parents) {
+        // Go over all the parents and update them
+        for (Node* parent : this->parents) {
             (this->status) ? parent->countTrueConditions++ : parent->countTrueConditions--;
-            currentParent = parent->updateTree();
-            // If we got the root - update the isRootTrue varible
-            if (currentParent != nullopt)
-                isRootTrue = currentParent;
+            parent->updateTree();
         }
 
     }
-
-	return isRootTrue;
 }

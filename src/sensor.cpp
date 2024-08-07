@@ -1,32 +1,13 @@
 #include "Sensor.h"
 
-
-enum operatorTypes {
-	b, // >
-	l,  // <
-	e,  // =
-	ne, // !=
-	be, // >=
-	le  // <=
-};
-
 //
-set<int> Sensor::updateStatusAndGetTrueRoots(string field, string value)
+void Sensor::updateTrueRoots(string field, string value)
 {
 	// To store IDs of conditions that become true after the update
 	set<int> result;
 
 	// Update the field value in the sensor
 	this->fields[field].first = value;
-
-	unordered_map<string, operatorTypes> map = {
-		{">", operatorTypes::b},
-		{"<", operatorTypes::l},
-		{"=", operatorTypes::e},
-		{"!=", operatorTypes::ne},
-		{">=", operatorTypes::be},
-		{"<=", operatorTypes::le}
-	};
 
 	// Evaluate each condition related to the field
 
@@ -35,7 +16,7 @@ set<int> Sensor::updateStatusAndGetTrueRoots(string field, string value)
 		bool flag = false, prevStatus = bc->status;
 		string bcValue = bc->value;
 
-		operatorTypes myOperator = map[bc->operatorType];
+		operatorTypes myOperator = s_convertStringToOperatorTypes(bc->operatorType);
 
 		// Set the new status based on the operator and the value
 		switch (myOperator) {
@@ -70,29 +51,13 @@ set<int> Sensor::updateStatusAndGetTrueRoots(string field, string value)
 		// Update the condition's status
 		bc->status = flag;
 
-		optional<bool> currentParent = nullopt, isRootTrue = nullopt;
-
 		// If the condition's status has changed
 		if (flag != prevStatus) {
-			// If no parents, add to result if condition is true
-			if (bc->parents.size() == 0) {
-				if (bc->status)
-					result.insert(bc->conditionId);
+			// Update parent conditions and check if the root condition is true
+			for (Node* parent : bc->parents) {
+				(bc->status) ? parent->countTrueConditions++ : parent->countTrueConditions--;
+				parent->updateTree();
 			}
-			else {
-				// Update parent conditions and check if the root condition is true
-				for (OperatorNode* parent : bc->parents) {
-					(bc->status) ? parent->countTrueConditions++ : parent->countTrueConditions--;
-					currentParent = parent->updateTree();
-					if (currentParent != nullopt)
-						isRootTrue = currentParent;
-				}
-				//Add the id of the full condition to the result if the root condition is true
-				if (isRootTrue)
-					result.insert(bc->conditionId);
-			}
-
 		}
 	}
-	return result;
 }

@@ -1,6 +1,6 @@
 #include "speed_sensor.h"
 
-// Implement the doAction function
+// Executes a specified action for the SpeedSensor.
 void SpeedSensor::doAction(string action)
 {
     //void Send_async(void* data, size_t size, uint srcId, uint dstId, *callback)

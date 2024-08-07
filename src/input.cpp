@@ -1,9 +1,7 @@
 #include "input.h"
-#include "sensor.h"
-#include "speed_sensor.h"
 
 // Function that builds the sensors according to the json file
-void Input::s_buildSensors(vector<Sensor*>& sensors)
+void Input::s_buildSensors(unordered_map<int, Sensor*>& sensors)
 {
 	Sensor* sensorPtr;
 	SensorsTypes sensorType;
@@ -30,7 +28,7 @@ void Input::s_buildSensors(vector<Sensor*>& sensors)
 
 		// Add to the vector a pointer to the sensor
 		if (sensorPtr != nullptr)
-			sensors.push_back(sensorPtr);
+			sensors[sensorPtr->id] = sensorPtr;
 	}
 }
 
@@ -58,22 +56,6 @@ json& Input::s_readData()
 		cout << "My Unknown Exception" << endl;
 	}
 
-}
-
-
-// Function that take a string and return the corresponding sensor type
-SensorsTypes Input::s_convertStringToSensorsTypes(string type)
-{
-	// Define a map to convert from string to sensor type
-	static unordered_map<string, SensorsTypes> s_map = {
-		{"Speed", SensorsTypes::Speed},
-		{"Tire Pressure", SensorsTypes::TirePressure},
-		{"Light", SensorsTypes::Light}
-	};
-
-	// Find the right type in the map and return it
-	auto it = s_map.find(type);
-	return ((it == s_map.end()) ? (SensorsTypes::Unknown) : (it->second));
 }
 
 // Load the json file into s_jsonToRead

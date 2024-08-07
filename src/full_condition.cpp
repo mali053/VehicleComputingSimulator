@@ -10,10 +10,13 @@ Sensor* currentSensor;
 unordered_map<string, Condition*> existingConditions;
 
 // Initialize a static variable to assign unique IDs to each FullCondition instance
-int FullCondition::counter = 0;
+int FullCondition::s_counter = 0;
 
 // Recursively builds the condition tree from the condition string.
-Condition* FullCondition::buildNode(const string& condition, int& index, vector<Sensor*>& sensors, map<int, int> bracketIndexes) {
+Condition* FullCondition::buildNode(const string& condition, int& index, map<int, int> bracketIndexes) {
+	
+	GlobalProperties& instanceGP = GlobalProperties::getInstance();
+
 	if (condition.empty())
 		throw "Condition string is empty!";
 
@@ -23,7 +26,7 @@ Condition* FullCondition::buildNode(const string& condition, int& index, vector<
 		string numStr = condition.substr(index + 1, closeBracket - index - 1);
 		int id = stoi(numStr);
 		index = closeBracket + 1;
-		currentSensor = *find_if(sensors.begin(), sensors.end(), [id](Sensor* s) { return s->id == id; });
+		currentSensor = instanceGP.sensors[id];
 	}
 
 	int openBracketIndex = find(condition.begin() + index, condition.end(), '(') - condition.begin();
@@ -45,14 +48,14 @@ Condition* FullCondition::buildNode(const string& condition, int& index, vector<
 	else if (condition[index] == '&')
 		conditionPtr = new AndOperator;
 	else
-		conditionPtr = new BasicCondition(this->id);
+		conditionPtr = new BasicCondition();
 	existingConditions[key] = conditionPtr;
 
 	if (OperatorNode* operatorNode = dynamic_cast<OperatorNode*>(conditionPtr)) {
 		index += 2;
 		// Going over the internal conditions and creating children
 		while (condition[index] != ')') {
-			operatorNode->conditions.push_back(buildNode(condition, index, sensors, bracketIndexes));
+			operatorNode->conditions.push_back(buildNode(condition, index, bracketIndexes));
 			operatorNode->conditions[operatorNode->conditions.size() - 1]->parents.push_back(operatorNode);
 		}
 	}
@@ -93,11 +96,12 @@ map<int, int> findBrackets(string condition)
 }
 
 // Constructor: Builds the condition tree.
-FullCondition::FullCondition(string condition, map<int, string>& actions, vector<Sensor*>& sensors) : actions(actions)
+FullCondition::FullCondition(string condition, map<int, string>& actions) : actions(actions)
 {
-	id = FullCondition::counter++;
+	id = FullCondition::s_counter++;
 	map<int, int> bracketsIndexes = findBrackets(condition);
 	int index = 0;
-	root = this->buildNode(condition, index, sensors, bracketsIndexes);
-	existingConditions.clear();
+	Condition* firstCondition = this->buildNode(condition, index, bracketsIndexes);
+	root = new Root(this->id, firstCondition);
+	firstCondition->parents.push_back(root);
 }

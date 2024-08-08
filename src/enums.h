@@ -3,7 +3,9 @@
 #include <unordered_map>
 using namespace std;
 
-enum operatorTypes {
+enum OperatorTypes {
+	o, // ||
+	a, // &&
 	b, // >
 	l,  // <
 	e,  // =
@@ -13,19 +15,21 @@ enum operatorTypes {
 	UnknownOperatorType
 };
 
-static operatorTypes s_convertStringToOperatorTypes(string operatorType)
+static OperatorTypes s_convertStringToOperatorTypes(string operatorType)
 {
-	unordered_map<string, operatorTypes> map = {
-		{">", operatorTypes::b},
-		{"<", operatorTypes::l},
-		{"=", operatorTypes::e},
-		{"!=", operatorTypes::ne},
-		{">=", operatorTypes::be},
-		{"<=", operatorTypes::le}
+	unordered_map<string, OperatorTypes> map = {
+		{"|", OperatorTypes::o},
+		{"&", OperatorTypes::a},
+		{">", OperatorTypes::b},
+		{"<", OperatorTypes::l},
+		{"=", OperatorTypes::e},
+		{"!=", OperatorTypes::ne},
+		{">=", OperatorTypes::be},
+		{"<=", OperatorTypes::le}
 	};
 
 	auto it = map.find(operatorType);
-	return ((it != map.end()) ? (it->second) : (operatorTypes::UnknownOperatorType));
+	return ((it != map.end()) ? (it->second) : (OperatorTypes::UnknownOperatorType));
 }
 
 // An enum that contains all possible sensor types

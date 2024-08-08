@@ -16,10 +16,8 @@ void Sensor::updateTrueRoots(string field, string value)
 		bool flag = false, prevStatus = bc->status;
 		string bcValue = bc->value;
 
-		operatorTypes myOperator = s_convertStringToOperatorTypes(bc->operatorType);
-
 		// Set the new status based on the operator and the value
-		switch (myOperator) {
+		switch (bc->operatorType) {
 		case b: {
 			flag = value > bcValue;
 			break;

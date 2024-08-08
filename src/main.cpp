@@ -31,6 +31,8 @@ int main()
 
     //"&([5]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[8]=(code,800))"
 
+    //"[5]&(&(|(=(code,500),=(code,700)),&(>=(code,500),=(status,\"high\"))),=(msg,\"aaa\"))"
+
 #pragma endregion
 
     // Build the condition tree

@@ -42,10 +42,11 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 
 	// | , & , ( = , < , > , >= , <= , != )
 	// Creating a new node
+	OperatorTypes operatorType = s_convertStringToOperatorTypes(condition.substr(index, openBracketIndex - index));
 	Condition* conditionPtr;
-	if (condition[index] == '|')
+	if (operatorType == OperatorTypes::o)
 		conditionPtr = new OrOperator;
-	else if (condition[index] == '&')
+	else if (operatorType == OperatorTypes::a)
 		conditionPtr = new AndOperator;
 	else
 		conditionPtr = new BasicCondition();
@@ -53,15 +54,29 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 
 	if (OperatorNode* operatorNode = dynamic_cast<OperatorNode*>(conditionPtr)) {
 		index += 2;
+		int count = 0;
+
 		// Going over the internal conditions and creating children
 		while (condition[index] != ')') {
+			string temp = condition.substr(index, 1);
+			while (s_convertStringToOperatorTypes(temp) == operatorType) {
+				count++;
+				index += 2;
+				temp = condition.substr(index, 1);
+			}
 			operatorNode->conditions.push_back(buildNode(condition, index, bracketIndexes));
 			operatorNode->conditions[operatorNode->conditions.size() - 1]->parents.push_back(operatorNode);
+			while (condition[index] == ')' && count) {
+				count--;
+				index++;
+			}
+			if (condition[index] == ',')
+				index++;
 		}
 	}
 	else if (BasicCondition* basicCondition = dynamic_cast<BasicCondition*>(conditionPtr)) {
 		// Fill the fields in BasicCondition
-		basicCondition->operatorType = condition.substr(index, openBracketIndex - index);
+		basicCondition->operatorType = operatorType;
 		int commaIndex = find(condition.begin() + index, condition.end(), ',') - condition.begin();
 		string name = condition.substr(openBracketIndex + 1, commaIndex - openBracketIndex - 1);
 		int closeBracket = bracketIndexes[openBracketIndex];

@@ -2,15 +2,8 @@
 #define __DETECTOR_H__
 
 #include <opencv2/opencv.hpp>
+#include "detection_object_struct.h"
 #include "object_type_enum.h"
-
-struct DetectionObject {
-    int id;
-    ObjectType type;
-    float confidence;
-    // Mat imageView;
-    cv::Rect position;
-};
 
 class Detector {
    public:
@@ -38,4 +31,4 @@ class Detector {
     bool isValidObjectType(int value) const;
 };
 
-#endif  // __DETECTOR_H__
+#endif // __DETECTOR_H__

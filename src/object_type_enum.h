@@ -5,4 +5,4 @@
 // The numbers of the objects match according to the model
 enum ObjectType { PEOPLE = 0, CAR = 2, COUNT };
 
-#endif  // __OBJECT_TYPE_ENUM_H__
+#endif // __OBJECT_TYPE_ENUM_H__

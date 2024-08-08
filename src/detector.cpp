@@ -96,25 +96,19 @@ void Detector::detect(const shared_ptr<Mat> &frame)
     }
 }
 
-vector<DetectionObject> Detector::getOutput() const
-{
-    return output;
+vector<DetectionObject> Detector::getOutput() const { return output; }
+
+Mat Detector::formatYolov5() {
+  int col = frame->cols;
+  int row = frame->rows;
+  int maximum = MAX(col, row);
+  Mat result = Mat::zeros(maximum, maximum, CV_8UC3);
+  frame->copyTo(result(Rect(0, 0, col, row)));
+  return result;
 }
 
-Mat Detector::formatYolov5()
-{
-    int col = frame->cols;
-    int row = frame->rows;
-    int maximum = MAX(col, row);
-    Mat result = Mat::zeros(maximum, maximum, CV_8UC3);
-    frame->copyTo(result(Rect(0, 0, col, row)));
-    return result;
-}
+void Detector::init(bool isCuda) { loadNet(isCuda); }
 
-void Detector::init(bool isCuda)
-{
-    loadNet(isCuda);
-}
 
 void Detector::loadNet(bool isCuda)
 {
@@ -137,13 +131,12 @@ void Detector::loadNet(bool isCuda)
     net = result;
 }
 
-bool Detector::isValidObjectType(int value) const
-{
-    switch (value) {
-        case PEOPLE:
-        case CAR:
-            return true;
-        default:
-            return false;
-    }
+bool Detector::isValidObjectType(int value) const {
+  switch (value) {
+  case PEOPLE:
+  case CAR:
+    return true;
+  default:
+    return false;
+  }
 }

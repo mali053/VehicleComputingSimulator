@@ -1,4 +1,6 @@
-#pragma once
+#ifndef __ENUMS_H__
+#define __ENUMS_H__
+
 #include <string>
 #include <unordered_map>
 using namespace std;
@@ -51,3 +53,4 @@ static SensorsTypes s_convertStringToSensorsTypes(string type)
 	auto it = s_map.find(type);
 	return ((it == s_map.end()) ? (SensorsTypes::UnknownSensorType) : (it->second));
 }
+#endif // _ENUMS_H_

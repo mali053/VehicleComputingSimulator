@@ -1,4 +1,8 @@
-#pragma once
+
+#ifndef __AND_OPERATOR_H__
+#define __AND_OPERATOR_H__
+
+
 #include "operator_node.h"
 
 class AndOperator : public OperatorNode {
@@ -10,3 +14,4 @@ public:
 	void print() const override;
 	void printNice() const override;
 };
+#endif // _AND_OPERATOR_H_

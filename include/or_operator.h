@@ -1,4 +1,8 @@
-#pragma once
+
+#ifndef __OR_OPERATOR_H__
+#define __OR_OPERATOR_H__
+
+
 #include "operator_node.h"
 
 class OrOperator : public OperatorNode {
@@ -10,3 +14,4 @@ public:
 	void print() const override;
 	void printNice() const override;
 };
+#endif // _OR_OPERATOR_H_

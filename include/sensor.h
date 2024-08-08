@@ -1,4 +1,7 @@
-#pragma once
+#ifndef __SENSOR_H__
+#define __SENSOR_H__
+
+
 #include <iostream>
 #include <string>
 #include <map>
@@ -27,3 +30,5 @@ public:
 
 };
 
+
+#endif // _SENSOR_H_

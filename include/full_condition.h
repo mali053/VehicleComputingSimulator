@@ -1,4 +1,8 @@
-#pragma once
+
+#ifndef __FULL_CONDITION_H__
+#define __FULL_CONDITION_H__
+
+
 #include <map>
 #include <string>
 #include <algorithm>
@@ -19,6 +23,8 @@ private:
 	// Recursively builds the condition tree from the condition string.
 	Condition* buildNode(const string& condition, int& index, map<int, int> bracketIndexes);
 public:
+	// Global map to keep track of existing conditions to avoid duplication
+	static unordered_map<string, Condition*> s_existingConditions;
 	// Static counter to assign unique IDs to each FullCondition instance
 	static int s_counter;
 	// Unique ID for the FullCondition instance
@@ -34,3 +40,4 @@ public:
 	FullCondition() {};
 
 };
+#endif // _FULL_CONDITION_H_

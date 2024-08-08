@@ -1,4 +1,4 @@
-#include "Sensor.h"
+#include "sensor.h"
 
 //
 void Sensor::updateTrueRoots(string field, string value)

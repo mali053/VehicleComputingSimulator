@@ -7,10 +7,22 @@
 Sensor* currentSensor;
 
 // Global map to keep track of existing conditions to avoid duplication
-unordered_map<string, Condition*> existingConditions;
+unordered_map<string, Condition*> FullCondition::s_existingConditions = {};
 
 // Initialize a static variable to assign unique IDs to each FullCondition instance
 int FullCondition::s_counter = 0;
+
+// Handling sensor reference
+void defineCurrentSensor(const string& condition, int& index)
+{
+	GlobalProperties& instanceGP = GlobalProperties::getInstance();
+
+	int closeBracket = find(condition.begin() + index, condition.end(), ']') - condition.begin();
+	string numStr = condition.substr(index + 1, closeBracket - index - 1);
+	int id = stoi(numStr);
+	index = closeBracket + 1;
+	currentSensor = instanceGP.sensors[id];
+}
 
 // Recursively builds the condition tree from the condition string.
 Condition* FullCondition::buildNode(const string& condition, int& index, map<int, int> bracketIndexes) {
@@ -21,23 +33,18 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 		throw "Condition string is empty!";
 
 	// Handling sensor reference
-	if (condition[index] == '[') {
-		int closeBracket = find(condition.begin() + index, condition.end(), ']') - condition.begin();
-		string numStr = condition.substr(index + 1, closeBracket - index - 1);
-		int id = stoi(numStr);
-		index = closeBracket + 1;
-		currentSensor = instanceGP.sensors[id];
-	}
+	if (condition[index] == '[')
+		defineCurrentSensor(condition, index);
 
 	int openBracketIndex = find(condition.begin() + index, condition.end(), '(') - condition.begin();
 	// Generates a key for the condition with the current sensor's ID (if exists)
 	string key = (currentSensor ? to_string(currentSensor->id) : "") + condition.substr(index, bracketIndexes[openBracketIndex] - index + 1);
 	// Check if the key already exists in the existingConditions map
-	if (existingConditions.find(key) != existingConditions.end()) {
+	if (s_existingConditions.find(key) != s_existingConditions.end()) {
 		index = bracketIndexes[openBracketIndex] + 1;
 		if (condition[index] == ',')
 			index++;
-		return existingConditions.find(key)->second;
+		return s_existingConditions.find(key)->second;
 	}
 
 	// | , & , ( = , < , > , >= , <= , != )
@@ -50,7 +57,7 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 		conditionPtr = new AndOperator;
 	else
 		conditionPtr = new BasicCondition();
-	existingConditions[key] = conditionPtr;
+	s_existingConditions[key] = conditionPtr;
 
 	if (OperatorNode* operatorNode = dynamic_cast<OperatorNode*>(conditionPtr)) {
 		index += 2;
@@ -58,14 +65,21 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 
 		// Going over the internal conditions and creating children
 		while (condition[index] != ')') {
+			// Handling sensor reference
+			if (condition[index] == '[')
+				defineCurrentSensor(condition, index);
+
+			// Handling same operator
 			string temp = condition.substr(index, 1);
 			while (s_convertStringToOperatorTypes(temp) == operatorType) {
 				count++;
 				index += 2;
 				temp = condition.substr(index, 1);
 			}
+
 			operatorNode->conditions.push_back(buildNode(condition, index, bracketIndexes));
 			operatorNode->conditions[operatorNode->conditions.size() - 1]->parents.push_back(operatorNode);
+			
 			while (condition[index] == ')' && count) {
 				count--;
 				index++;
@@ -119,4 +133,5 @@ FullCondition::FullCondition(string condition, map<int, string>& actions) : acti
 	Condition* firstCondition = this->buildNode(condition, index, bracketsIndexes);
 	root = new Root(this->id, firstCondition);
 	firstCondition->parents.push_back(root);
+	currentSensor = nullptr;
 }

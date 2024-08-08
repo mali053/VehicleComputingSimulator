@@ -1,4 +1,8 @@
-#pragma once
+
+#ifndef __ROOT_H__
+#define __ROOT_H__
+
+
 #include "node.h"
 #include "global_properties.h"
 
@@ -20,3 +24,4 @@ public:
 	virtual void print() const override {};
 	virtual void printNice() const override {};
 };
+#endif // _ROOT_H_

@@ -4,8 +4,12 @@ void Root::updateTree()
 {
 	GlobalProperties& instanceGP = GlobalProperties::getInstance();
 
-	if (this->countTrueConditions)
+	if (this->countTrueConditions){
 		instanceGP.trueConditions.insert(this->conditionId);
-	else
+		this->status = true;
+	}
+	else{
 		instanceGP.trueConditions.erase(this->conditionId);
+		this->status = true;
+	}
 }

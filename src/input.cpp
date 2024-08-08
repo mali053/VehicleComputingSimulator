@@ -43,10 +43,10 @@ json& Input::s_readData()
 	if (!f.is_open()) {
 		std::cerr << "Failed to open json_to_read.json" << std::endl;
 	}
-
+	json* data = NULL;
 	// Try parse to json type and return it
 	try {
-		json* data = new json(json::parse(f));
+		data = new json(json::parse(f));
 		return *data;
 	}
 	catch (exception e) {
@@ -56,6 +56,7 @@ json& Input::s_readData()
 		cout << "My Unknown Exception" << endl;
 	}
 
+	return *data;
 }
 
 // Load the json file into s_jsonToRead

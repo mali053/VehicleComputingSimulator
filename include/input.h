@@ -1,16 +1,19 @@
-#pragma once
+#ifndef __INPUT_H__
+#define __INPUT_H__
+
+
 #include <fstream>
 #include <map>
 #include <vector>
 #include <fstream>
 #include <unordered_map>
-#include "json.hpp"
+#include "../include/json.hpp"
 #include "sensor.h"
 #include "speed_sensor.h"
 using namespace std;
 using json = nlohmann::json;
 
-static class Input
+class Input
 {
 public:
 	// Function that builds the sensors according to the json file
@@ -22,3 +25,4 @@ private:
 	// Member that contains the json file data
     static json s_jsonToRead;
 };
+#endif // _INPUT_H_

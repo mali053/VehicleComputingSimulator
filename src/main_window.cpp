@@ -173,9 +173,6 @@ void MainWindow::startProcesses()
         timeLabel->hide();
         timeInput->hide();
     }
-
-
-
     compileBoxes();
 }
 

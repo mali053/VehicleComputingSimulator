@@ -19,8 +19,8 @@ public:
     const Process getProcess() const;
     const QPoint getDragStartPosition() const;
     void setSquareColor(const QString &color);
+    void print() const;
     
-
 protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

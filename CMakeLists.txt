@@ -26,6 +26,7 @@ add_executable(DraggableSquares
                 src/simulation_data_manager.cpp
                 src/log_handler.cpp
                 src/my_widget.cpp
+                src/frames.cpp
 )
 
 # Include BSON directories

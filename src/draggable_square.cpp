@@ -8,6 +8,17 @@
 #include <QWidget>
 #include <QLabel>
 #include <QString>
+#include <iostream>
+
+// Add this function to your DraggableSquare class
+void DraggableSquare::print() const {
+    std::cout << "DraggableSquare:" << std::endl;
+    std::cout << "  Process ID: " << process.getId() << std::endl;
+    std::cout << "  Drag Start Position: (" << dragStartPosition.x() << ", " << dragStartPosition.y() << ")" << std::endl;
+    std::cout << "  Initial Position: (" << initialPosition.x() << ", " << initialPosition.y() << ")" << std::endl;
+    std::cout << "  Color: " << label->styleSheet().toStdString() << std::endl;
+    std::cout << "  Size: (" << this->width() << ", " << this->height() << ")" << std::endl;
+}
 
 void DraggableSquare::setSquareColor(const QString &color) {
     setStyleSheet(color);

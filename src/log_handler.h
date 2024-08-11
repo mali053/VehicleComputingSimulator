@@ -10,7 +10,6 @@
 #include <QJsonObject>
 #include "draggable_square.h"
 
-
 class LogHandler {
 public:
     struct LogEntry {
@@ -23,14 +22,16 @@ public:
         bool operator<(const LogEntry& other) const {
             return timestamp < other.timestamp;
         }
-
     };
 
     void readLogFile(const QString& fileName);
     void sortLogEntries();
-    void analyzeLogEntries(QMainWindow* mainWindow, const QString& jsonFileName);
+    void analyzeLogEntries(QMainWindow* mainWindow, const QString& jsonFileName, bool realTime=false);
     void draw(int xSrc, int ySrc, int xDest, int yDest);
     QVector<int> findProcessCoordinatesById(int processId, const QString& fileName);
+    QVector<LogHandler::LogEntry> getLogEntries();
+    const QMap<int, DraggableSquare*>& getProcessSquares() const;
+
 private:
     QVector<LogEntry> logEntries;
     QMap<int, DraggableSquare*> processSquares; // Track process squares by their IDs

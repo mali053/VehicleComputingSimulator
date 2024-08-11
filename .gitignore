@@ -10,7 +10,6 @@
 
 #clangd
 .cache
-.clang-format
 
 # VS Code files
 .vscode/

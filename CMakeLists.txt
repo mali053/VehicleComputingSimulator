@@ -40,7 +40,7 @@ if(USE_SYCL)
 endif()
 
 # Add the executable for the tests
-add_executable(runTests tests/ecc_tests.cpp ${SOURCES})
+add_executable(runTests tests/aes_tests.cpp tests/ecc_tests.cpp tests/sha256_tests.cpp ${SOURCES})
 
 # Link libraries
 target_link_libraries(runTests

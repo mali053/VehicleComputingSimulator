@@ -1,10 +1,9 @@
 #include "../include/sha256.h"
 #include <cstring>
-#include <vector>
 
 using namespace std;
 
-// Constants for SHA-256
+// Constants used in SHA-256 processing
 #define CHOOSE(x, y, z) (((x) & (y)) ^ (~(x) & (z)))
 #define MAJORITY(x, y, z) (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
 #define ROTRIGHT(a, b) (((a) >> (b)) | ((a) << (32 - (b))))
@@ -33,28 +32,25 @@ const uint32_t bytes[64] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-Sha256::Sha256() : messageSize(0), bitLength(0)
-{
-    // Initialize hash values
-    result[0] = 0x6a09e667;
-    result[1] = 0xbb67ae85;
-    result[2] = 0x3c6ef372;
-    result[3] = 0xa54ff53a;
-    result[4] = 0x510e527f;
-    result[5] = 0x9b05688c;
-    result[6] = 0x1f83d9ab;
-    result[7] = 0x5be0cd19;
+// Global variables used in SHA-256 computation
+static uint32_t result[8];
+static uint8_t message[64];
+static size_t messageSize;
+static size_t bitLength;
 
-    // Initialize message array to zero
-    memset(message, 0, sizeof(message));
-}
-
-void Sha256::update(const std::vector<uint8_t>& data)
+/**
+ * Updates the SHA-256 hash with the provided data.
+ * Processes data in 64-byte chunks, calling `transform` for each chunk.
+ * 
+ * @param data A vector of bytes to be added to the hash.
+ */
+void sha256_update(const std::vector<uint8_t>& data)
 {
     size_t length = data.size();
     for (size_t i = 0; i < length; i++) {
         message[messageSize++] = static_cast<uint8_t>(data[i]);
-        if(messageSize == 64){
+        if (messageSize == 64) {
+            // Transform function is called for each 64-byte chunk
             transform();
             messageSize = 0;
             bitLength += 512;
@@ -62,7 +58,11 @@ void Sha256::update(const std::vector<uint8_t>& data)
     }
 }
 
-void Sha256::padding() 
+/**
+ * Adds padding to the message and appends the length of the original message.
+ * The message is padded so its length is congruent to 56 modulo 64.
+ */
+void padding()
 {
     uint64_t currentLength = messageSize;
     uint8_t paddingEnd = currentLength < 56 ? 56 : 64;
@@ -90,7 +90,11 @@ void Sha256::padding()
     transform();
 }
 
-void Sha256::transform()
+/**
+ * Processes a 64-byte block of the message and updates the hash state.
+ * Applies the SHA-256 compression function to the current block.
+ */
+void transform()
 {
     uint32_t temp[64];
     for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
@@ -129,8 +133,17 @@ void Sha256::transform()
     }
 }
 
-vector<uint8_t> Sha256::getHash() {
-    std::vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
+/**
+ * Finalizes the SHA-256 hash computation.
+ * Applies padding and appends the length of the original message.
+ * Returns the final hash as a vector of bytes.
+ * 
+ * @return A vector containing the SHA-256 hash value.
+ */
+vector<uint8_t> sha256_finalize()
+{
+    padding();
+    vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
     for (int i = 0; i < 8; i++) {
         hash[i * 4] = (result[i] >> 24) & 0xFF;
         hash[i * 4 + 1] = (result[i] >> 16) & 0xFF;
@@ -140,9 +153,29 @@ vector<uint8_t> Sha256::getHash() {
     return hash;
 }
 
-vector<uint8_t> Sha256::computeSHA256(const std::vector<uint8_t>& input) {
-    Sha256 sha256;
-    sha256.update(input);
-    sha256.padding();
-    return sha256.getHash();
+/**
+ * Computes the SHA-256 hash for the given input.
+ * Resets the internal state, updates with the input data, and returns the final hash.
+ * 
+ * @param input A vector of bytes to be hashed.
+ * @return A vector containing the SHA-256 hash value.
+ */
+vector<uint8_t> sha256_compute(const std::vector<uint8_t>& input)
+{
+    // Reset state
+    result[0] = 0x6a09e667;
+    result[1] = 0xbb67ae85;
+    result[2] = 0x3c6ef372;
+    result[3] = 0xa54ff53a;
+    result[4] = 0x510e527f;
+    result[5] = 0x9b05688c;
+    result[6] = 0x1f83d9ab;
+    result[7] = 0x5be0cd19;
+
+    messageSize = 0;
+    bitLength = 0;
+
+    // Update with input data and finalize
+    sha256_update(input);
+    return sha256_finalize();
 }

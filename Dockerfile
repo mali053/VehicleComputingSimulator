@@ -1,33 +1,32 @@
-# Use an official Ubuntu as a parent image
+# Use the Ubuntu 20.04 image as the base
 FROM ubuntu:20.04
 
-# Set environment variables to avoid user input prompts during installation
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install dependencies
-RUN apt-get update && \
-    apt-get install -y cmake g++ git wget libgtest-dev
-
-# Install Google Test
-RUN cd /usr/src/gtest && \
-    cmake . && \
-    make && \
-    cp lib/*.a /usr/lib
-
-# Create and set the working directory
-WORKDIR /usr/src/myapp
-
-# Copy the current directory contents into the container
-COPY . .
-
-# Ensure the build directory exists and clean any previous cache
-RUN mkdir -p build && \
-    rm -rf build/*
-
-# Run CMake and build the project
-RUN cd build && \
-    cmake .. && \
+# Install CMake, Google Test dependencies, and g++
+RUN apt-get update && apt-get install -y \
+    cmake \
+    libgtest-dev \
+    g++ \
     make
 
-# Run the tests
-CMD ["./build/runTests"]
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the current directory contents into the container at /app
+COPY . .
+
+# Create a build directory
+RUN mkdir build
+
+# Change to the build directory
+WORKDIR /app/build
+
+# Install Google Test
+RUN cd /usr/src/gtest && cmake CMakeLists.txt && make && \
+    find /usr/src/gtest -name "*.a" -exec cp {} /usr/lib \;
+
+# Build the project using CMake and Make
+RUN cmake .. -DUSE_SYCL=OFF
+RUN make
+
+# Command to run tests (optional)
+CMD ["./DPCPPExample"]

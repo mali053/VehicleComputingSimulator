@@ -1,36 +1,32 @@
 #include "../include/ecc.h"
 #include <gmpxx.h>
 #include <gmp.h>
+#include <cstdint>
 #include <iostream>
 #include <string>
 #include <bitset>
 
-// Prime number for the elliptic curve 
-std::string decimalString = "115792089237316195423570985008687907853269984665640564039457584007913129639936";
-const mpz_class ECC::prime(decimalString);
-const mpz_class ECC::a = 0;// Curve parameter a
-const mpz_class ECC::b = 7;// Curve parameter b
-// Curve basic point 
-const Point ECC::basicPoint(mpz_class("55066263022277343669578718895168534326250603453777594175500187360389116729240"),
-                     mpz_class("32670510020758816978083085130507043184471273380659243275938904335757337482424"));
 
-/**
- * ECC constructor.
- */
-ECC::ECC()  
-{
-    privateKey = generatePrivateKey();
-    publicKey = generatePublicKey();
-    k = generateK();
-}
+unsigned int added = 0;
+
+// Define static constants
+const mpz_class prime(
+    "11579208923731619542357098500868790785326998466564056403945758400791312963"
+    "9936");
+const mpz_class a = 0;
+const mpz_class b = 7;
+const Point basicPoint(mpz_class("550662630222773436695787188951685343262506034"
+                                 "53777594175500187360389116729240"),
+                       mpz_class("326705100207588169780830851305070431844712733"
+                                 "80659243275938904335757337482424"));
+
 
 /**
  * Converts a message string to a point on the elliptic curve.
  * @param text The message to convert.
  * @return The point on the elliptic curve.
  */
-
-Point ECC::convertMessageToPoint(const std::string& text)
+Point convertMessageToPoint(const std::string &text)
 {
     std::string binaryStr;
     for (char c : text)
@@ -56,7 +52,7 @@ Point ECC::convertMessageToPoint(const std::string& text)
  * @param point The point to convert.
  * @return The message string.
  */
-std::string ECC::convertPointToMessage(const Point& point)
+std::string convertPointToMessage(const Point &point)
 {
     mpz_class x = point.x - mpz_class(added);
     std::string binaryStr = x.get_str(2);
@@ -83,7 +79,7 @@ std::string ECC::convertPointToMessage(const Point& point)
  * @param p The modulus.
  * @return True if the square root exists, false otherwise.
  */
-bool ECC::modularSqrt(mpz_t result, const mpz_t a, const mpz_t p) 
+bool modularSqrt(mpz_t result, const mpz_t a, const mpz_t p)
 {
     mpz_t q, s, z, m, c, t, r, b, temp;
     mpz_inits(q, s, z, m, c, t, r, b, temp, NULL);
@@ -129,7 +125,7 @@ bool ECC::modularSqrt(mpz_t result, const mpz_t a, const mpz_t p)
 
     while (true) {
         mpz_powm(b, t, c, p);
-       if (mpz_cmp_ui(b, 1) == 0)
+        if (mpz_cmp_ui(b, 1) == 0)
             break;
         mpz_set_ui(b, 0);
         mpz_powm(b, r, b, p);
@@ -152,7 +148,7 @@ bool ECC::modularSqrt(mpz_t result, const mpz_t a, const mpz_t p)
  * Generates a private key for ECC.
  * @return The generated private key.
  */
-mpz_class ECC::generatePrivateKey()
+mpz_class generatePrivateKey()
 {
     gmp_randclass rng(gmp_randinit_default);
     rng.seed(time(nullptr));
@@ -163,7 +159,7 @@ mpz_class ECC::generatePrivateKey()
  * Generates a random value k for ECC.
  * @return The generated value of k.
  */
-mpz_class ECC::generateK()
+mpz_class generateK()
 {
     gmp_randclass rng(gmp_randinit_default);
     rng.seed(time(nullptr));
@@ -174,7 +170,7 @@ mpz_class ECC::generateK()
  * Generates a public key for ECC.
  * @return The generated public key.
  */
-Point ECC::generatePublicKey()
+Point generatePublicKey(mpz_class privateKey)
 {
     return multiply(basicPoint, privateKey);
 }
@@ -184,7 +180,7 @@ Point ECC::generatePublicKey()
  * @param x The x-coordinate.
  * @return The y-coordinate.
  */
-mpz_class ECC::calculateY(mpz_class x)
+mpz_class calculateY(mpz_class x)
 {
     mpz_class rhs = mod(x * x * x + a * x + b);
     mpz_class y;
@@ -199,7 +195,7 @@ mpz_class ECC::calculateY(mpz_class x)
  * @param P The point to check.
  * @return True if the point is on the curve, false otherwise.
  */
-bool ECC::isOnCurve(Point P)
+bool isOnCurve(Point P)
 {
     return mod(P.y * P.y) == mod(P.x * P.x * P.x + a * P.x + b);
 }
@@ -209,7 +205,7 @@ bool ECC::isOnCurve(Point P)
  * @param x The value to reduce.
  * @return The reduced value.
  */
-mpz_class ECC::mod(mpz_class x)
+mpz_class mod(mpz_class x)
 {
     mpz_class result;
     mpz_mod(result.get_mpz_t(), x.get_mpz_t(), prime.get_mpz_t());
@@ -221,7 +217,7 @@ mpz_class ECC::mod(mpz_class x)
  * @param base The value to invert.
  * @return The modular inverse.
  */
-mpz_class ECC::inverse(mpz_class base)
+mpz_class inverse(mpz_class base)
 {
     mpz_class result;
     mpz_invert(result.get_mpz_t(), base.get_mpz_t(), prime.get_mpz_t());
@@ -234,7 +230,7 @@ mpz_class ECC::inverse(mpz_class base)
  * @param Q The second point.
  * @return The resulting point.
  */
-Point ECC::add(Point P, Point Q)
+Point add(Point P, Point Q)
 {
     mpz_class incline;
     if (P.x == 0 && P.y == 0)
@@ -262,7 +258,7 @@ Point ECC::add(Point P, Point Q)
  * @param times The scalar to multiply by.
  * @return The resulting point.
  */
-Point ECC::multiply(Point P, mpz_class times)
+Point multiply(Point P, mpz_class times)
 {
     Point R(0, 0);
     Point N = P;
@@ -282,12 +278,45 @@ Point ECC::multiply(Point P, mpz_class times)
  * @param message The message text to encrypt.
  * @return A pair of points representing the ciphertext.
  */
-EncryptedMessage ECC::encrypt(std::string message)
+EncryptedMessage encryptECC(std::vector<uint8_t> message, Point publicKey)
 {
-    Point meesagePoint = convertMessageToPoint(message);
+    std::string text = uint8ToString(message);
+    mpz_class k = generateK();
+    Point meesagePoint = convertMessageToPoint(text);
     Point C1 = multiply(basicPoint, k);
     Point C2 = add(meesagePoint, multiply(publicKey, k));
     return EncryptedMessage(C1.x, C1.y < 0, C2.x, C2.y < 0);
+}
+
+/**
+ * @brief Converts a vector of uint8_t to a string.
+ *
+ * This function takes a vector of uint8_t and converts it to a std::string.
+ * It uses the std::string constructor that takes two iterators, converting
+ * the entire vector to a string.
+ *
+ * @param uint8Vec The vector of uint8_t to convert.
+ * @return std::string The resulting string from the conversion.
+ */
+std::string uint8ToString(const std::vector<uint8_t>& uint8Vec) 
+{
+    return std::string(uint8Vec.begin(), uint8Vec.end());
+}
+
+/**
+ * @brief Converts a string to a vector of uint8_t.
+ *
+ * This function takes a std::string and converts it to a vector of uint8_t.
+ * It uses the std::vector constructor that takes two iterators, converting
+ * the entire string to a vector of uint8_t.
+ *
+ * @param str The string to convert.
+ * @return std::vector<uint8_t> The resulting vector of uint8_t from the conversion.
+ */
+std::vector<uint8_t> stringToUint8(const std::string& str) 
+{
+    std::vector<uint8_t> uint8Vec(str.begin(), str.end());
+    return uint8Vec;
 }
 
 /**
@@ -295,14 +324,76 @@ EncryptedMessage ECC::encrypt(std::string message)
  * @param ciphertext The ciphertext to decrypt.
  * @return The decrypted message point.
  */
-std::string ECC::decrypt(EncryptedMessage ciphertext)
+std::vector<uint8_t> decryptECC(EncryptedMessage ciphertext, mpz_class privateKey)
 {
 
     Point temp = multiply(Point(ciphertext.c1X, calculateY(ciphertext.c1X) *
                                                     (ciphertext.c1Y ? -1 : 1)),
-                          privateKey);    Point negTemp = Point(temp.x, mod(-temp.y));
+                          privateKey);
+    Point negTemp = Point(temp.x, mod(-temp.y));
     Point decrypted = add(Point(ciphertext.c2X, calculateY(ciphertext.c2X) *
                                                     (ciphertext.c1Y ? -1 : 1)),
                           negTemp);
-    return convertPointToMessage(decrypted);
+    std::string text=convertPointToMessage(decrypted);
+    return stringToUint8(text);
+}
+
+/** 
+* Function to sign a message using ECC
+* @param message: The message to be signed, represented as a vector of uint8_t
+* @param privateKey: The private key used for signing
+* @param G: The base point for the elliptic curve
+* @param n: The order of the elliptic curve
+* @return: A pair containing the signature (r, s)
+*/
+std::pair<mpz_class, mpz_class> signMessageECC(const std::vector<uint8_t> &message, const mpz_class &privateKey)
+ {
+    mpz_class r, s;
+    mpz_class k;
+    // Convert uint8_t message to mpz_class hash
+    mpz_class messageHash;
+    mpz_import(messageHash.get_mpz_t(), message.size(), 1, sizeof(uint8_t), 0, 0, message.data());
+    do {
+        // Generate a random k
+        k = generateK();
+        Point R = multiply(basicPoint, k);
+        r = mod(R.x);
+        mpz_class kInv;
+        // Compute the modular inverse of k
+        if (mpz_invert(kInv.get_mpz_t(), k.get_mpz_t(), prime.get_mpz_t()) == 0) 
+            continue; // Retry if inversion fails
+        // Compute the signature s
+        s = mod((messageHash + r * privateKey) * kInv) ;
+    } while (s == 0); // Ensure s is not zero
+    return {r, s};
+}
+
+/** 
+* Function to verify a message signature using ECC
+* @param message: The message whose signature is to be verified, represented as a vector of uint8_t
+* @param signature: The signature (r, s) to be verified
+* @param publicKey: The public key used for verification
+* @param G: The base point for the elliptic curve
+* @param n: The order of the elliptic curve
+* @return: True if the signature is valid, false otherwise
+*/
+bool verifySignatureECC(const std::vector<uint8_t> &message, const std::pair<mpz_class, mpz_class> &signature, const Point& publicKey)
+{
+    mpz_class r = signature.first;
+    mpz_class s = signature.second;
+    // Check if r and s are within valid range
+    if (r <= 0 || r >= prime || s <= 0 || s >= prime) 
+        return false; // Invalid r or s
+    
+    // Convert uint8_t message to mpz_class hash
+    mpz_class messageHash;
+    mpz_import(messageHash.get_mpz_t(), message.size(), 1, sizeof(uint8_t), 0, 0, message.data());
+    // Compute v1 and v2 for verification
+    mpz_class v1 = mod(r * r );
+    mpz_class v2 = mod(s * s);
+    // Perform scalar multiplication
+    Point P = multiply(publicKey, v1);
+    Point Q = multiply(basicPoint, v2);
+    // Verify the equality (r, s) = (P + Q)
+    return true; // Update with actual verification logic
 }

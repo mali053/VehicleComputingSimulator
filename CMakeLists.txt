@@ -4,18 +4,17 @@ project(MyTest)
 # Include directories
 include_directories(src)
 
-# Find GMP library 
+# Find GMP library
 find_path(GMP_INCLUDE_DIR NAMES gmp.h)
 find_library(GMP_LIBRARY NAMES gmp)
 find_library(GMPXX_LIBRARY NAMES gmpxx)
-
-# Check if GMP libraries were found
 if(NOT GMP_INCLUDE_DIR OR NOT GMP_LIBRARY OR NOT GMPXX_LIBRARY)
   message(FATAL_ERROR "Could not find GMP or GMPXX libraries")
 endif()
-
-# Include GMP headers
 include_directories(${GMP_INCLUDE_DIR})
+
+# Find Google Test
+find_package(GTest REQUIRED)
 
 # Add source files
 file(GLOB SOURCES "src/*.cpp")

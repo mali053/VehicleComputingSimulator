@@ -50,13 +50,8 @@ Condition* FullCondition::buildNode(const string& condition, int& index, map<int
 	// | , & , ( = , < , > , >= , <= , != )
 	// Creating a new node
 	OperatorTypes operatorType = s_convertStringToOperatorTypes(condition.substr(index, openBracketIndex - index));
-	Condition* conditionPtr;
-	if (operatorType == OperatorTypes::o)
-		conditionPtr = new OrOperator;
-	else if (operatorType == OperatorTypes::a)
-		conditionPtr = new AndOperator;
-	else
-		conditionPtr = new BasicCondition();
+	Condition* conditionPtr = createCondition(operatorType);
+	
 	s_existingConditions[key] = conditionPtr;
 
 	if (OperatorNode* operatorNode = dynamic_cast<OperatorNode*>(conditionPtr)) {

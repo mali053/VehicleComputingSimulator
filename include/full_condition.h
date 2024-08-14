@@ -14,6 +14,7 @@
 #include "and_operator.h"
 #include "basic_condition.h"
 #include "root.h"
+#include "condition_factory.h"
 using namespace std;
 
 class Root;

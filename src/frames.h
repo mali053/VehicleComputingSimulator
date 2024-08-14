@@ -1,47 +1,59 @@
-#ifndef FRAMES_H
-#define FRAMES_H
+#ifndef __FRAMES_H__
+#define __FRAMES_H__
 
-#include <cstdlib>
-#include <ctime>
-#include <vector>
+#include "log_handler.h"
 #include <QDateTime>
 #include <QHash>
 #include <QMap>
+#include <QPainter>
+#include <QPen>
 #include <QSet>
 #include <QString>
-#include "log_handler.h"
+#include <vector>
 
-class Frames {
+class Frames : public QWidget {
+    Q_OBJECT
+
 public:
     struct Frame {
         QString color;
-        int thickness;
+        double thickness;
     };
-    LogHandler logHandler;
-    std::vector<std::vector<Frame>> framesMat;
-    std::vector<LogHandler::LogEntry> activeLogEntriesVector;
-    QHash<int, int> idMapping;
-    QDateTime currentTime;
-    Frames(LogHandler &logHandler);
-  
-    void updateFrames(const QDateTime &currentTime);
-    void fillFramesMat();
+
+    // Ctor
+    Frames(LogHandler &logHandler, QWidget *parent = nullptr);
+
     // Getters
-    const LogHandler& getLogHandler() const;
-    const std::vector<std::vector<Frame>>& getFramesMat() const; 
-    const std::vector<LogHandler::LogEntry>& getLogEntriesVector() const;
-    const QHash<int, int> getIdMapping() const;
-    const QDateTime getCurrentTime() const;
+    const LogHandler &getLogHandler() const;
+    const std::vector<std::vector<Frame>> &getFramesMat() const;
+    const std::multimap<QDateTime, LogHandler::LogEntry> &getActiveLogEntries()
+        const;
+    QMap<int, int> getIdMapping() const;
+
     // Setters
     void setLogHandler(LogHandler &logHandler);
-    void setFramesMat(const std::vector<std::vector<Frame>>& framesMat);
-    void setLogEntriesVector(const std::vector<LogHandler::LogEntry>& logEntriesVector);
-    void setIdMapping(QHash<int, int> &idMapping);
-    void setCurrentTime(const QDateTime &currentTime);
+    void setFramesMat(const std::vector<std::vector<Frame>> &framesMat);
+    void setActiveLogEntries(
+        const std::multimap<QDateTime, LogHandler::LogEntry> &logEntriesVector);
+    void setIdMapping(const QMap<int, int> &idMapping);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private slots:
+    void updateFrames();
+
 private:
+    LogHandler &logHandler;
+    std::vector<std::vector<Frame>> framesMat;
+    std::multimap<QDateTime, LogHandler::LogEntry> activeLogEntries;
+    QMap<int, int> idMapping;
+    qint64 differenceTime;
+
     void initialFramesMat(int size);
     void createSequentialIds();
     QString generateRandomColor();
+    void fillFramesMat();
 };
 
-#endif // FRAMES_H
+#endif  // __FRAMES_H__

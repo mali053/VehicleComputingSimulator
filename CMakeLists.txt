@@ -25,7 +25,6 @@ add_executable(DraggableSquares
                 src/main_window.cpp
                 src/simulation_data_manager.cpp
                 src/log_handler.cpp
-                src/my_widget.cpp
                 src/frames.cpp
 )
 

@@ -1,20 +1,39 @@
-#include <QMouseEvent>
-#include <QVBoxLayout>
+#include <QBoxLayout>
 #include <QLabel>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QString>
+#include <QStyleOption>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <iostream>
 #include <QDebug>
 #include <QMenu>
-#include <QAction>
-#include <iostream>
-#include <QStyleOption>
-#include <QPainter>
-#include <qboxlayout.h>
-#include "draggable_square.h"
-#include "process.h"
 #include "main_window.h"
+#include "draggable_square.h"
 
-DraggableSquare::DraggableSquare(QWidget *parent, const QString &color, 
-                                 int width, int height) 
-    : QWidget(parent), label(new QLabel(this)), dragging(false)
+// Add this function to your DraggableSquare class
+void DraggableSquare::print() const
+{
+    std::cout << "DraggableSquare:" << std::endl;
+    std::cout << "  Process ID: " << process.getId() << std::endl;
+    std::cout << "  Drag Start Position: (" << dragStartPosition.x() << ", "
+              << dragStartPosition.y() << ")" << std::endl;
+    std::cout << "  Initial Position: (" << initialPosition.x() << ", "
+              << initialPosition.y() << ")" << std::endl;
+    std::cout << "  Color: " << label->styleSheet().toStdString() << std::endl;
+    std::cout << "  Size: (" << this->width() << ", " << this->height() << ")"
+              << std::endl;
+}
+
+void DraggableSquare::setSquareColor(const QString &color)
+{
+    setStyleSheet(color);
+}
+//constructor
+DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
+                                 int width, int height)
+    : QWidget(parent), label(new QLabel(this))
 {
     setFixedSize(width, height);
     setStyleSheet(color);
@@ -24,11 +43,13 @@ DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
     setLayout(layout);
 }
 
-
 // Copy constructor
 DraggableSquare::DraggableSquare(const DraggableSquare &other)
-    : QWidget(other.parentWidget()), dragStartPosition(other.dragStartPosition), initialPosition(other.initialPosition),
-      label(new QLabel(other.label->text(), this)), process(other.process) // Copy QLabel's text
+    : QWidget(other.parentWidget()),
+      dragStartPosition(other.dragStartPosition),
+      initialPosition(other.initialPosition),
+      label(new QLabel(other.label->text(), this)),
+      process(other.process)  // Copy QLabel's text
 {
     setFixedSize(other.width(), other.height());
     setStyleSheet(other.styleSheet());
@@ -44,7 +65,7 @@ DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
     dragStartPosition = other.dragStartPosition;
     initialPosition = other.initialPosition;
     delete label;
-    label = new QLabel(other.label->text(), this); // Copy QLabel's text
+    label = new QLabel(other.label->text(), this);  // Copy QLabel's text
     process = other.process;
 
     setFixedSize(other.width(), other.height());
@@ -53,29 +74,16 @@ DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
     return *this;
 }
 
-void DraggableSquare::print() const {
-    std::cout << "DraggableSquare:" << std::endl;
-    std::cout << "  Process ID: " << process.getId() << std::endl;
-    std::cout << "  Drag Start Position: (" << dragStartPosition.x() << ", " << dragStartPosition.y() << ")" << std::endl;
-    std::cout << "  Initial Position: (" << initialPosition.x() << ", " << initialPosition.y() << ")" << std::endl;
-    std::cout << "  Color: " << label->styleSheet().toStdString() << std::endl;
-    std::cout << "  Size: (" << this->width() << ", " << this->height() << ")" << std::endl;
-}
-
-void DraggableSquare::setSquareColor(const QString &color) {
-    setStyleSheet(color);
-}
-
 void DraggableSquare::setProcess(const Process &process)
 {
     this->process = process;
     this->id = process.getId();
 
     label->setText(QString("ID: %1\nName: %2\nCMake: %3\nQEMU: %4")
-        .arg(process.getId())
-        .arg(process.getName())
-        .arg(process.getCMakeProject())
-        .arg(process.getQEMUPlatform()));
+                       .arg(process.getId())
+                       .arg(process.getName())
+                       .arg(process.getCMakeProject())
+                       .arg(process.getQEMUPlatform()));
 }
 
 const Process DraggableSquare::getProcess() const
@@ -86,6 +94,11 @@ const Process DraggableSquare::getProcess() const
 const QPoint DraggableSquare::getDragStartPosition() const
 {
     return dragStartPosition;
+}
+
+void DraggableSquare::setDragStartPosition(QPoint dragStartPosition)
+{
+    this->dragStartPosition = dragStartPosition;
 }
 
 DraggableSquare::~DraggableSquare()
@@ -117,7 +130,6 @@ void DraggableSquare::mousePressEvent(QMouseEvent *event)
         }
     } else if (event->button() == Qt::LeftButton) {
         dragStartPosition = event->pos();
-        initialPosition = pos();
         dragging = true;
     } else {
         QWidget::mousePressEvent(event);
@@ -129,13 +141,13 @@ void DraggableSquare::mouseMoveEvent(QMouseEvent *event)
     if (!dragging) {
         return;
     }
-    if (!(event->buttons() & Qt::LeftButton)) return;
 
     QPoint newPos = mapToParent(event->pos() - dragStartPosition);
     newPos.setX(qMax(0, qMin(newPos.x(), parentWidget()->width() - width())));
     newPos.setY(qMax(0, qMin(newPos.y(), parentWidget()->height() - height())));
     
     move(newPos);
+    dragStartPosition = newPos;
 }
 
 void DraggableSquare::mouseReleaseEvent(QMouseEvent *event)

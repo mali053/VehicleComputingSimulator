@@ -1,14 +1,14 @@
 #ifndef LOGHANDLER_H
 #define LOGHANDLER_H
 
-#include <QString>
-#include <QVector>
-#include <QTime>
+#include "draggable_square.h"
 #include <QDateTime>
-#include <QMainWindow>
 #include <QDockWidget>
 #include <QJsonObject>
-#include "draggable_square.h"
+#include <QMainWindow>
+#include <QString>
+#include <QTime>
+#include <QVector>
 
 class LogHandler {
 public:
@@ -19,23 +19,28 @@ public:
         QString payload;
         QString status;  // SEND/RECEIVE
 
-        bool operator<(const LogEntry& other) const {
+        bool operator<(const LogEntry &other) const
+        {
             return timestamp < other.timestamp;
         }
     };
 
-    void readLogFile(const QString& fileName);
+    void readLogFile(const QString &fileName);
     void sortLogEntries();
-    void analyzeLogEntries(QMainWindow* mainWindow, const QString& jsonFileName, bool realTime=false);
+    void analyzeLogEntries(QMainWindow *mainWindow, const QString &jsonFileName,
+                           bool realTime = false);
     void draw(int xSrc, int ySrc, int xDest, int yDest);
-    QVector<int> findProcessCoordinatesById(int processId, const QString& fileName);
+    QVector<int> findProcessCoordinatesById(int processId,
+                                            const QString &fileName);
     QVector<LogHandler::LogEntry> getLogEntries();
-    const QMap<int, DraggableSquare*>& getProcessSquares() const;
+    const QMap<int, DraggableSquare *> &getProcessSquares() const;
 
 private:
     QVector<LogEntry> logEntries;
-    QMap<int, DraggableSquare*> processSquares; // Track process squares by their IDs
-    QMap<int, QMap<int, int>> communicationCounts; // Track communication counts between process pairs
+    QMap<int, DraggableSquare *>
+        processSquares;  // Track process squares by their IDs
+    QMap<int, QMap<int, int>>
+        communicationCounts;  // Track communication counts between process pairs
 };
 
-#endif // LOGHANDLER_H
+#endif  // LOGHANDLER_H

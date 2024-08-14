@@ -1,15 +1,14 @@
 #ifndef PROCESSDIALOG_H
 #define PROCESSDIALOG_H
 
+#include <QComboBox>
 #include <QDialog>
+#include <QFormLayout>
 #include <QLineEdit>
 #include <QPushButton>
 #include <QVBoxLayout>
-#include <QFormLayout>
-#include <QComboBox>
 
-class ProcessDialog : public QDialog
-{
+class ProcessDialog : public QDialog {
     Q_OBJECT
 
 public:
@@ -32,8 +31,7 @@ private:
     QLineEdit *idEdit;
     QLineEdit *nameEdit;
     QLineEdit *cmakeProjectEdit;
-    // QLineEdit *qemuPlatformEdit;
     QComboBox *qemuPlatformCombo;
 };
 
-#endif // PROCESSDIALOG_H
+#endif  // PROCESSDIALOG_H

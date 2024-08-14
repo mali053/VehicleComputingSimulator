@@ -1,21 +1,22 @@
-#include "simulation_data_manager.h"
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <fstream>
+#include <iostream>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <fstream>
-#include <iostream>
 #include <QDebug>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <QFile>
+#include "simulation_data_manager.h"
 
-SimulationDataManager::SimulationDataManager(QWidget *parent) : QWidget(parent) 
+SimulationDataManager::SimulationDataManager(QWidget *parent) : QWidget(parent)
 {
 }
 
 void SimulationDataManager::readSimulationData(QVector<DraggableSquare*> squares, QString img)
 {
+    data.processes.clear();
     for(int i = 0; i < squares.size(); i++) {
         if(squares[i] != nullptr)
             data.processes.append(squares[i]);
@@ -28,7 +29,9 @@ void SimulationDataManager::readSimulationData(QVector<DraggableSquare*> squares
     data.user.img = img;
 }
 
-void SimulationDataManager::saveSimulationData(const std::string &fileName, QVector<DraggableSquare*> squares, QString img)
+void SimulationDataManager::saveSimulationData(
+    const std::string &fileName, QVector<DraggableSquare *> squares,
+    QString img)
 {
     readSimulationData(squares, img);
 
@@ -42,14 +45,21 @@ void SimulationDataManager::saveSimulationData(const std::string &fileName, QVec
         snprintf(key, sizeof(key), "%d", process->getProcess().getId());
         BSON_APPEND_DOCUMENT_BEGIN(&processes, key, &proc);
         BSON_APPEND_INT32(&proc, "id", process->getProcess().getId());
-        BSON_APPEND_UTF8(&proc, "name", process->getProcess().getName().toStdString().c_str());
-        BSON_APPEND_UTF8(&proc, "CMakeProject", process->getProcess().getCMakeProject().toStdString().c_str());
-        BSON_APPEND_UTF8(&proc, "QEMUPlatform", process->getProcess().getQEMUPlatform().toStdString().c_str());
+        BSON_APPEND_UTF8(&proc, "name",
+                         process->getProcess().getName().toStdString().c_str());
+        BSON_APPEND_UTF8(
+            &proc, "CMakeProject",
+            process->getProcess().getCMakeProject().toStdString().c_str());
+        BSON_APPEND_UTF8(
+            &proc, "QEMUPlatform",
+            process->getProcess().getQEMUPlatform().toStdString().c_str());
 
         bson_t coordinate;
         BSON_APPEND_DOCUMENT_BEGIN(&proc, "coordinate", &coordinate);
-        BSON_APPEND_INT32(&coordinate, "x", process->getDragStartPosition().x());
-        BSON_APPEND_INT32(&coordinate, "y", process->getDragStartPosition().y());
+        BSON_APPEND_INT32(&coordinate, "x",
+                          process->getDragStartPosition().x());
+        BSON_APPEND_INT32(&coordinate, "y",
+                          process->getDragStartPosition().y());
         bson_append_document_end(&proc, &coordinate);
 
         BSON_APPEND_INT32(&proc, "width", process->width());
@@ -74,19 +84,22 @@ void SimulationDataManager::saveSimulationData(const std::string &fileName, QVec
         file.write(reinterpret_cast<char *>(buf), length);
         file.close();
         std::cout << "Successfully saved data to " << fileName << std::endl;
-    } else {
-        std::cerr << "Failed to open file for writing: " << fileName << std::endl;
+    }
+    else {
+        std::cerr << "Failed to open file for writing: " << fileName
+                  << std::endl;
     }
 
     bson_free(buf);
 }
 
-QJsonObject SimulationDataManager::loadSimulationData(const std::string &fileName)
+QJsonObject SimulationDataManager::loadSimulationData(
+    const std::string &fileName)
 {
     std::ifstream file(fileName, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << fileName << std::endl;
-        return QJsonObject(); // Return an empty QJsonObject
+        return QJsonObject();  // Return an empty QJsonObject
     }
 
     std::streamsize size = file.tellg();
@@ -98,29 +111,31 @@ QJsonObject SimulationDataManager::loadSimulationData(const std::string &fileNam
         bson_t *document = bson_new_from_data(data, size);
         if (document) {
             QJsonObject jsonObject = bsonToJsonObject(document);
-            bson_destroy(document); // Clean up BSON document
+            bson_destroy(document);  // Clean up BSON document
             return jsonObject;
-        } else {
+        }
+        else {
             std::cerr << "Failed to parse BSON document" << std::endl;
         }
-    } else {
+    }
+    else {
         std::cerr << "Failed to read file: " << fileName << std::endl;
     }
-    return QJsonObject(); // Return an empty QJsonObject
+    return QJsonObject();  // Return an empty QJsonObject
 }
 
-QJsonObject SimulationDataManager::bsonToJsonObject(const bson_t *document) 
+QJsonObject SimulationDataManager::bsonToJsonObject(const bson_t *document)
 {
     char *json = bson_as_json(document, nullptr);
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(QByteArray::fromRawData(json, strlen(json)));
+    QJsonDocument jsonDoc =
+        QJsonDocument::fromJson(QByteArray::fromRawData(json, strlen(json)));
     bson_free(json);
     return jsonDoc.object();
 }
 
-void SimulationDataManager::printJson(QJsonObject jsonObject) 
+void SimulationDataManager::printJson(QJsonObject jsonObject)
 {
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonBytes = jsonDoc.toJson();
     std::cout << jsonBytes.toStdString() << std::endl;
 }
-

@@ -1,11 +1,11 @@
-#include "process_dialog.h"
+#include <QComboBox>
+#include <QHBoxLayout>
 #include <QIntValidator>
 #include <QLabel>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
 #include <QMessageBox>
-#include <QComboBox>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include "process_dialog.h"
 
 ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
 {
@@ -33,11 +33,13 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(qemuPlatformLabel);
     layout->addWidget(qemuPlatformCombo);
 
-    QRegExp regex("[a-zA-Z0-9]*"); // Allows only English letters and numbers
+    QRegExp regex("[a-zA-Z0-9]*");  // Allows only English letters and numbers
     QRegExpValidator *validator = new QRegExpValidator(regex, this);
 
-    QRegExp cmakeProjectRegex("[\\x20-\\x7E]*"); // Allows any printable ASCII character
-    QRegExpValidator *cmakeProjectValidator = new QRegExpValidator(cmakeProjectRegex, this);
+    QRegExp cmakeProjectRegex(
+        "[\\x20-\\x7E]*");  // Allows any printable ASCII character
+    QRegExpValidator *cmakeProjectValidator =
+        new QRegExpValidator(cmakeProjectRegex, this);
 
     nameEdit->setValidator(validator);
     cmakeProjectEdit->setValidator(cmakeProjectValidator);
@@ -50,7 +52,8 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     buttonLayout->addWidget(cancelButton);
     layout->addLayout(buttonLayout);
 
-    connect(okButton, &QPushButton::clicked, this, &ProcessDialog::validateAndAccept);
+    connect(okButton, &QPushButton::clicked, this,
+            &ProcessDialog::validateAndAccept);
     connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
     setLayout(layout);
@@ -79,7 +82,8 @@ QString ProcessDialog::getQEMUPlatform() const
 bool ProcessDialog::isValid() const
 {
     return !idEdit->text().isEmpty() && !nameEdit->text().isEmpty() &&
-           !cmakeProjectEdit->text().isEmpty() && !qemuPlatformCombo->currentText().isEmpty();
+           !cmakeProjectEdit->text().isEmpty() &&
+           !qemuPlatformCombo->currentText().isEmpty();
 }
 
 void ProcessDialog::validateAndAccept()
@@ -88,7 +92,8 @@ void ProcessDialog::validateAndAccept()
         accept();
     }
     else {
-        QMessageBox::warning(this, "Input Error", "Please fill in all fields correctly.");
+        QMessageBox::warning(this, "Input Error",
+                             "Please fill in all fields correctly.");
     }
 }
 void ProcessDialog::setId(int id)

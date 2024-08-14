@@ -3,12 +3,12 @@
 
 #include <QString>
 
-class Process
-{
+class Process {
 public:
-    Process(int id, const QString &name, const QString &cmakeProject, const QString &qemuPlatform);
+    Process(int id, const QString &name, const QString &cmakeProject,
+            const QString &qemuPlatform);
     Process();
-    Process(const Process &other); // Copy constructor
+    Process(const Process &other);  // Copy constructor
 
     int getId() const;
     QString getName() const;
@@ -22,4 +22,4 @@ private:
     QString qemuPlatform;
 };
 
-#endif // PROCESS_H
+#endif  // PROCESS_H

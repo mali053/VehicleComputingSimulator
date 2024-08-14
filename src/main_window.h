@@ -1,9 +1,6 @@
 #ifndef MAIN_WINDOW_H
 #define MAIN_WINDOW_H
 
-#include <QMainWindow>
-#include <QPushButton>
-#include <QVBoxLayout>
 #include <QDebug>
 #include <vector>
 #include <QSet>
@@ -11,23 +8,28 @@
 #include <QWidget>
 #include <QProcess>
 #include <QDir>
-#include <QTextEdit>
-#include <QLineEdit>
-#include <QTimer>
-#include <QLabel>
 #include <QFileDialog>
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMainWindow>
+#include <QMap>
 #include <QPixmap>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QTimer>
+#include <QVBoxLayout>
 #include <QVector>
 #include <memory>
-
 #include "process.h"
 #include "draggable_square.h"
+#include "frames.h"
+#include "log_handler.h"
+#include "process.h"
 #include "process_dialog.h"
 #include "simulation_data_manager.h"
-#include "log_handler.h"
 
-class MainWindow : public QMainWindow
-{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -39,7 +41,7 @@ public:
     void showTimerInput();
     void timerTimeout();
     void openImageDialog();
-    
+
 private slots:
     void createNewProcess();
 
@@ -57,8 +59,8 @@ private:
 
     QVBoxLayout *toolboxLayout;
     QWidget *workspace;
-    QVector<DraggableSquare*> squares;
-    QMap<int, QPoint> squarePositions; 
+    QVector<DraggableSquare *> squares;
+    QMap<int, QPoint> squarePositions;
     QSet<int> usedIds;
     QPushButton *startButton;
     QPushButton *endButton;
@@ -68,10 +70,11 @@ private:
     QTextEdit *logOutput;
     QTimer *timer;
     QLabel *imageLabel;
-    QVector<QProcess*> runningProcesses;
+    QVector<QProcess *> runningProcesses;
     QString currentImagePath;
     SimulationDataManager *dataManager;
     LogHandler logHandler;
+    Frames *frames;
 };
 
-#endif // MAIN_WINDOW_H
+#endif  // MAIN_WINDOW_H

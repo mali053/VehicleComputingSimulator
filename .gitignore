@@ -54,5 +54,3 @@ src/process_dialog.h
 src/process.h
 src/simulation_data_manager.cpp
 src/simulation_data_manager.h
-src/my_widget.h
-src/my_widget.cpp

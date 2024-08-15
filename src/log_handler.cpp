@@ -101,7 +101,7 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
             Process process(id, name, cmakeProject, qemuPlatform);
             DraggableSquare *square =
                 new DraggableSquare(mainWindow, "", width, height);
-            square->setProcess(process);
+            square->setProcess(&process);
             square->setDragStartPosition(QPoint(x, y));
             square->move(x, y);
             processSquares.insert(id, square);

@@ -16,7 +16,7 @@
 void DraggableSquare::print() const
 {
     std::cout << "DraggableSquare:" << std::endl;
-    std::cout << "  Process ID: " << process.getId() << std::endl;
+    std::cout << "  Process ID: " << process->getId() << std::endl;
     std::cout << "  Drag Start Position: (" << dragStartPosition.x() << ", "
               << dragStartPosition.y() << ")" << std::endl;
     std::cout << "  Initial Position: (" << initialPosition.x() << ", "
@@ -74,19 +74,20 @@ DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
     return *this;
 }
 
-void DraggableSquare::setProcess(const Process &process)
+void DraggableSquare::setProcess(Process *proc)
 {
-    this->process = process;
-    this->id = process.getId();
-
-    label->setText(QString("ID: %1\nName: %2\nCMake: %3\nQEMU: %4")
-                       .arg(process.getId())
-                       .arg(process.getName())
-                       .arg(process.getCMakeProject())
-                       .arg(process.getQEMUPlatform()));
+    process = proc;
+    if (process) {
+        this->id = process->getId();
+        label->setText(QString("ID: %1\nName: %2\nCMake: %3\nQEMU: %4")
+                           .arg(process->getId())
+                           .arg(process->getName())
+                           .arg(process->getCMakeProject())
+                           .arg(process->getQEMUPlatform()));
+    }
 }
 
-const Process DraggableSquare::getProcess() const
+Process *DraggableSquare::getProcess() const
 {
     return process;
 }
@@ -107,14 +108,14 @@ DraggableSquare::~DraggableSquare()
         delete label;
         label = nullptr;
     }
-    
+
     qDebug() << "DraggableSquare with ID" << id << "is being destroyed.";
 }
 
 void DraggableSquare::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton) {
-        if (id < 0 || id > 4) { // Prevent menu for IDs 1 to 4
+        if (id < 0 || id > 4) {  // Prevent menu for IDs 1 to 4
             QMenu contextMenu(this);
 
             QAction *editAction = contextMenu.addAction("Edit");
@@ -124,14 +125,17 @@ void DraggableSquare::mousePressEvent(QMouseEvent *event)
 
             if (selectedAction == editAction) {
                 editSquare(id);
-            } else if (selectedAction == deleteAction) {
+            }
+            else if (selectedAction == deleteAction) {
                 deleteSquare(id);
             }
         }
-    } else if (event->button() == Qt::LeftButton) {
+    }
+    else if (event->button() == Qt::LeftButton) {
         dragStartPosition = event->pos();
         dragging = true;
-    } else {
+    }
+    else {
         QWidget::mousePressEvent(event);
     }
 }
@@ -145,7 +149,7 @@ void DraggableSquare::mouseMoveEvent(QMouseEvent *event)
     QPoint newPos = mapToParent(event->pos() - dragStartPosition);
     newPos.setX(qMax(0, qMin(newPos.x(), parentWidget()->width() - width())));
     newPos.setY(qMax(0, qMin(newPos.y(), parentWidget()->height() - height())));
-    
+
     move(newPos);
     dragStartPosition = newPos;
 }
@@ -161,7 +165,8 @@ void DraggableSquare::mouseReleaseEvent(QMouseEvent *event)
 
 void DraggableSquare::editSquare(int id)
 {
-    MainWindow *mainWindow = qobject_cast<MainWindow*>(parentWidget()->window());
+    MainWindow *mainWindow =
+        qobject_cast<MainWindow *>(parentWidget()->window());
     if (mainWindow) {
         mainWindow->editSquare(id);
     }
@@ -169,7 +174,8 @@ void DraggableSquare::editSquare(int id)
 
 void DraggableSquare::deleteSquare(int id)
 {
-    MainWindow *mainWindow = qobject_cast<MainWindow*>(parentWidget()->window());
+    MainWindow *mainWindow =
+        qobject_cast<MainWindow *>(parentWidget()->window());
     if (mainWindow) {
         mainWindow->deleteSquare(id);
     }

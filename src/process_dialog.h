@@ -25,8 +25,8 @@ public:
     void setQEMUPlatform(const QString &qemuPlatform);
 
 private slots:
-    void validateAndAccept();
-
+    bool validateAndAccept();
+        friend class ProcessDialogTests; 
 private:
     QLineEdit *idEdit;
     QLineEdit *nameEdit;

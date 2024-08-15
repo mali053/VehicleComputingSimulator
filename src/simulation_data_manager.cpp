@@ -14,7 +14,8 @@ SimulationDataManager::SimulationDataManager(QWidget *parent) : QWidget(parent)
 {
 }
 
-void SimulationDataManager::readSimulationData(QVector<DraggableSquare*> squares, QString img)
+void SimulationDataManager::readSimulationData(
+    QVector<DraggableSquare *> squares, QString img)
 {
     data.processes.clear();
     for(int i = 0; i < squares.size(); i++) {
@@ -42,17 +43,18 @@ void SimulationDataManager::saveSimulationData(
     for (const auto &process : data.processes) {
         bson_t proc;
         char key[16];
-        snprintf(key, sizeof(key), "%d", process->getProcess().getId());
+        snprintf(key, sizeof(key), "%d", process->getProcess()->getId());
         BSON_APPEND_DOCUMENT_BEGIN(&processes, key, &proc);
-        BSON_APPEND_INT32(&proc, "id", process->getProcess().getId());
-        BSON_APPEND_UTF8(&proc, "name",
-                         process->getProcess().getName().toStdString().c_str());
+        BSON_APPEND_INT32(&proc, "id", process->getProcess()->getId());
+        BSON_APPEND_UTF8(
+            &proc, "name",
+            process->getProcess()->getName().toStdString().c_str());
         BSON_APPEND_UTF8(
             &proc, "CMakeProject",
-            process->getProcess().getCMakeProject().toStdString().c_str());
+            process->getProcess()->getCMakeProject().toStdString().c_str());
         BSON_APPEND_UTF8(
             &proc, "QEMUPlatform",
-            process->getProcess().getQEMUPlatform().toStdString().c_str());
+            process->getProcess()->getQEMUPlatform().toStdString().c_str());
 
         bson_t coordinate;
         BSON_APPEND_DOCUMENT_BEGIN(&proc, "coordinate", &coordinate);

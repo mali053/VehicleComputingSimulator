@@ -12,16 +12,16 @@ class DraggableSquare : public QWidget
 {
     Q_OBJECT
 
-public:
+   public:
+   friend class DraggableSquareTest;
     explicit DraggableSquare(QWidget *parent = nullptr,
                              const QString &color = "background-color: green;",
                              int width = 100, int height = 100);
     DraggableSquare(const DraggableSquare &other);  // Copy constructor
     DraggableSquare &operator=(
         const DraggableSquare &other);  // Copy assignment operator
-
-    void setProcess(const Process &process);
-    const Process getProcess() const;
+    void setProcess(Process *process);
+    Process *getProcess() const;
     const QPoint getDragStartPosition() const;
     void setDragStartPosition(QPoint dragStartPosition);
     void setSquareColor(const QString &color);
@@ -33,20 +33,21 @@ public:
     void setId(int _id) { id = _id; }
     ~DraggableSquare() override;
 
-protected:
+   protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
-private:
+   private:
+   
     QPoint dragStartPosition;
     QPoint initialPosition;
     QLabel *label;
-    Process process;
+    Process *process;
     int id;
     bool dragging;
 
-private slots:
+   private slots:
     void editSquare(int id);
     void deleteSquare(int id);
 };

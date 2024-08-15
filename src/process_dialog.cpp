@@ -86,14 +86,15 @@ bool ProcessDialog::isValid() const
            !qemuPlatformCombo->currentText().isEmpty();
 }
 
-void ProcessDialog::validateAndAccept()
+bool ProcessDialog::validateAndAccept()
 {
     if (isValid()) {
         accept();
+        return true;
     }
     else {
-        QMessageBox::warning(this, "Input Error",
-                             "Please fill in all fields correctly.");
+        QMessageBox::warning(this, "Input Error", "Please fill in all fields correctly.");
+        return false;
     }
 }
 void ProcessDialog::setId(int id)

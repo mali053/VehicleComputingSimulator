@@ -32,30 +32,36 @@
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
-public:
+   public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
     void startProcesses();
     void endProcesses();
     void showTimerInput();
     void timerTimeout();
     void openImageDialog();
-
-private slots:
+    QLineEdit *getTimeInput() const { return timeInput; }
+    QPushButton *getStartButton() const { return startButton; }
+    QTimer *getTimer() const { return timer; }
+    QTextEdit *getLogOutput() const { return logOutput; }
+    QString getCurrentImagePath() const { return currentImagePath; }
+   public slots:
     void createNewProcess();
-
-public slots:
     void editSquare(int id);
     void deleteSquare(int id);
 
-private:
-    void addProcessSquare(const Process &process);
+   private:
+    friend class TestMainWindow;
+    friend class DraggableSquareTest;
+    friend class UserInteractionTests;
+    void addProcessSquare(Process *&process);
     bool isUniqueId(int id);
     void addId(int id);
-    void addProcessSquare(const Process &process, int index, const QString &color = "background-color: green;");
+    void addProcessSquare(Process *&process, int index,
+                          const QString &color = "background-color: green;");
     void compileBoxes();
     QString getExecutableName(const QString &buildDirPath);
+    Process *getProcessById(int id);
 
     QVBoxLayout *toolboxLayout;
     QWidget *workspace;

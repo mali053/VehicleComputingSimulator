@@ -112,7 +112,7 @@ void Frames::createSequentialIds()
 {
     int newId = 0;
     for (const DraggableSquare *ds : logHandler.getProcessSquares()) {
-        int originalId = ds->getProcess().getId();
+        int originalId = ds->getProcess()->getId();
         qDebug() << originalId;
         idMapping.insert(originalId, newId);
         newId++;

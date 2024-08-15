@@ -13,10 +13,10 @@ void OperatorNode::updateTree()
     // Check if the status changed
     if (prevStatus != this->status) {
         // Go over all the parents and update them
-        for (Node* parent : this->parents) {
-            (this->status) ? parent->countTrueConditions++ : parent->countTrueConditions--;
+        for (Node *parent : this->parents) {
+            (this->status) ? parent->countTrueConditions++
+                           : parent->countTrueConditions--;
             parent->updateTree();
         }
-
     }
 }

@@ -1,12 +1,11 @@
 cmake_minimum_required(VERSION 3.8)
 project("CMakeProject" LANGUAGES CXX)
 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
-)
-FetchContent_MakeAvailable(googletest)
+# Path to local GoogleTest directory
+set(GOOGLETEST_PATH "${CMAKE_SOURCE_DIR}/googletest")
+
+# Add GoogleTest
+add_subdirectory(${GOOGLETEST_PATH} ${CMAKE_BINARY_DIR}/googletest)
 
 # Find all source files except for main.cpp
 file(GLOB SOURCES "src/*.cpp")

@@ -1,7 +1,5 @@
-
 #ifndef __GLOBAL_PROPERTIES_H__
 #define __GLOBAL_PROPERTIES_H__
-
 
 #include <iostream>
 #include <unordered_map>
@@ -10,20 +8,28 @@
 #include "full_condition.h"
 using namespace std;
 
- class FullCondition;
+class FullCondition;
 
+// Singleton class managing global properties
 class GlobalProperties {
 private:
-	static unique_ptr<GlobalProperties> instance;
-	GlobalProperties();
+    // Single instance of the class
+    static unique_ptr<GlobalProperties> instance;
+    // Private constructor
+    GlobalProperties();
 
 public:
-	static GlobalProperties& getInstance();
-	static void resetInstance();
+    // Gets the singleton instance
+    static GlobalProperties &getInstance();
+    // Resets the singleton instance
+    static void resetInstance();
 
-	unordered_map<int, Sensor*> sensors;
-	unordered_map<int, FullCondition*> conditions;
-	unordered_set<int> trueConditions;
+    // Map of sensors by ID
+    unordered_map<int, Sensor *> sensors;
+    // Map of conditions by ID
+    unordered_map<int, FullCondition *> conditions;
+    // Set of true condition IDs
+    unordered_set<int> trueConditions;
 };
 
-#endif // _GLOBAL_PROPERTIES_H_
+#endif  // _GLOBAL_PROPERTIES_H_

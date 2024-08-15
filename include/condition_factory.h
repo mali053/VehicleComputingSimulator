@@ -5,7 +5,7 @@
 #include "and_operator.h"
 #include "basic_condition.h"
 
- Condition* createCondition(OperatorTypes operatorType);
+// Function that creates and returns a Condition object based on the given OperatorTypes value.
+Condition *createCondition(OperatorTypes operatorType);
 
-
-#endif // _CONDITION_FACTORY_H_
+#endif  // _CONDITION_FACTORY_H_

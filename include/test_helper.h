@@ -9,8 +9,8 @@
 #include "full_condition.h"
 #include "global_properties.h"
 using namespace std;
-// Declare the function
+
+// Tests a condition by resetting global state and updating sensor values
 void testCondition(string condition, int sensorId, string field, string value);
-void sendToActions(map<int, string> actions);
 
 #endif  // TEST_HELPER_H

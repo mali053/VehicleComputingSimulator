@@ -1,7 +1,5 @@
-
 #ifndef __FULL_CONDITION_H__
 #define __FULL_CONDITION_H__
-
 
 #include <map>
 #include <string>
@@ -21,24 +19,24 @@ class Root;
 
 class FullCondition {
 private:
-	// Recursively builds the condition tree from the condition string.
-	Condition* buildNode(const string& condition, int& index, map<int, int> bracketIndexes);
+    // Recursively builds the condition tree from the condition string.
+    Condition *buildNode(const string &condition, int &index,
+                         map<int, int> bracketIndexes);
+
 public:
-	// Global map to keep track of existing conditions to avoid duplication
-	static unordered_map<string, Condition*> s_existingConditions;
-	// Static counter to assign unique IDs to each FullCondition instance
-	static int s_counter;
-	// Unique ID for the FullCondition instance
-	int id;
-	// Root node of the condition tree
-	Root* root;
-	// Map of actions associated with this condition
-	map<int, string> actions;
+    // Global map to keep track of existing conditions to avoid duplication
+    static unordered_map<string, Condition *> s_existingConditions;
+    // Static counter to assign unique IDs to each FullCondition instance
+    static int s_counter;
+    // Unique ID for the FullCondition instance
+    int id;
+    // Root node of the condition tree
+    Root *root;
+    // Map of actions associated with this condition
+    map<int, string> actions;
 
-
-	// Constructor: Initializes the FullCondition object, parses the condition string, and builds the condition tree.
-	FullCondition(string condition, map<int, string>& actions);
-	FullCondition() {};
-
+    // Constructor: Initializes the FullCondition object, parses the condition string, and builds the condition tree.
+    FullCondition(string condition, map<int, string> &actions);
+    void activateActions();
 };
-#endif // _FULL_CONDITION_H_
+#endif  // _FULL_CONDITION_H_

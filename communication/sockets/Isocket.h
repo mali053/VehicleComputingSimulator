@@ -1,4 +1,3 @@
-
 #ifndef ISOCKET_H
 #define ISOCKET_H
 
@@ -15,6 +14,7 @@ public:
     virtual ssize_t send(int sockfd, const void *buf, size_t len, int flags) = 0;
     virtual ssize_t recv(int sockfd, void *buf, size_t len, int flags) = 0;
     virtual int close(int fd) = 0;
+    virtual ~ISocket() = default;
 };
 
-#endif // ISOCKET_H
+#endif

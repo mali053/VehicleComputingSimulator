@@ -3,7 +3,7 @@
 #define MOCKSOCKET_H
 
 #include "gmock/gmock.h"
-#include "ISocket.h"
+#include "Isocket.h"
 
 class MockSocket : public ISocket {
 public:
@@ -18,4 +18,4 @@ public:
     MOCK_METHOD(int, close, (int fd), (override));
 };
 
-#endif // MOCKSOCKET_H
+#endif

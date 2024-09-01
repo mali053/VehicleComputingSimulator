@@ -29,9 +29,6 @@ class DraggableSquare : public QWidget
     void setId(int _id) { id = _id; }
     ~DraggableSquare() override;
     void print() const;
-     int getId() const { return id; }
-    void setId(int _id) { id = _id; }
-    ~DraggableSquare() override;
 
    protected:
     void mousePressEvent(QMouseEvent *event) override;

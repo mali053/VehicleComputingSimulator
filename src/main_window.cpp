@@ -5,15 +5,13 @@
 #include <QPixmap>
 #include <QFileDialog>
 #include <QTimer>
-#include <QFileInfo>
-#include <QDebug>
-#include <QPixmap>
-#include <QFileDialog>
-#include <QTimer>
+#include <QJsonDocument>
 #include "process.h"
 #include "main_window.h"
 #include "draggable_square.h"
 #include "process_dialog.h"
+#include "frames.h"
+#include "log_handler.h"
 
 int sizeSquare = 120;
 
@@ -32,7 +30,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     timeInput = new QLineEdit(this);
     timeLabel = new QLabel("Enter time in seconds:", this);
     logOutput = new QTextEdit(this);
-    QPushButton *chooseButton = new QPushButton("Choose Image", this);
     QPushButton *chooseButton = new QPushButton("Choose Image", this);
 
     timeLabel->hide();
@@ -153,9 +150,11 @@ void MainWindow::addProcessSquare(Process *&process)
     QPoint pos = squarePositions.value(process->getId(), QPoint(0, 0));
     square->move(pos);
     square->show();
-
+    square->setDragStartPosition(pos);
     squarePositions[process->getId()] = pos;
     squares.push_back(square);
+
+    createProcessConfigFile(process->getId(), process->getCMakeProject());
 }
 
 void MainWindow::addProcessSquare(Process *&process, int index,
@@ -174,6 +173,8 @@ void MainWindow::addProcessSquare(Process *&process, int index,
 
     squarePositions[process->getId()] = pos;
     squares.push_back(square);
+
+    createProcessConfigFile(process->getId(), process->getCMakeProject());
 }
 
 bool MainWindow::isUniqueId(int id)
@@ -219,7 +220,8 @@ void MainWindow::startProcesses()
         timeLabel->hide();
         timeInput->hide();
     }
-    compileBoxes();
+
+    compileAndRunProjects();
 }
 
 void MainWindow::endProcesses()
@@ -237,6 +239,15 @@ void MainWindow::endProcesses()
     timeInput->clear();
 
     dataManager->saveSimulationData("simulation_data.bson", squares, currentImagePath);
+
+    QString filePath = "../log_file.log";
+    logHandler.readLogFile(filePath);
+    logHandler.analyzeLogEntries(this, "simulation_data.bson");
+
+    frames = new Frames(logHandler);  // Initialize Frames
+    QVBoxLayout *framesLayout = new QVBoxLayout(workspace);
+    framesLayout->addWidget(frames);
+    workspace->setLayout(framesLayout);
 
     for (QProcess* process : runningProcesses) {
         if (process->state() != QProcess::NotRunning) {
@@ -345,8 +356,7 @@ QString MainWindow::getExecutableName(const QString &buildDirPath)
     return QString();
 }
 
-
-void MainWindow::compileBoxes()
+void MainWindow::compileAndRunProjects()
 {
     // Clear previous running processes
     for (QProcess *process : runningProcesses) {
@@ -533,36 +543,25 @@ void MainWindow::deleteSquare(int id)
     squarePositions.remove(id);
 }
 
+void MainWindow::createProcessConfigFile(int id, const QString &processPath) {
+    // Creating a JSON object with the process ID
+    QJsonObject jsonObject;
+    jsonObject["ID"] = id;
 
-// void MainWindow::deleteSquare(int squareId)
-// {
-//     if (runningProcesses.contains(squareId)) {
-//         Process process = runningProcesses.value(squareId);
+    // Converting the object to a JSON document
+    QJsonDocument jsonDoc(jsonObject);
 
-//         // Find and remove the corresponding square widget
-//         QWidget* targetSquare = nullptr;
-//         for (QWidget* square : squares) {
-//             // Assuming the square ID can be associated with the widget
-//             // You may need to modify this based on your implementation
-//             if (square->property("id").toInt() == squareId) {
-//                 targetSquare = square;
-//                 break;
-//             }
-//         }
+    // Defining the file name and its path
+    QString filePath = processPath + "/config.json";
+    QFile configFile(filePath);
 
-//         if (targetSquare) {
-//             squares.removeOne(targetSquare);
-//             targetSquare->deleteLater(); // Safely delete the widget
-//         }
-
-//         runningProcesses.remove(squareId);
-//         squarePositions.remove(squareId);
-//         usedIds.remove(squareId);
-
-//         // Optionally, update the UI
-//         update();
-//     }
-// }
-
-
+    // Opening the file for writing and checking if the file opened successfully
+    if (configFile.open(QIODevice::WriteOnly)) {
+        configFile.write(jsonDoc.toJson());
+        configFile.close();
+        qDebug() << "Config file created at:" << filePath;
+    } else {
+        qWarning() << "Failed to create config file at:" << filePath;
+    }
+}
 #include "moc_main_window.cpp"

@@ -1,0 +1,20 @@
+{
+    "endianness": "little",
+    "fields": [
+        {
+            "size": 7,
+            "type": "UInt",
+            "name": "Status"
+        },
+        {
+            "size": 64,
+            "type": "Char array",
+            "name": "Msg"
+        },
+        {
+            "size": 32,
+            "type": "FloatFixed",
+            "name": "Speed"
+        }
+    ]
+}

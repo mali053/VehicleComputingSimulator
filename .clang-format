@@ -1,0 +1,43 @@
+BasedOnStyle: Google
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: false
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+ColumnLimit: 80
+IndentCaseLabels: true
+SortIncludes: false
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+IncludeBlocks: Preserve
+IncludeIsMainSourceRegex: '$'
+AllowShortFunctionsOnASingleLine: Empty
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: true
+AlignTrailingComments: true
+BreakConstructorInitializersBeforeComma: false
+CompactNamespaces: false
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+DerivePointerAlignment: false
+PointerAlignment: Right
+NamespaceIndentation: None
+ReflowComments: false
+IndentPPDirectives: None
+MaxEmptyLinesToKeep: 1
+AccessModifierOffset: -4
+IndentAccessModifiers: false

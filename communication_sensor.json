@@ -1,0 +1,20 @@
+{
+    "endianness": "little",
+    "fields": [
+        {
+            "size": 7,
+            "type": "UInt",
+            "name": "Status"
+        },
+        {
+            "size": 7,
+            "type": "UInt",
+            "name": "Code"
+        },
+        {
+            "size": 8,
+            "type": "BitField",
+            "name": "Flags"
+        }
+    ]
+}

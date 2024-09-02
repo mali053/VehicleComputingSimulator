@@ -3,7 +3,8 @@
 
 #include <cstdio>
 #include <cstring>
-
+#define NUM_BLOCKS 4
+#define BLOCK_BYTES_LEN (4 * (NUM_BLOCKS) * sizeof(unsigned char))
 enum class AESKeyLength
 {
     AES_128,
@@ -11,30 +12,24 @@ enum class AESKeyLength
     AES_256
 };
 
-class AES
-{
-  private:
-    static constexpr unsigned int numBlocks = 4;
-    static constexpr unsigned int blockBytesLen = 4 * numBlocks * sizeof(unsigned char);
-    unsigned int numWord;
-    unsigned int numRound;
-    unsigned char* generateKey();
-    void addRoundKey(unsigned char state[4][numBlocks], unsigned char* roundKey);
+    void addRoundKey(unsigned char state[4][NUM_BLOCKS], unsigned char* roundKey);
     void checkLength(unsigned int length);
     void encryptBlock(const unsigned char in[], unsigned char out[], unsigned char* roundKeys);
     void decryptBlock(const unsigned char in[], unsigned char out[], unsigned char* roundKeys);
-    void subBytes(unsigned char state[4][numBlocks]);
-    void invSubBytes(unsigned char state[4][numBlocks]);
-    void invShiftRows(unsigned char state[4][numBlocks]);
-    void invMixColumns(unsigned char state[4][numBlocks]);
-    void mixColumns(unsigned char state[4][numBlocks]);
-    void shiftRows(unsigned char state[4][numBlocks]);
+    void subBytes(unsigned char state[4][NUM_BLOCKS]);
+    void invSubBytes(unsigned char state[4][NUM_BLOCKS]);
+    void invShiftRows(unsigned char state[4][NUM_BLOCKS]);
+    void invMixColumns(unsigned char state[4][NUM_BLOCKS]);
+    void mixColumns(unsigned char state[4][NUM_BLOCKS]);
+    void shiftRows(unsigned char state[4][NUM_BLOCKS]);
     void keyExpansion(const unsigned char* key, unsigned char roundKeys[]);
     unsigned char xtime(unsigned char x);
     void rotWord(unsigned char word[4]);
     void subWord(unsigned char word[4]);
     void rconWord(unsigned char rcon[4], unsigned int n);
     unsigned char multiply(unsigned char x, unsigned char y);
+    void xorBlocks(const unsigned char *a, const unsigned char *b,
+                    unsigned char *c, unsigned int len);
 
     // Inverse S-Box
     const unsigned char invSBox[16][16] = {
@@ -76,17 +71,16 @@ class AES
         {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16}
     };
 
-  public:
-    AES(const AESKeyLength keyLength);
+
+    void init(const AESKeyLength keyLength);
 
     // Encrypt the input data using the provided key
-    unsigned char* encrypt(const unsigned char in[], unsigned int inLen, const unsigned char key[]);
+    void encrypt(const unsigned char in[], unsigned int inLen, unsigned char* key, unsigned char* &out, unsigned int &outLen, const unsigned char *iv);
 
     // Decrypt the input data using the provided key
-    unsigned char* decrypt(const unsigned char in[], unsigned int inLen, const unsigned char key[]);
-
+    void decrypt(const unsigned char in[], unsigned int inLen, unsigned char* key, unsigned char* &out, unsigned int &outLen, const unsigned char *iv);
     //Generate new ranom key;
     unsigned char* generateKey(AESKeyLength keyLength);
-};
+
 
 #endif

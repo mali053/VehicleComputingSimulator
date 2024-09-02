@@ -7,7 +7,7 @@
 using json = nlohmann::json;
 using namespace std;
 
-char *Alerter::makeAlertBuffer(const DetectionObject& detectionObject)
+char *Alerter::makeAlertBuffer(const DetectionObject &detectionObject)
 {
     Alert alert(false, 1, detectionObject.type, 0);
     vector<char> serialized = alert.serialize();

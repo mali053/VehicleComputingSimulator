@@ -9,10 +9,10 @@
 class Manager {
    public:
     // Gets a first image and initializes the class's members
-    Manager(const cv::Mat& Frame);
+    Manager(const cv::Mat &Frame);
     // Gets the currentFrame and sends it for detection and then tracking,
     // finally if necessary sends a alert
-    void processing(const cv::Mat& newFrame);
+    void processing(const cv::Mat &newFrame);
     void init();
 
    private:

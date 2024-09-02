@@ -11,4 +11,4 @@ struct TrackerObject {
   cv::Rect currentPosition;
 };
 
-#endif //__TRACKER_OBJECT_STRUCT_H__
+#endif  //__TRACKER_OBJECT_STRUCT_H__

@@ -28,10 +28,11 @@ class Detector {
     const float NMS_THRESHOLD = 0.4;
     const float CONFIDENCE_THRESHOLD = 0.4;
     
-    cv::Mat formatYolov5(const std::shared_ptr<cv::Mat>& frame);
+    cv::Mat formatYolov5(const std::shared_ptr<cv::Mat> &frame);
     void loadNet(bool isCuda);
     bool isValidObjectType(int value) const;
-    void detectObjects(const std::shared_ptr<cv::Mat>& frame, const cv::Point& position);
+    void detectObjects(const std::shared_ptr<cv::Mat> &frame,
+                       const cv::Point &position);
     void detectChanges();
     std::vector<cv::Rect> findDifference();
     std::vector<cv::Rect> unionOverlappingRectangels(

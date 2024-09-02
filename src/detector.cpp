@@ -18,7 +18,8 @@ void Detector::detect(const shared_ptr<Mat> &frame)
     }
 }
 
-void Detector::detectObjects(const shared_ptr<Mat>& frame, const Point& position)
+void Detector::detectObjects(const shared_ptr<Mat> &frame,
+                             const Point &position)
 {
     // Prepare a blob from the input image formatted for YOLOv5
     Mat blob;
@@ -194,7 +195,7 @@ vector<DetectionObject> Detector::getOutput() const
     return output;
 }
 
-Mat Detector::formatYolov5(const shared_ptr<Mat>& frame)
+Mat Detector::formatYolov5(const shared_ptr<Mat> &frame)
 {
     int col = frame->cols;
     int row = frame->rows;

@@ -49,3 +49,9 @@ __pycache__/
 /docs/html/
 
 alert.json
+
+# Models
+*.caffemodel
+*.prototxt
+*.onnx
+json.hpp

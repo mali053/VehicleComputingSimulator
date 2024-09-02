@@ -18,20 +18,6 @@ TEST(ECCTest, EncryptDecrypt)
     EXPECT_EQ(messageBytes, decryptedMessage);
 }
 
-// Test for ECC signature and verification
-TEST(ECCTest, SignVerify)
-{
-    mpz_class privateKey = generatePrivateKey();
-    Point publicKey = generatePublicKey(privateKey);
-    // Sign the message
-    std::vector<uint8_t> messageBytes = {0b01110100, 0b01100101, 0b01110011, 0b01110100, 0b00100000, 0b01101101, 0b01100101, 0b01110011, 0b01110011, 0b01100001, 0b01100111, 0b01100101};  
-    auto signature = signMessageECC(messageBytes, privateKey);
-    // Verify the signature
-    bool isValid = verifySignatureECC(messageBytes, signature, publicKey);
-    // Check if the signature is valid
-    EXPECT_TRUE(isValid);
-}
-
 // The main function for running all the tests
 int main(int argc, char **argv)
 {

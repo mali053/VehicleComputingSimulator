@@ -7,6 +7,7 @@
 #include <bitset>
 
 
+
 unsigned int added = 0;
 
 // Define static constants
@@ -20,6 +21,95 @@ const Point basicPoint(mpz_class("550662630222773436695787188951685343262506034"
                        mpz_class("326705100207588169780830851305070431844712733"
                                  "80659243275938904335757337482424"));
 
+#ifdef USE_SYCL
+#include <CL/sycl.hpp>
+using namespace cl::sycl;
+/**
+ * Converts a message string to a point on the elliptic curve using SYCL.
+ * @param text The message to convert.
+ * @return The point on the elliptic curve.
+ */
+Point convertMessageToPoint(const std::string &text)
+{
+    std::string binaryStr(text.size() * 8, '0');
+    queue queue;
+    buffer<char, 1> textBuf(text.data(), range<1>(text.size()));
+    buffer<char, 1> binaryStrBuf(binaryStr.data(),
+                                    range<1>(binaryStr.size()));
+
+    queue.submit([&](handler &handler) {
+        auto textAcc = textBuf.get_access<access::mode::read>(handler);
+        auto binaryStrAcc =
+            binaryStrBuf.get_access<access::mode::write>(handler);
+
+        handler.parallel_for<class ConvertEKernel>(range<1>(text.size()), [=](id<1> idx) {
+            for (int i = 7; i >= 0; --i) 
+                binaryStrAcc[idx[0] * 8 + (7 - i)] =
+                        ((textAcc[idx] >> i) & 1) ? '1' : '0';
+                 
+        });
+    }).wait();
+
+    mpz_class x;
+    x.set_str(binaryStr, 2);
+
+    for (;; added++) {
+        mpz_class xAdded = x + mpz_class(added);
+        mpz_class rhs = mod(xAdded * xAdded * xAdded + a * xAdded + b);
+        mpz_class yAdded;
+
+        if (modularSqrt(yAdded.get_mpz_t(), rhs.get_mpz_t(), prime.get_mpz_t()))
+            return Point(xAdded, yAdded);
+    }
+
+    throw std::runtime_error(
+        "Unable to convert message to a valid point on the curve.");
+}
+
+/**
+ * Converts a point on the elliptic curve to a message string.
+ * @param point The point to convert.
+ * @return The message string.
+ */
+std::string convertPointToMessage(const Point &point)
+{
+    sycl::queue queue;
+
+    mpz_class x = point.x - mpz_class(added);
+    std::string binaryStr = x.get_str(2);
+
+    size_t paddingLength = 8 - (binaryStr.size() % 8);
+    if (paddingLength != 8) 
+        binaryStr = std::string(paddingLength, '0') + binaryStr;
+    
+    size_t numBytes = binaryStr.size() / 8;
+    std::vector<char> result(numBytes);
+    sycl::buffer<char, 1> binaryBuffer(binaryStr.data(),
+                                           sycl::range<1>(binaryStr.size()));
+    sycl::buffer<char, 1> resultBuffer(result.data(),
+                                           sycl::range<1>(result.size()));
+
+    queue.submit([&](sycl::handler &handler) {
+        auto binaryAcc =
+            binaryBuffer.get_access<sycl::access::mode::read>(handler);
+        auto resultAcc =
+            resultBuffer.get_access<sycl::access::mode::write>(handler);
+
+        handler.parallel_for<class ConvertKernel>(
+            sycl::range<1>(numBytes), [=](sycl::id<1> id) {
+                size_t idx = id[0] * 8;
+                std::bitset<8> byteStr;
+                for (size_t bit = 0; bit < 8; ++bit) 
+                         byteStr[7 - bit] = binaryAcc[idx + bit] ==
+                                            '1';  
+                resultAcc[id] = static_cast<char>(byteStr.to_ulong());
+        });
+    }).wait();
+    std::string text(result.begin(), result.end());
+    return text;
+}
+
+#else
 
 /**
  * Converts a message string to a point on the elliptic curve.
@@ -71,6 +161,8 @@ std::string convertPointToMessage(const Point &point)
 
     return text;
 }
+
+#endif
 
 /**
  * Computes the modular square root using the Tonelli-Shanks algorithm.
@@ -336,64 +428,4 @@ std::vector<uint8_t> decryptECC(EncryptedMessage ciphertext, mpz_class privateKe
                           negTemp);
     std::string text=convertPointToMessage(decrypted);
     return stringToUint8(text);
-}
-
-/** 
-* Function to sign a message using ECC
-* @param message: The message to be signed, represented as a vector of uint8_t
-* @param privateKey: The private key used for signing
-* @param G: The base point for the elliptic curve
-* @param n: The order of the elliptic curve
-* @return: A pair containing the signature (r, s)
-*/
-std::pair<mpz_class, mpz_class> signMessageECC(const std::vector<uint8_t> &message, const mpz_class &privateKey)
- {
-    mpz_class r, s;
-    mpz_class k;
-    // Convert uint8_t message to mpz_class hash
-    mpz_class messageHash;
-    mpz_import(messageHash.get_mpz_t(), message.size(), 1, sizeof(uint8_t), 0, 0, message.data());
-    do {
-        // Generate a random k
-        k = generateK();
-        Point R = multiply(basicPoint, k);
-        r = mod(R.x);
-        mpz_class kInv;
-        // Compute the modular inverse of k
-        if (mpz_invert(kInv.get_mpz_t(), k.get_mpz_t(), prime.get_mpz_t()) == 0) 
-            continue; // Retry if inversion fails
-        // Compute the signature s
-        s = mod((messageHash + r * privateKey) * kInv) ;
-    } while (s == 0); // Ensure s is not zero
-    return {r, s};
-}
-
-/** 
-* Function to verify a message signature using ECC
-* @param message: The message whose signature is to be verified, represented as a vector of uint8_t
-* @param signature: The signature (r, s) to be verified
-* @param publicKey: The public key used for verification
-* @param G: The base point for the elliptic curve
-* @param n: The order of the elliptic curve
-* @return: True if the signature is valid, false otherwise
-*/
-bool verifySignatureECC(const std::vector<uint8_t> &message, const std::pair<mpz_class, mpz_class> &signature, const Point& publicKey)
-{
-    mpz_class r = signature.first;
-    mpz_class s = signature.second;
-    // Check if r and s are within valid range
-    if (r <= 0 || r >= prime || s <= 0 || s >= prime) 
-        return false; // Invalid r or s
-    
-    // Convert uint8_t message to mpz_class hash
-    mpz_class messageHash;
-    mpz_import(messageHash.get_mpz_t(), message.size(), 1, sizeof(uint8_t), 0, 0, message.data());
-    // Compute v1 and v2 for verification
-    mpz_class v1 = mod(r * r );
-    mpz_class v2 = mod(s * s);
-    // Perform scalar multiplication
-    Point P = multiply(publicKey, v1);
-    Point Q = multiply(basicPoint, v2);
-    // Verify the equality (r, s) = (P + Q)
-    return true; // Update with actual verification logic
 }

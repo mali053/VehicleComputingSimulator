@@ -30,6 +30,7 @@ int Client::connectToServer()
     connected = true;
     receiveThread = std::thread(&Client::receivePacket, this);
     receiveThread.detach();
+
     return 0;
 }
 

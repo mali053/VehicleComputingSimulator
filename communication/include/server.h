@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <functional>
 #include <map>
+#include <csignal>
 #include "message.h"
 #include "../sockets/Isocket.h"
 #include "../sockets/real_socket.h"
@@ -17,7 +18,7 @@ private:
     int serverSocket;
     sockaddr_in address;
     int port;
-    bool running;
+    std::atomic<bool> running;
     std::thread mainThread;
     std::vector<std::thread> clientThreads;
     std::vector<int> sockets;

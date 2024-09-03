@@ -9,6 +9,9 @@ private:
     std::unordered_map<std::string, Message> receivedMessages;
     void (*passData)(void *); 
     uint32_t id;
+    // A static variable that holds an instance of the class
+    static Communication* instance;
+
 public:
     // Constructor
     Communication(uint32_t id, void (*passDataCallback)(void *));
@@ -42,6 +45,9 @@ public:
     
     // Adding the packet to the complete message
     void addPacketToMessage(Packet &p);
+
+    // Static method to handle SIGINT signal
+    static void signalHandler(int signum);
     
     //Destructor
     ~Communication();

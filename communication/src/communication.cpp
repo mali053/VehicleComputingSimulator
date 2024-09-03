@@ -1,8 +1,15 @@
 #include "../include/communication.h"
 #include <future>
 
+Communication* Communication::instance = nullptr;
+
 // Constructor
-Communication::Communication(uint32_t id, void (*passDataCallback)(void *)) : client(id, std::bind(&Communication::receivePacket, this, std::placeholders::_1)), passData(passDataCallback), id(id) {}
+Communication::Communication(uint32_t id, void (*passDataCallback)(void *)) : client(id, std::bind(&Communication::receivePacket, this, std::placeholders::_1)), passData(passDataCallback), id(id)
+{
+    instance = this;
+    // Setup the signal handler for SIGINT
+    signal(SIGINT, Communication::signalHandler);
+}
 
 // Sends the client to connect to server
 void Communication::startConnection()
@@ -109,5 +116,15 @@ void Communication::addPacketToMessage(Packet &p)
     }
 }
 
+// Static method to handle SIGINT signal
+void Communication::signalHandler(int signum)
+{
+    std::cout << "Interrupt signal (" << signum << ") received.\n";
+    if (instance) {
+        instance->client.closeConnection();  // Call the closeConnection method
+    }
+    exit(signum);
+}
+
 //Destructor
-Communication::~Communication(){}
+Communication::~Communication() {}

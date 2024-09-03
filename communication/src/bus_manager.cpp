@@ -1,7 +1,14 @@
 #include "../include/bus_manager.h"
 
+BusManager* BusManager::instance = nullptr;
+
 // constructor
-BusManager::BusManager() : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1)) {}
+BusManager::BusManager() : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1))
+{
+    instance = this;
+    // Setup the signal handler for SIGINT
+    signal(SIGINT, BusManager::signalHandler);
+}
 
 // Sends to the server to listen for requests
 int BusManager::startConnection()
@@ -40,4 +47,12 @@ Packet BusManager::packetPriority(Packet &a, Packet &b)
     return (a.header.SrcID < b.header.SrcID) ? a : b;
 }
 
-BusManager::~BusManager(){}
+// Static method to handle SIGINT signal
+void BusManager::signalHandler(int signum)
+{
+    if (instance) {
+        instance->server.stopServer();  // Call the stopServer method
+    }
+    exit(signum);
+}
+BusManager::~BusManager() {}

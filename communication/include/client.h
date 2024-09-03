@@ -20,7 +20,7 @@ private:
     uint32_t id;
     int clientSocket;
     sockaddr_in servAddress;
-    bool connected;
+    std::atomic<bool> connected;
     std::function<void(Packet &)> passPacketCom;
     ISocket* socketInterface;
     std::thread receiveThread;

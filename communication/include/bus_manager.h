@@ -7,8 +7,9 @@
 class BusManager
 {
 private:
-
     Server server;
+    // A static variable that holds an instance of the class
+    static BusManager* instance;
    
     // Sending according to broadcast variable
     int sendToClients(const Packet &packet);
@@ -28,6 +29,9 @@ public:
 
     // Implement a priority check according to the CAN bus
     Packet packetPriority(Packet &a, Packet &b);
+
+    // Static method to handle SIGINT signal
+    static void signalHandler(int signum);
 
     ~BusManager();
 };

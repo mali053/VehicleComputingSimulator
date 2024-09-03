@@ -41,6 +41,7 @@ private:
     int getClientSocketByID(uint32_t destID);
 
 public:
+
     // Constructor
     Server(int port, std::function<void(void *)> callback, ISocket* socketInterface = new RealSocket());
     

@@ -1,13 +1,25 @@
 #include "../include/bus_manager.h"
 
 BusManager* BusManager::instance = nullptr;
+std::mutex BusManager::managerMutex;
 
-// constructor
+//Private constructor
 BusManager::BusManager() : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1))
 {
-    instance = this;
     // Setup the signal handler for SIGINT
     signal(SIGINT, BusManager::signalHandler);
+}
+
+// Static function to return a singleton instance
+BusManager* BusManager::getInstance() {
+    if (instance == nullptr) {
+        // Lock the mutex to prevent multiple threads from creating instances simultaneously
+        std::lock_guard<std::mutex> lock(managerMutex);
+        if (instance == nullptr) {
+            instance = new BusManager();
+        }
+    }
+    return instance;
 }
 
 // Sends to the server to listen for requests
@@ -55,4 +67,7 @@ void BusManager::signalHandler(int signum)
     }
     exit(signum);
 }
-BusManager::~BusManager() {}
+
+BusManager::~BusManager() {
+    instance = nullptr;
+}

@@ -8,15 +8,21 @@ class BusManager
 {
 private:
     Server server;
-    // A static variable that holds an instance of the class
+    
+    // Singleton instance
     static BusManager* instance;
+    static std::mutex managerMutex;
    
     // Sending according to broadcast variable
     int sendToClients(const Packet &packet);
 
-public:
-    // constructor
+    // Private constructor
     BusManager();
+
+public:
+    
+    //Static function to return a singleton instance
+    static BusManager* getInstance();
 
     // Sends to the server to listen for requests
     int startConnection();

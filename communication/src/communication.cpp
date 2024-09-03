@@ -127,4 +127,6 @@ void Communication::signalHandler(int signum)
 }
 
 //Destructor
-Communication::~Communication() {}
+Communication::~Communication() {
+    instance = nullptr;
+}

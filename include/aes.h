@@ -1,11 +1,21 @@
 #ifndef _AES_H_
 #define _AES_H_
-
+#include <functional>
 #include <cstdio>
 #include <cstring>
+#include <functional>
 #include <map>
+#define AES_STATE_ROWS 4
 #define NUM_BLOCKS 4
-#define BLOCK_BYTES_LEN (4 * (NUM_BLOCKS) * sizeof(unsigned char))
+#define BLOCK_BYTES_LEN (AES_STATE_ROWS * (NUM_BLOCKS) * sizeof(unsigned char))
+
+enum AESChainingMode {
+    ECB,  /*Electronic Codebook*/
+    CBC,  /*Cipher Block Chaining*/
+    CFB,  /*Cipher Feedback*/
+    OFB,  /*Output Feedback*/
+    CTR   /*Counter*/
+};
 
 enum class AESKeyLength
 {
@@ -13,12 +23,15 @@ enum class AESKeyLength
     AES_192,
     AES_256
 };
+
 struct AESData
 {
     unsigned int numWord;
     unsigned int numRound;
     unsigned int keySize;
 };
+
+typedef std::function<void(unsigned char*, unsigned int, unsigned char*, unsigned char*&, unsigned int&, const unsigned char*, AESKeyLength)> EncryptDecryptFunc;
 static std::map<AESKeyLength,AESData> aesKeyLengthData = {
    { AESKeyLength::AES_128, {4, 10, 128} },
    { AESKeyLength::AES_192, {6, 12, 192} },
@@ -27,21 +40,21 @@ static std::map<AESKeyLength,AESData> aesKeyLengthData = {
 
     void padMessage(unsigned char* &message, unsigned int& length, unsigned int& paddedLength);
     void unpadMessage(unsigned char* message, unsigned int& length);
-    void addRoundKey(unsigned char state[4][NUM_BLOCKS], unsigned char* roundKey);
+    void addRoundKey(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS], unsigned char* roundKey);
     void checkLength(unsigned int length);
     void encryptBlock(const unsigned char in[], unsigned char out[], unsigned char* roundKeys, AESKeyLength keyLength);
     void decryptBlock(const unsigned char in[], unsigned char out[], unsigned char* roundKeys, AESKeyLength keyLength);
-    void subBytes(unsigned char state[4][NUM_BLOCKS]);
-    void invSubBytes(unsigned char state[4][NUM_BLOCKS]);
-    void invShiftRows(unsigned char state[4][NUM_BLOCKS]);
-    void invMixColumns(unsigned char state[4][NUM_BLOCKS]);
-    void mixColumns(unsigned char state[4][NUM_BLOCKS]);
-    void shiftRows(unsigned char state[4][NUM_BLOCKS]);
+    void subBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
+    void invSubBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
+    void invShiftRows(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
+    void invMixColumns(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
+    void mixColumns(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
+    void shiftRows(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS]);
     void keyExpansion(const unsigned char* key, unsigned char roundKeys[], AESKeyLength keyLength);
     unsigned char xtime(unsigned char x);
-    void rotWord(unsigned char word[4]);
-    void subWord(unsigned char word[4]);
-    void rconWord(unsigned char rcon[4], unsigned int n);
+    void rotWord(unsigned char word[AES_STATE_ROWS]);
+    void subWord(unsigned char word[AES_STATE_ROWS]);
+    void rconWord(unsigned char rcon[AES_STATE_ROWS], unsigned int n);
     unsigned char multiply(unsigned char x, unsigned char y);
     void xorBlocks(const unsigned char *a, const unsigned char *b,
                     unsigned char *c, unsigned int len);
@@ -116,21 +129,54 @@ const unsigned char sBox[16][16] = {
     {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f,
      0xb0, 0x54, 0xbb, 0x16}};
 
-/*Encrypt the input data using the provided key*/
-void encrypt(unsigned char in[], unsigned int inLen, unsigned char *key,
+void encryptECB(unsigned char in[], unsigned int inLen, unsigned char *key,
              unsigned char *&out, unsigned int &outLen,
              const unsigned char *iv, AESKeyLength keyLength);
+void encryptCBC(unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void encryptCFB(unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void encryptOFB(unsigned char in[], unsigned int inLen, unsigned char *key,
+                unsigned char *&out, unsigned int &outLen, const unsigned char *iv, AESKeyLength keyLength);
+void encryptCTR(unsigned char in[], unsigned int inLen, unsigned char *key,
+                unsigned char *&out, unsigned int &outLen, const unsigned char *iv, AESKeyLength keyLength);
 void encryptAES(unsigned char in[], unsigned int inLen, unsigned char *key,
-                unsigned char *&out, unsigned int &outLen ,AESKeyLength keyLength);
-
-/*Decrypt the input data using the provided key*/
-void decrypt(const unsigned char in[], unsigned int inLen, unsigned char *key,
+                unsigned char *&out, unsigned int &outLen ,AESKeyLength keyLength, AESChainingMode chainingMode);
+void decryptECB(const unsigned char in[], unsigned int inLen, unsigned char *key,
              unsigned char *&out, unsigned int &outLen,
              const unsigned char *iv, AESKeyLength keyLength);
-             
-void decryptAES(const unsigned char in[], unsigned int inLen,
-                unsigned char *key, unsigned char *&out, unsigned int &outLen, AESKeyLength keyLength);
-
-/*Generate new ranom key*/
+void decryptCBC(const unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void decryptCFB(const unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void decryptOFB(const unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void decryptCTR(const unsigned char in[], unsigned int inLen, unsigned char *key,
+             unsigned char *&out, unsigned int &outLen,
+             const unsigned char *iv, AESKeyLength keyLength);
+void decryptAES(unsigned char in[], unsigned int inLen,
+                unsigned char *key, unsigned char *&out, unsigned int &outLen, AESKeyLength keyLength, AESChainingMode chainingMode);
 unsigned char *generateKey(AESKeyLength keyLength);
+
+static std::map<AESChainingMode, EncryptDecryptFunc> encryptFunctions = {
+    {ECB, encryptECB},
+    {CBC, encryptCBC},
+    {CFB, encryptCFB},
+    {OFB, encryptOFB},
+    {CTR, encryptCTR}
+};
+
+static std::map<AESChainingMode, EncryptDecryptFunc> decryptFunctions = {
+    {ECB, decryptECB},
+    {CBC, decryptCBC},
+    {CFB, decryptCFB},
+    {OFB, decryptOFB},
+    {CTR, decryptCTR}
+};
+
 #endif

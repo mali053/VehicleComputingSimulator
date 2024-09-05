@@ -1,5 +1,11 @@
 #include "../include/sha256.h"
+#include <cstddef>
+#include <cstdint>
 #include <cstring>
+#ifdef USE_SYCL
+#include <CL/sycl.hpp>
+using namespace sycl;
+#endif //USE_SYCL
 
 using namespace std;
 
@@ -12,8 +18,8 @@ using namespace std;
 #define GAMMA0(x) (ROTRIGHT(x, 7) ^ ROTRIGHT(x, 18) ^ ((x) >> 3))
 #define GAMMA1(x) (ROTRIGHT(x, 17) ^ ROTRIGHT(x, 19) ^ ((x) >> 10))
 
+// SHA-256 constants used in the compression function
 const uint32_t bytes[64] = {
-    // SHA-256 constants
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
     0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -32,28 +38,21 @@ const uint32_t bytes[64] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-// Global variables used in SHA-256 computation
-static uint32_t result[8];
-static uint8_t message[64];
-static size_t messageSize;
-static size_t bitLength;
-
 /**
  * Updates the SHA-256 hash with the provided data.
  * Processes data in 64-byte chunks, calling `transform` for each chunk.
  * 
  * @param data A vector of bytes to be added to the hash.
  */
-void sha256_update(const std::vector<uint8_t>& data)
+void sha256_update(SHA256State& state, const std::vector<uint8_t>& data)
 {
     size_t length = data.size();
     for (size_t i = 0; i < length; i++) {
-        message[messageSize++] = static_cast<uint8_t>(data[i]);
-        if (messageSize == 64) {
-            // Transform function is called for each 64-byte chunk
-            transform();
-            messageSize = 0;
-            bitLength += 512;
+        state.message[state.messageSize++] = static_cast<uint8_t>(data[i]);
+        if (state.messageSize == 64) {
+            transform(state); // Process the current 64-byte block
+            state.messageSize = 0;
+            state.bitLength += 512;
         }
     }
 }
@@ -62,43 +61,136 @@ void sha256_update(const std::vector<uint8_t>& data)
  * Adds padding to the message and appends the length of the original message.
  * The message is padded so its length is congruent to 56 modulo 64.
  */
-void padding()
+void padding(SHA256State& state)
 {
-    uint64_t currentLength = messageSize;
+    uint64_t currentLength = state.messageSize;
     uint8_t paddingEnd = currentLength < 56 ? 56 : 64;
 
     // Append the 0x80 byte (0b10000000)
-    message[currentLength++] = 0x80;
+    state.message[currentLength++] = 0x80;
 
     // Pad with 0x00 bytes until the length of the message is 56 bytes mod 64
-    memset(message + currentLength, 0, paddingEnd - currentLength);
+    memset(state.message + currentLength, 0, paddingEnd - currentLength);
     currentLength = paddingEnd;
 
     // If message length is >= 56, process the current block and reset for new padding
-    if (messageSize >= 56) {
-        transform();
-        memset(message, 0, 56);
+    if (state.messageSize >= 56) {
+        transform(state); // Process the current block
+        memset(state.message, 0, 56);
         currentLength = 56;
     }
 
     // Append the length of the original message in bits (64-bit big-endian)
-    bitLength += messageSize * 8;
+    state.bitLength += state.messageSize * 8;
     for (int i = 0; i < 8; i++) {
-        message[63 - i] = bitLength >> (i * 8);
+        state.message[63 - i] = state.bitLength >> (i * 8);
     }
 
-    transform();
+    transform(state); // Final block processing
 }
 
+#ifdef USE_SYCL
 /**
  * Processes a 64-byte block of the message and updates the hash state.
  * Applies the SHA-256 compression function to the current block.
  */
-void transform()
+void transform(SHA256State& state)
+{
+    uint32_t temp[64];
+    queue q;
+
+    // Initialize the first 16 elements of temp with the message schedule
+    for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
+        temp[i] = (state.message[j] << 24) | (state.message[j + 1] << 16) | (state.message[j + 2] << 8) | (state.message[j + 3]);
+
+    for (uint8_t k = 16; k < 64; k++)
+        temp[k] = GAMMA1(temp[k - 2]) + temp[k - 7] + GAMMA0(temp[k - 15]) + temp[k - 16];
+
+    // Save the current state
+    uint32_t s[8];
+    for (uint8_t i = 0; i < 8; i++)
+        s[i] = state.result[i];
+
+    for (size_t i = 0; i < 64; i++) {
+        uint32_t choose, sum, majority, newA, newE;
+
+        choose = CHOOSE(s[4], s[5], s[6]);
+        majority = MAJORITY(s[0], s[1], s[2]);
+        sum = temp[i] + bytes[i] + s[7] + choose + SIGMA1(s[4]);
+        newA = SIGMA0(s[0]) + majority + sum;
+        newE = s[3] + sum;
+
+        s[7] = s[6];
+        s[6] = s[5];
+        s[5] = s[4];
+        s[4] = newE;
+        s[3] = s[2];
+        s[2] = s[1];
+        s[1] = s[0];
+        s[0] = newA;
+    }
+
+    // Process the message in 64-byte chunks, parallelizing where feasible
+    {
+        buffer<uint32_t, 1> state_buf(s, range<1>(8));
+        buffer<uint32_t, 1> result_buf(state.result, range<1>(8));
+
+        // Update the result with the state
+        q.submit([&](handler &h) {
+            auto state_acc = state_buf.get_access<access::mode::read>(h);
+            auto result_acc = result_buf.get_access<access::mode::read_write>(h);
+
+            h.parallel_for(range<1>(8), [=](id<1> idx) {
+                result_acc[idx] += state_acc[idx];
+            });
+        }).wait();
+    }
+}
+
+/**
+ * Finalizes the SHA-256 hash computation.
+ * Applies padding and appends the length of the original message.
+ * Returns the final hash as a vector of bytes.
+ * 
+ * @param state The SHA256State object to finalize.
+ * @return A vector containing the SHA-256 hash value.
+ */
+vector<uint8_t> sha256_finalize(SHA256State& state)
+{
+    padding(state);
+    vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
+    
+    // Define SYCL buffers
+    buffer<uint32_t, 1> result_buf(state.result, range<1>(8));
+    buffer<uint8_t, 1> hash_buf(hash.data(), range<1>(32));
+
+    // Copy the result to the hash output
+    queue q;
+    q.submit([&](handler &h) {
+        auto result_acc = result_buf.get_access<access::mode::read>(h);
+        auto hash_acc = hash_buf.get_access<access::mode::write>(h);
+
+        h.parallel_for(range<1>(8), [=](id<1> idx) {
+            size_t i = idx[0];
+            hash_acc[i * 4 + 0] = (result_acc[i] >> 24) & 0xff;
+            hash_acc[i * 4 + 1] = (result_acc[i] >> 16) & 0xff;
+            hash_acc[i * 4 + 2] = (result_acc[i] >> 8) & 0xff;
+            hash_acc[i * 4 + 3] = (result_acc[i] >> 0) & 0xff;
+        });
+    }).wait();
+
+    return hash;
+}
+#else
+/**
+ * Processes a 64-byte block of the message and updates the hash state.
+ * Applies the SHA-256 compression function to the current block.
+ */
+void transform(SHA256State& SHAState)
 {
     uint32_t temp[64];
     for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
-        temp[i] = (message[j] << 24) | (message[j + 1] << 16) | (message[j + 2] << 8) | (message[j + 3]);
+        temp[i] = (SHAState.message[j] << 24) | (SHAState.message[j + 1] << 16) | (SHAState.message[j + 2] << 8) | (SHAState.message[j + 3]);
 
     for (uint8_t k = 16; k < 64; k++)
         temp[k] = GAMMA1(temp[k - 2]) + temp[k - 7] + GAMMA0(temp[k - 15]) + temp[k - 16];
@@ -106,7 +198,7 @@ void transform()
     // Save the current state
     uint32_t state[8];
     for (uint8_t i = 0; i < 8; i++)
-        state[i] = result[i];
+        state[i] = SHAState.result[i];
 
     // Process the message in 64-byte chunks
     for (size_t i = 0; i < 64; i++) {
@@ -129,7 +221,7 @@ void transform()
     }
     // Add the current chunk's hash to the result
     for (uint8_t i = 0; i < 8; i++) {
-        result[i] += state[i];
+        SHAState.result[i] += state[i];
     }
 }
 
@@ -140,18 +232,21 @@ void transform()
  * 
  * @return A vector containing the SHA-256 hash value.
  */
-vector<uint8_t> sha256_finalize()
+vector<uint8_t> sha256_finalize(SHA256State& SHAState)
 {
-    padding();
+    padding(SHAState);
     vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
     for (int i = 0; i < 8; i++) {
-        hash[i * 4] = (result[i] >> 24) & 0xFF;
-        hash[i * 4 + 1] = (result[i] >> 16) & 0xFF;
-        hash[i * 4 + 2] = (result[i] >> 8) & 0xFF;
-        hash[i * 4 + 3] = result[i] & 0xFF;
+        hash[i * 4] = (SHAState.result[i] >> 24) & 0xFF;
+        hash[i * 4 + 1] = (SHAState.result[i] >> 16) & 0xFF;
+        hash[i * 4 + 2] = (SHAState.result[i] >> 8) & 0xFF;
+        hash[i * 4 + 3] = SHAState.result[i] & 0xFF;
     }
     return hash;
 }
+
+#endif //USE_SYCL
+
 
 /**
  * Computes the SHA-256 hash for the given input.
@@ -162,20 +257,20 @@ vector<uint8_t> sha256_finalize()
  */
 vector<uint8_t> sha256_compute(const std::vector<uint8_t>& input)
 {
-    // Reset state
-    result[0] = 0x6a09e667;
-    result[1] = 0xbb67ae85;
-    result[2] = 0x3c6ef372;
-    result[3] = 0xa54ff53a;
-    result[4] = 0x510e527f;
-    result[5] = 0x9b05688c;
-    result[6] = 0x1f83d9ab;
-    result[7] = 0x5be0cd19;
+    SHA256State state;
+    // Initialize state
+    state.result[0] = 0x6a09e667;
+    state.result[1] = 0xbb67ae85;
+    state.result[2] = 0x3c6ef372;
+    state.result[3] = 0xa54ff53a;
+    state.result[4] = 0x510e527f;
+    state.result[5] = 0x9b05688c;
+    state.result[6] = 0x1f83d9ab;
+    state.result[7] = 0x5be0cd19;
+    state.messageSize = 0;
+    state.bitLength = 0;
 
-    messageSize = 0;
-    bitLength = 0;
-
-    // Update with input data and finalize
-    sha256_update(input);
-    return sha256_finalize();
+    // Process the input data
+    sha256_update(state, input);
+    return sha256_finalize(state);
 }

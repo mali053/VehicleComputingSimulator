@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(MyTest)
+project(DPCPPExample)
 
 # Include directories
 include_directories(include)

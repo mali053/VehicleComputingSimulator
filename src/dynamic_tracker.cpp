@@ -5,6 +5,7 @@
 
 using namespace std;
 using namespace cv;
+using namespace chrono;
 
 void DynamicTracker::init() {}
 void DynamicTracker::track(const std::shared_ptr<cv::Mat> &prevFrame,

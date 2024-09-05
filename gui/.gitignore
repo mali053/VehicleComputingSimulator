@@ -45,12 +45,3 @@ lib/*
 bin/*
 # Test-specific files
 test/test_runner
-#else
-src/dummy_program1
-src/dummy_program2
-src/main.cpp
-src/process_dialog.cpp
-src/process_dialog.h
-src/process.h
-src/simulation_data_manager.cpp
-src/simulation_data_manager.h

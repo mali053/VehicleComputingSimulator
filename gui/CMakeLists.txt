@@ -33,14 +33,29 @@ add_executable(DraggableSquares
     src/frames.cpp
 )
 
+# Add headers to the executable target
+target_sources(DraggableSquares PRIVATE
+    include/main_window.h
+    include/draggable_square.h
+    include/process_dialog.h
+    include/simulation_data_manager.h
+    include/log_handler.h
+    include/frames.h
+)
+
 # Include BSON directories
 target_include_directories(DraggableSquares PRIVATE ${BSON_INCLUDE_DIRS})
 
 # Link the BSON library and Qt5 components
 target_link_libraries(DraggableSquares PRIVATE ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
 
-# Enable testing
-enable_testing()
 
-# Add test directory
-add_subdirectory(test)
+# Add the include directory
+target_include_directories(DraggableSquares PRIVATE ${BSON_INCLUDE_DIRS} include)
+
+
+# # Enable testing
+# enable_testing()
+
+# # Add test directory
+# add_subdirectory(test)

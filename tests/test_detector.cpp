@@ -2,7 +2,8 @@
 #include <opencv2/opencv.hpp>
 #include "detector.h"
 
-bool is_cuda = false; // or true
+// or true
+bool is_cuda = false; 
 
 // Helper function to load an image from a file
 cv::Mat loadImage(const std::string &filename) {

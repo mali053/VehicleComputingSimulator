@@ -38,6 +38,7 @@ vector<char> Alert::serialize() {
   // serialize carSpeed
   char *carSpeedPtr = reinterpret_cast<char *>(&carSpeed);
    buffer.insert(buffer.end(), carSpeedPtr, carSpeedPtr + sizeof(int));
+
   // serialize objectSpeed
   char *objectSpeedPtr = reinterpret_cast<char *>(&objectSpeed);
   buffer.insert(buffer.end(), objectSpeedPtr, objectSpeedPtr + sizeof(int));
@@ -50,12 +51,15 @@ void Alert::deserialize(const char *buffer) {
   // Deserialize alertDetails
   memcpy(&alertDetails, buffer, sizeof(AlertDetails));
   place += sizeof(AlertDetails);
+
   // Deserialize distance
   memcpy(&objectDistance, buffer + place, sizeof(double));
   place += sizeof(double);
+
   // Deserialize carSpeed
   memcpy(&carSpeed, buffer + place, sizeof(int));
   place += sizeof(int);
+  
   // Deserialize objectSpeed
   memcpy(&objectSpeed, buffer + place, sizeof(int));
 };

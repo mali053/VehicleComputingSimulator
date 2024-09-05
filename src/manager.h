@@ -13,7 +13,6 @@ class Manager {
     // Gets the currentFrame and sends it for detection and then tracking,
     // finally if necessary sends a alert
     void processing(const cv::Mat& newFrame);
-    void findDifference();
     void init();
 
    private:

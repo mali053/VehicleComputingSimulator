@@ -27,27 +27,3 @@ void Manager::processing(const Mat &newFrame) {
 }
 
 void Manager::prepareForTheNext() { prevFrame = currentFrame; }
-
-void Manager::findDifference() {
-  Mat gray1, gray2;
-  cvtColor(*prevFrame, gray1, COLOR_BGR2GRAY);
-  cvtColor(*currentFrame, gray2, COLOR_BGR2GRAY);
-  // Find the difference between the two images
-  Mat diff;
-  absdiff(gray1, gray2, diff);
-  // Apply threshold
-  Mat thresh;
-  threshold(diff, thresh, 0, 255, THRESH_BINARY | THRESH_OTSU);
-  // Dilation
-  Mat kernel = Mat::ones(5, 5, CV_8U);
-  Mat dil;
-  dilate(thresh, dil, kernel, Point(-1, -1), 2);
-  // Calculate contours
-  vector<vector<Point>> contours;
-  findContours(dil, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
-  for (const auto &contour : contours) {
-    // Calculate bounding box around contour
-    Rect boundingBox = boundingRect(contour);
-    // TODO : Sending each rectangle to detect
-  }
-}

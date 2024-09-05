@@ -6,12 +6,24 @@ using namespace dnn;
 
 void Detector::detect(const shared_ptr<Mat> &frame)
 {
-    // Store the input frame for processing
-    this->frame = frame;
+    //intialize variables
+    output.clear();
+    this->prevFrame = this->currentFrame;
+    this->currentFrame = frame;
+    if (!prevFrame) {
+        detectObjects(currentFrame, Point(0, 0));
+    }
+    else {
+        detectChanges();
+    }
+}
+
+void Detector::detectObjects(const shared_ptr<Mat>& frame, const Point& position)
+{
     // Prepare a blob from the input image formatted for YOLOv5
     Mat blob;
     // Custom function to format the input image
-    auto inputImage = formatYolov5();
+    auto inputImage = formatYolov5(frame);
     // Convert the image to a blob suitable for YOLOv5
     blobFromImage(inputImage, blob, 1. / 255., Size(INPUT_WIDTH, INPUT_HEIGHT),
                   Scalar(), true, false);
@@ -96,15 +108,100 @@ void Detector::detect(const shared_ptr<Mat> &frame)
     }
 }
 
-vector<DetectionObject> Detector::getOutput() const { return output; }
+void Detector::detectChanges()
+{
+    const vector<Rect> changedAreas = findDifference();
+    cout << "changedAreas:" << changedAreas.size() << endl;
+    for (Rect oneChange : changedAreas) {
+        int x = oneChange.x;
+        int y = oneChange.y;
+        Point position(x, y);
+        Mat view(*currentFrame, oneChange);
+        detectObjects(make_shared<Mat>(view), position);
+    }
+}
 
-Mat Detector::formatYolov5() {
-  int col = frame->cols;
-  int row = frame->rows;
-  int maximum = MAX(col, row);
-  Mat result = Mat::zeros(maximum, maximum, CV_8UC3);
-  frame->copyTo(result(Rect(0, 0, col, row)));
-  return result;
+vector<Rect> Detector::findDifference()
+{
+    vector<Rect> differencesRects;
+    Mat prevGray, currentGray;
+    cvtColor(*prevFrame, prevGray, COLOR_BGR2GRAY);
+    cvtColor(*currentFrame, currentGray, COLOR_BGR2GRAY);
+    // Find the difference between the two images
+    Mat diff;
+    absdiff(prevGray, currentGray, diff);
+    // Apply threshold
+    Mat thresh;
+    threshold(diff, thresh, 0, 255, THRESH_BINARY | THRESH_OTSU);
+    // Dilation
+    Mat kernel = Mat::ones(5, 5, CV_8U);
+    Mat dil;
+    dilate(thresh, dil, kernel, Point(-1, -1), 2);
+    // Calculate contours
+    std::vector<std::vector<Point>> contours;
+    findContours(dil, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    for (const auto &contour : contours) {
+        // Calculate bounding box around contour
+        Rect boundingBox = boundingRect(contour);
+        differencesRects.push_back(boundingBox);
+    }
+    cout << "num of difference:" << differencesRects.size() << endl;
+    vector<Rect> unionRects = unionOverlappingRectangels(differencesRects);
+    cout << "after union:" << unionRects.size() << endl;
+    return unionRects;
+}
+
+vector<Rect> Detector::unionOverlappingRectangels(vector<Rect> allChanges)
+{
+    bool isUnion;
+    int sizeVec=0;
+    vector<Rect> unionRect;
+    Rect temp;
+    for(int i=0; i< allChanges.size(); i++) {
+        isUnion=false;
+        sizeVec = unionRect.size();
+        for(int j=0; j<sizeVec; j++) {
+            temp = unionRect[0];
+            unionRect.erase(unionRect.begin());
+            if ((allChanges[i] & temp).area() > 0) {
+                allChanges[i] |= temp;
+            }
+            else {
+                unionRect.push_back(temp);
+            }
+        }
+        for(int j=i+1; j<allChanges.size(); j++) {
+            if ((allChanges[i] & allChanges[j]).area() > 0) {
+                allChanges[j] |= allChanges[i];
+                isUnion=true;
+                break;
+            }
+        }
+        if(!isUnion){
+        unionRect.push_back(allChanges[i]);
+        }
+    }  
+    for (Rect r : unionRect) {
+        rectangle(*currentFrame, r, Scalar(0, 0, 255), 2);
+    }
+    imshow("win", *currentFrame);
+    waitKey();
+    return unionRect;
+}
+
+vector<DetectionObject> Detector::getOutput() const
+{
+    return output;
+}
+
+Mat Detector::formatYolov5(const shared_ptr<Mat>& frame)
+{
+    int col = frame->cols;
+    int row = frame->rows;
+    int maximum = MAX(col, row);
+    Mat result = Mat::zeros(maximum, maximum, CV_8UC3);
+    frame->copyTo(result(Rect(0, 0, col, row)));
+    return result;
 }
 
 void Detector::init(bool isCuda) { loadNet(isCuda); }

@@ -156,3 +156,46 @@ TEST(DetectorTest, DetectTwoPeoples) {
   ASSERT_EQ(carCount, 0);
   ASSERT_EQ(peopleCount, 2);
 }
+
+TEST(DetectChangesTest, detect)
+{
+    cv::Mat first, second;
+    //load video
+    cv::VideoCapture capture("../tests/images/cars4.mp4");
+    if (!capture.isOpened()) {
+        throw std::runtime_error("Error while opening video media\n");
+    }
+    //load first frame from video
+    capture.read(first);
+    if (first.empty()) {
+        throw std::runtime_error("CMedia finished\n");
+    }
+    //load second frame from video
+    capture.read(second);
+    if (second.empty()) {
+        throw std::runtime_error("CMedia finished\n");
+    }
+    // Wrap it in a shared_ptr
+    std::shared_ptr<cv::Mat> firstFrame = std::make_shared<cv::Mat>(first);
+    std::shared_ptr<cv::Mat> secondFrame = std::make_shared<cv::Mat>(second);
+    //preper detectAll and detectChanges
+    // Create Detector instance
+    Detector detectAll;
+    Detector detectChanges;
+    // or true
+    bool is_cuda = false;
+    detectAll.init(is_cuda);
+    detectChanges.init(is_cuda);
+    // Perform detection
+    detectAll.detect(secondFrame);
+    detectChanges.detect(firstFrame);
+    detectChanges.detect(secondFrame);
+    // Get output
+    const auto &detectAllOutput = detectAll.getOutput();
+    const auto &detectChangesOutput = detectChanges.getOutput();
+    // Check if output is not empty
+    ASSERT_FALSE(detectAllOutput.empty());
+    ASSERT_FALSE(detectChangesOutput.empty());
+    //check if two ouptputs have the same length
+    ASSERT_EQ(detectAllOutput.size(), detectChangesOutput.size());
+}

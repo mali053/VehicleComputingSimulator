@@ -31,7 +31,7 @@ struct AESData
     unsigned int keySize;
 };
 
-typedef std::function<void(unsigned char*, unsigned int, unsigned char*, unsigned char*&, unsigned int&, const unsigned char*, AESKeyLength)> EncryptDecryptFunc;
+typedef std::function<void(unsigned char*, unsigned int, unsigned char*, unsigned char*&, unsigned int&, const unsigned char*, unsigned char*, AESKeyLength)> EncryptDecryptFunc;
 static std::map<AESKeyLength,AESData> aesKeyLengthData = {
    { AESKeyLength::AES_128, {4, 10, 128} },
    { AESKeyLength::AES_192, {6, 12, 192} },
@@ -58,6 +58,7 @@ static std::map<AESKeyLength,AESData> aesKeyLengthData = {
     unsigned char multiply(unsigned char x, unsigned char y);
     void xorBlocks(const unsigned char *a, const unsigned char *b,
                     unsigned char *c, unsigned int len);
+   void generateRandomIV(unsigned char* iv); 
 
 /*Inverse S-Box*/
 const unsigned char invSBox[16][16] = {
@@ -129,54 +130,6 @@ const unsigned char sBox[16][16] = {
     {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f,
      0xb0, 0x54, 0xbb, 0x16}};
 
-void encryptECB(unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void encryptCBC(unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void encryptCFB(unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void encryptOFB(unsigned char in[], unsigned int inLen, unsigned char *key,
-                unsigned char *&out, unsigned int &outLen, const unsigned char *iv, AESKeyLength keyLength);
-void encryptCTR(unsigned char in[], unsigned int inLen, unsigned char *key,
-                unsigned char *&out, unsigned int &outLen, const unsigned char *iv, AESKeyLength keyLength);
-void encryptAES(unsigned char in[], unsigned int inLen, unsigned char *key,
-                unsigned char *&out, unsigned int &outLen ,AESKeyLength keyLength, AESChainingMode chainingMode);
-void decryptECB(const unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void decryptCBC(const unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void decryptCFB(const unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void decryptOFB(const unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void decryptCTR(const unsigned char in[], unsigned int inLen, unsigned char *key,
-             unsigned char *&out, unsigned int &outLen,
-             const unsigned char *iv, AESKeyLength keyLength);
-void decryptAES(unsigned char in[], unsigned int inLen,
-                unsigned char *key, unsigned char *&out, unsigned int &outLen, AESKeyLength keyLength, AESChainingMode chainingMode);
 unsigned char *generateKey(AESKeyLength keyLength);
-
-static std::map<AESChainingMode, EncryptDecryptFunc> encryptFunctions = {
-    {ECB, encryptECB},
-    {CBC, encryptCBC},
-    {CFB, encryptCFB},
-    {OFB, encryptOFB},
-    {CTR, encryptCTR}
-};
-
-static std::map<AESChainingMode, EncryptDecryptFunc> decryptFunctions = {
-    {ECB, decryptECB},
-    {CBC, decryptCBC},
-    {CFB, decryptCFB},
-    {OFB, decryptOFB},
-    {CTR, decryptCTR}
-};
 
 #endif

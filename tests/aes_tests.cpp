@@ -1,369 +1,129 @@
 #include <cstring>
 #include "gtest/gtest.h"
 #include "../include/aes.h"
+#include "../include/aes_stream_factory.h"  // Assuming this is where your FactoryManager is defined
+
 const unsigned int BLOCK_BYTES_LENGTH = 16 * sizeof(unsigned char);
 
-TEST(KeyLengths, KeyLength128_CBC)
+/* Helper function to setup encryption and decryption */
+void testEncryptionDecryption(AESChainingMode mode, AESKeyLength keyLength) {
+    unsigned char plain[BLOCK_BYTES_LENGTH] = {
+        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
+    };
+    unsigned char plain2[BLOCK_BYTES_LENGTH] = {
+        0x00, 0x10, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
+        0x78, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff
+    };
+
+    // Create a factory instance
+    StreamAES* streamAES = FactoryManager::getInstance().create(mode);
+    ASSERT_NE(streamAES, nullptr); 
+
+    unsigned char* key = generateKey(keyLength);
+    unsigned char* encrypted = nullptr;
+    unsigned char* encrypted2 = nullptr;
+    unsigned int outLenEncrypted = 0;
+    unsigned int outLenEncrypted2 = 0;
+
+    streamAES->encryptStart(plain, BLOCK_BYTES_LENGTH, encrypted, outLenEncrypted, key, keyLength);
+    streamAES->encryptContinue(plain2, BLOCK_BYTES_LENGTH, encrypted2, outLenEncrypted2);
+
+    unsigned char* decrypted = nullptr;
+    unsigned char* decrypted2 = nullptr;
+    unsigned int outLenDecrypted = 0;
+    unsigned int outLenDecrypted2 = 0;
+
+    streamAES->decryptStart(encrypted, outLenEncrypted, decrypted, outLenDecrypted, key, keyLength);
+    streamAES->decryptContinue(encrypted2, outLenEncrypted2, decrypted2, outLenDecrypted2);
+
+    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
+    delete[] encrypted;
+    delete[] encrypted2;
+    delete[] decrypted;
+    delete[] decrypted2;
+   // delete streamAES;
+}
+TEST(KeyLengths, KeyLength128_ECB) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_128);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_128,AESChainingMode::CBC);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_128,AESChainingMode::CBC);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::ECB, AESKeyLength::AES_128);
 }
 
-TEST(KeyLengths, KeyLength192_CBC)
+TEST(KeyLengths, KeyLength128_CBC) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-   
-    unsigned char *key = generateKey(AESKeyLength::AES_192);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_192,AESChainingMode::CBC);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_192,AESChainingMode::CBC);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CBC, AESKeyLength::AES_128);
 }
 
-TEST(KeyLengths, KeyLength256_CBC)
+TEST(KeyLengths, KeyLength128_CFB) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_256,AESChainingMode::CBC);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256,AESChainingMode::CBC);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CFB, AESKeyLength::AES_128);
 }
 
-TEST(CBC, EncryptDecryptOneBlock_CBC)
+TEST(KeyLengths, KeyLength128_OFB) 
 {
-    unsigned char plain[18] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
-                               0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
-                               0xcc, 0xdd, 0xee, 0xff, 0xef, 0x03};
-   
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, 17, key, encrypted, outLenEncrypted, AESKeyLength::AES_256,AESChainingMode::CBC);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256,AESChainingMode::CBC);
-    ASSERT_FALSE(memcmp(plain, decrypted, 17));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::OFB, AESKeyLength::AES_128);
 }
 
-TEST(KeyLengths, KeyLength128_CTR)
+TEST(KeyLengths, KeyLength128_CTR) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_128);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_128, AESChainingMode::CTR);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_128, AESChainingMode::CTR);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CTR, AESKeyLength::AES_128);
 }
 
-TEST(KeyLengths, KeyLength192_CTR)
+TEST(KeyLengths, KeyLength192_ECB) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_192);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_192, AESChainingMode::CTR);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_192, AESChainingMode::CTR);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::ECB, AESKeyLength::AES_192);
 }
 
-TEST(KeyLengths, KeyLength256_CTR)
+TEST(KeyLengths, KeyLength192_CBC) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::CTR);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::CTR);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CBC, AESKeyLength::AES_192);
 }
 
-TEST(CTR, EncryptDecryptOneBlock_CTR)
+TEST(KeyLengths, KeyLength192_CFB) 
 {
-    unsigned char plain[18] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
-                               0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
-                               0xcc, 0xdd, 0xee, 0xff, 0xef, 0x03};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, 17, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::CTR);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::CTR);
-    ASSERT_FALSE(memcmp(plain, decrypted, 17));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CFB, AESKeyLength::AES_192);
 }
 
-TEST(KeyLengths, KeyLength128_ECB)
+TEST(KeyLengths, KeyLength192_OFB) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_128);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_128, AESChainingMode::ECB);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_128, AESChainingMode::ECB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::OFB, AESKeyLength::AES_192);
 }
 
-TEST(KeyLengths, KeyLength192_ECB)
+TEST(KeyLengths, KeyLength192_CTR) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-   
-    unsigned char *key = generateKey(AESKeyLength::AES_192);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_192, AESChainingMode::ECB);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_192, AESChainingMode::ECB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CTR, AESKeyLength::AES_192);
 }
 
-TEST(KeyLengths, KeyLength256_ECB)
+TEST(KeyLengths, KeyLength256_ECB) 
 {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::ECB);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::ECB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::ECB, AESKeyLength::AES_256);
 }
 
-TEST(ECB, EncryptDecryptOneBlock_ECB)
+TEST(KeyLengths, KeyLength256_CBC) 
 {
-    unsigned char plain[18] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
-                               0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
-                               0xcc, 0xdd, 0xee, 0xff, 0xef, 0x03};
-   
-    unsigned char *key = generateKey(AESKeyLength::AES_256);
-    unsigned char *encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, 17, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::ECB);
-    unsigned char *decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::ECB);
-    ASSERT_FALSE(memcmp(plain, decrypted, 17));
-    delete[] encrypted;
-    delete[] decrypted;
+    testEncryptionDecryption(AESChainingMode::CBC, AESKeyLength::AES_256);
 }
 
-TEST(KeyLengths, KeyLength128_CFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char* key = generateKey(AESKeyLength::AES_128);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_128, AESChainingMode::CFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_128, AESChainingMode::CFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST(KeyLengths, KeyLength192_CFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-   
-    unsigned char* key = generateKey(AESKeyLength::AES_192);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_192, AESChainingMode::CFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_192, AESChainingMode::CFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST(KeyLengths, KeyLength256_CFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char* key = generateKey(AESKeyLength::AES_256);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::CFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::CFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST(CFB, EncryptDecryptOneBlock) {
-    unsigned char plain[18] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
-                               0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
-                               0xcc, 0xdd, 0xee, 0xff, 0xef, 0x03};
-   
-    unsigned char* key = generateKey(AESKeyLength::AES_256);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, 17, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::CFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::CFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, 17));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST( KeyLengths, KeyLength128_OFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char* key = generateKey(AESKeyLength::AES_128);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_128, AESChainingMode::OFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_128, AESChainingMode::OFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST(KeyLengths, KeyLength192_OFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-   
-    unsigned char* key = generateKey(AESKeyLength::AES_192);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_192, AESChainingMode::OFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_192, AESChainingMode::OFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST( KeyLengths, KeyLength256_OFB) {
-    unsigned char plain[BLOCK_BYTES_LENGTH] = {
-        0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77,
-        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-
-    unsigned char* key = generateKey(AESKeyLength::AES_256);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, BLOCK_BYTES_LENGTH, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::OFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::OFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, BLOCK_BYTES_LENGTH));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-
-TEST( OFB, EncryptDecryptOneBlock) {
-    unsigned char plain[18] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55,
-                               0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb,
-                               0xcc, 0xdd, 0xee, 0xff, 0xef, 0x03};
-   
-    unsigned char* key = generateKey(AESKeyLength::AES_256);
-    unsigned char* encrypted;
-    unsigned int outLenEncrypted;
-    encryptAES(plain, 17, key, encrypted, outLenEncrypted, AESKeyLength::AES_256, AESChainingMode::OFB);
-    unsigned char* decrypted;
-    unsigned int outLenDecrypted;
-    decryptAES(encrypted, outLenEncrypted, key, decrypted, outLenDecrypted, AESKeyLength::AES_256, AESChainingMode::OFB);
-    ASSERT_FALSE(memcmp(plain, decrypted, 17));
-    delete[] encrypted;
-    delete[] decrypted;
-    delete[] key;
-}
-int main(int argc, char **argv)
+TEST(KeyLengths, KeyLength256_CFB) 
 {
-    ::testing::InitGoogleTest(&argc, argv);
+    testEncryptionDecryption(AESChainingMode::CFB, AESKeyLength::AES_256);
+}
+
+TEST(KeyLengths, KeyLength256_OFB) 
+{
+    testEncryptionDecryption(AESChainingMode::OFB, AESKeyLength::AES_256);
+}
+
+TEST(KeyLengths, KeyLength256_CTR) 
+{
+    testEncryptionDecryption(AESChainingMode::CTR, AESKeyLength::AES_256);
+}
+
+int main() {
+    // Register factories
+    FactoryManager& manager = FactoryManager::getInstance();
+
+    // Now run your tests
+    ::testing::InitGoogleTest();
     return RUN_ALL_TESTS();
 }

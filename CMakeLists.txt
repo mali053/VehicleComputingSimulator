@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 project(MyTest)
 # Include directories
 include_directories(src)
-
 # Find Google Test
 find_package(GTest REQUIRED)
 # Add source files
@@ -23,14 +22,16 @@ if(USE_SYCL)
     message(STATUS "Compiling without SYCL support")
     remove_definitions(-DUSE_SYCL)
 endif()
+# Add debug flags
+set(CMAKE_BUILD_TYPE Debug)
 # Add the executable for the tests
-add_executable(runTests tests/aes_tests.cpp ${SOURCES})
+add_executable(runTests 
+  tests/aes_tests.cpp ${SOURCES})
 # Link libraries
 target_link_libraries(runTests
-    GTest::GTest
-    GTest::Main
-    pthread
+    gtest gtest_main pthread
 )
-# Enable testing
-enable_testing()
-gtest_discover_tests(runTests)
+# Optional: Output directory for the executable
+set_target_properties(runTests PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+)

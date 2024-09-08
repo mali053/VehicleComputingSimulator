@@ -26,7 +26,8 @@ public:
 
 private slots:
     bool validateAndAccept();
-        friend class ProcessDialogTests; 
+    friend class ProcessDialogTests;
+
 private:
     QLineEdit *idEdit;
     QLineEdit *nameEdit;

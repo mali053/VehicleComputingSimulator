@@ -1,8 +1,7 @@
 #include <QtTest/QtTest>
 #include "../src/main_window.h"
 
-class TestMainWindow : public QObject
-{
+class TestMainWindow : public QObject {
     Q_OBJECT
 
 private slots:
@@ -17,7 +16,6 @@ private slots:
     void addId(int id);
 };
 
-
 void TestMainWindow::testCreateNewProcess()
 {
     MainWindow window;
@@ -26,12 +24,13 @@ void TestMainWindow::testCreateNewProcess()
     QString cmakeProject = "../src/dummy_program3";
     QString qemuPlatform = "QEMUPlatform";
     // Create a new Process object with the provided data
-    Process* newProcess = new Process(newProcessId, processName, cmakeProject, qemuPlatform);
+    Process *newProcess =
+        new Process(newProcessId, processName, cmakeProject, qemuPlatform);
     // Simulate adding the process square to the main window
     window.addProcessSquare(newProcess);
     window.addId(newProcessId);
     // Verify that the process was added correctly
-    Process* retrievedProcess = window.getProcessById(newProcessId);
+    Process *retrievedProcess = window.getProcessById(newProcessId);
     QVERIFY(retrievedProcess != nullptr);
     QCOMPARE(retrievedProcess->getName(), processName);
     QCOMPARE(retrievedProcess->getCMakeProject(), cmakeProject);
@@ -43,25 +42,26 @@ void TestMainWindow::testCreateNewProcess()
 void TestMainWindow::testAddProcessSquare()
 {
     MainWindow window;
-    Process *newProcess = new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
+    Process *newProcess =
+        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
     window.addProcessSquare(newProcess);
-    QCOMPARE(window.squares.size(), 5); // Check if square is added
-   
+    QCOMPARE(window.squares.size(), 5);  // Check if square is added
 }
 
 void TestMainWindow::testIsUniqueId()
 {
     MainWindow window;
     window.addId(5);
-    QCOMPARE(window.isUniqueId(5), false); // Check if the ID is unique
-    QCOMPARE(window.isUniqueId(10), true); // Check if a different ID is unique
+    QCOMPARE(window.isUniqueId(5), false);  // Check if the ID is unique
+    QCOMPARE(window.isUniqueId(10), true);  // Check if a different ID is unique
 }
 
 void TestMainWindow::testStartProcesses()
 {
     MainWindow window;
     window.startProcesses();
-    QVERIFY(!window.runningProcesses.isEmpty()); // Ensure processes are started
+    QVERIFY(
+        !window.runningProcesses.isEmpty());  // Ensure processes are started
 }
 
 void TestMainWindow::testEndProcesses()
@@ -69,35 +69,33 @@ void TestMainWindow::testEndProcesses()
     MainWindow window;
     window.startProcesses();
     window.endProcesses();
-    QVERIFY(window.runningProcesses.isEmpty()); // Ensure processes are stopped
+    QVERIFY(window.runningProcesses.isEmpty());  // Ensure processes are stopped
 }
-
-
-
 
 void TestMainWindow::testDeleteSquare()
 {
     MainWindow window;
-    Process *process = new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
+    Process *process =
+        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
     window.addProcessSquare(process);
-   
 
     window.deleteSquare(5);
-    
+
     // Ensure that only the initial 4 squares remain
     QCOMPARE(window.squares.size(), 4);
     QVERIFY(!window.squarePositions.contains(5));
     QVERIFY(!window.usedIds.contains(5));
 }
 
-
-void TestMainWindow::addId(int id){
+void TestMainWindow::addId(int id)
+{
     MainWindow window;
     window.addId(77);
     QVERIFY(window.usedIds.contains(77));
 }
 
-void TestMainWindow::testShowTimerInput() {
+void TestMainWindow::testShowTimerInput()
+{
     MainWindow mainWindow;
 
     // Initially, the time input and label should be hidden
@@ -113,8 +111,5 @@ void TestMainWindow::testShowTimerInput() {
     QVERIFY(mainWindow.timeLabel->isVisible());
 }
 
-
 QTEST_MAIN(TestMainWindow)
 #include "test_main_window.moc"
-
-

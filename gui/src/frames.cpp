@@ -2,11 +2,15 @@
 #include <cstdlib>
 #include <ctime>
 #include "frames.h"
+#include "main_window.h"
 
 // Constructor to initialize Frames with a LogHandler reference
 Frames::Frames(LogHandler &logHandler, QWidget *parent)
     : logHandler(logHandler), QWidget(parent), differenceTime(0)
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Initializing Frames");
+
     createSequentialIds();
     fillFramesMat();
 
@@ -18,6 +22,9 @@ Frames::Frames(LogHandler &logHandler, QWidget *parent)
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Frames::updateFrames);
     timer->start(1000);
+
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::DEBUG, "Frames initialized with timer set to 1000ms");
 }
 
 void Frames::initialFramesMat(int size)
@@ -57,11 +64,12 @@ void Frames::paintEvent(QPaintEvent *event)
                 painter.drawRect(rect2);
             }
             else {
-                qDebug() << "Invalid index: row" << row << "col" << col;
+                MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, 
+                "Invalid index: row " + std::to_string(row) + " col " + std::to_string(col));
             }
         }
         else {
-            qDebug() << "Invalid ID index:";
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Invalid ID index");
         }
     }
 }
@@ -71,7 +79,10 @@ void Frames::updateFrames()
     QDateTime currentTime =
         QDateTime::currentDateTime().addMSecs(-differenceTime);
 
-    qDebug() << "Updating frames at time:" << currentTime.toString();
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::DEBUG,
+        "Updating frames at time: " + currentTime.toString().toStdString());
+
     // Decrease thickness for expired log entries
     for (auto it = activeLogEntries.begin(); it != activeLogEntries.end();) {
         if (it->first.addSecs(5) <= currentTime) {
@@ -90,6 +101,10 @@ void Frames::updateFrames()
         }
     }
 
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO, "Active log entries remaining: " +
+                                    std::to_string(activeLogEntries.size()));
+
     // Increase thickness for new log entries
     for (const LogHandler::LogEntry &logEntry : logHandler.getLogEntries()) {
         if (logEntry.timestamp <= currentTime) {
@@ -104,7 +119,6 @@ void Frames::updateFrames()
             }
         }
     }
-
     update();
 }
 
@@ -113,16 +127,21 @@ void Frames::createSequentialIds()
     int newId = 0;
     for (const DraggableSquare *ds : logHandler.getProcessSquares()) {
         int originalId = ds->getProcess()->getId();
-        qDebug() << originalId;
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::DEBUG, "Mapping original ID " +
+                                         std::to_string(originalId) +
+                                         " to new ID " + std::to_string(newId));
         idMapping.insert(originalId, newId);
         newId++;
     }
-    qDebug() << newId;
     initialFramesMat(newId);
 }
 
 void Frames::fillFramesMat()
 {
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO, "Filling frames matrix with random colors");
+
     QSet<QString> usedColors;
     srand(static_cast<unsigned int>(time(0)));
 
@@ -137,8 +156,10 @@ void Frames::fillFramesMat()
             framesMat[i][j].color = randomColor;
             framesMat[i][j].thickness = 1;
 
-            qDebug() << "Color for frame (" << i << "," << j
-                     << "):" << randomColor;
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::DEBUG,
+                "Assigned color " + randomColor.toStdString() + " to frame (" +
+                    std::to_string(i) + ", " + std::to_string(j) + ")");
         }
     }
 }

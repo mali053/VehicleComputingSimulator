@@ -2,38 +2,66 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <fstream>
-#include <iostream>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
 #include "simulation_data_manager.h"
+#include "main_window.h"
 
 SimulationDataManager::SimulationDataManager(QWidget *parent) : QWidget(parent)
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "SimulationDataManager", "Constructor",
+                                     "SimulationDataManager instance created");
 }
 
 void SimulationDataManager::readSimulationData(
     QVector<DraggableSquare *> squares, QString img)
 {
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::DEBUG, "SimulationDataManager", "readSimulationData",
+        "Starting to read simulation data");
+
     data.processes.clear();
-    for(int i = 0; i < squares.size(); i++) {
-        if(squares[i] != nullptr)
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::DEBUG, "SimulationDataManager", "readSimulationData",
+        "Cleared existing processes");
+
+    for (int i = 0; i < squares.size(); i++) {
+        if (squares[i] != nullptr) {
             data.processes.append(squares[i]);
-        else
-            qWarning() << "Warning: Null pointer at index" << i;
+
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::DEBUG, "SimulationDataManager",
+                "readSimulationData",
+                "Added process at index " + std::to_string(i));
+        }
+        else {
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::ERROR, "SimulationDataManager",
+                "readSimulationData",
+                "Null pointer encountered at index " + std::to_string(i));
+        }
     }
 
     data.user.id = 1;
     data.user.name = "default user";
     data.user.img = img;
+
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO, "SimulationDataManager", "readSimulationData",
+        "Simulation data read completed. Total processes: " +
+            std::to_string(data.processes.size()));
 }
 
 void SimulationDataManager::saveSimulationData(
     const std::string &fileName, QVector<DraggableSquare *> squares,
     QString img)
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Starting to save simulation data.");
+
     readSimulationData(squares, img);
 
     bson_t *document = bson_new();
@@ -85,11 +113,13 @@ void SimulationDataManager::saveSimulationData(
     if (file.is_open()) {
         file.write(reinterpret_cast<char *>(buf), length);
         file.close();
-        std::cout << "Successfully saved data to " << fileName << std::endl;
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO, "Successfully saved data to " + fileName);
     }
     else {
-        std::cerr << "Failed to open file for writing: " << fileName
-                  << std::endl;
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Failed to open file for writing: " + fileName);
     }
 
     bson_free(buf);
@@ -98,9 +128,14 @@ void SimulationDataManager::saveSimulationData(
 QJsonObject SimulationDataManager::loadSimulationData(
     const std::string &fileName)
 {
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "Attempting to load simulation data from " + fileName);
+
     std::ifstream file(fileName, std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << fileName << std::endl;
+        MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR,
+                                         "Failed to open file: " + fileName);
         return QJsonObject();  // Return an empty QJsonObject
     }
 
@@ -112,16 +147,20 @@ QJsonObject SimulationDataManager::loadSimulationData(
         const uint8_t *data = reinterpret_cast<const uint8_t *>(buffer.data());
         bson_t *document = bson_new_from_data(data, size);
         if (document) {
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::INFO, "Successfully loaded simulation data.");
             QJsonObject jsonObject = bsonToJsonObject(document);
             bson_destroy(document);  // Clean up BSON document
             return jsonObject;
         }
         else {
-            std::cerr << "Failed to parse BSON document" << std::endl;
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR,
+                                             "Failed to parse BSON document");
         }
     }
     else {
-        std::cerr << "Failed to read file: " << fileName << std::endl;
+        MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR,
+                                         "Failed to read file: " + fileName);
     }
     return QJsonObject();  // Return an empty QJsonObject
 }
@@ -132,6 +171,10 @@ QJsonObject SimulationDataManager::bsonToJsonObject(const bson_t *document)
     QJsonDocument jsonDoc =
         QJsonDocument::fromJson(QByteArray::fromRawData(json, strlen(json)));
     bson_free(json);
+
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Converted BSON to JSON object.");
+
     return jsonDoc.object();
 }
 
@@ -139,5 +182,8 @@ void SimulationDataManager::printJson(QJsonObject jsonObject)
 {
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonBytes = jsonDoc.toJson();
-    std::cout << jsonBytes.toStdString() << std::endl;
+
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::DEBUG,
+        "Printing JSON object:\n" + jsonBytes.toStdString());
 }

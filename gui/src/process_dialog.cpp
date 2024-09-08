@@ -6,10 +6,14 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include "process_dialog.h"
+#include "main_window.h"
 
 ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
+
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Initializing ProcessDialog");
 
     QLabel *idLabel = new QLabel("ID:");
     idEdit = new QLineEdit(this);
@@ -88,12 +92,28 @@ bool ProcessDialog::isValid() const
 
 bool ProcessDialog::validateAndAccept()
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Validating ProcessDialog inputs");
+
     if (isValid()) {
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO, "Validation successful, accepting dialog");
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::DEBUG,
+            "Entered values: ID = " + idEdit->text().toStdString() +
+                ", Name = " + nameEdit->text().toStdString() +
+                ", CMake Project = " + cmakeProjectEdit->text().toStdString() +
+                ", QEMU Platform = " +
+                qemuPlatformCombo->currentText().toStdString());
         accept();
         return true;
     }
     else {
-        QMessageBox::warning(this, "Input Error", "Please fill in all fields correctly.");
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Validation failed, missing or incorrect input");
+        QMessageBox::warning(this, "Input Error",
+                             "Please fill in all fields correctly.");
         return false;
     }
 }

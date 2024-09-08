@@ -6,8 +6,6 @@
 #include <QStyleOption>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <iostream>
-#include <QDebug>
 #include <QMenu>
 #include "main_window.h"
 #include "draggable_square.h"
@@ -15,15 +13,17 @@
 // Add this function to your DraggableSquare class
 void DraggableSquare::print() const
 {
-    std::cout << "DraggableSquare:" << std::endl;
-    std::cout << "  Process ID: " << process->getId() << std::endl;
-    std::cout << "  Drag Start Position: (" << dragStartPosition.x() << ", "
-              << dragStartPosition.y() << ")" << std::endl;
-    std::cout << "  Initial Position: (" << initialPosition.x() << ", "
-              << initialPosition.y() << ")" << std::endl;
-    std::cout << "  Color: " << label->styleSheet().toStdString() << std::endl;
-    std::cout << "  Size: (" << this->width() << ", " << this->height() << ")"
-              << std::endl;
+    std::stringstream ss;
+    ss << "DraggableSquare:\n"
+       << "  Process ID: " << process->getId() << "\n"
+       << "  Drag Start Position: (" << dragStartPosition.x() << ", " 
+       << dragStartPosition.y() << ")\n"
+       << "  Initial Position: (" << initialPosition.x() << ", " 
+       << initialPosition.y() << ")\n"
+       << "  Color: " << label->styleSheet().toStdString() << "\n"
+       << "  Size: (" << this->width() << ", " << this->height() << ")";
+       
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, ss.str());
 }
 
 void DraggableSquare::setSquareColor(const QString &color)
@@ -51,6 +51,8 @@ DraggableSquare::DraggableSquare(const DraggableSquare &other)
       label(new QLabel(other.label->text(), this)),
       process(other.process)  // Copy QLabel's text
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::DEBUG,
+                                     "Copying DraggableSquare");
     setFixedSize(other.width(), other.height());
     setStyleSheet(other.styleSheet());
 }
@@ -58,6 +60,8 @@ DraggableSquare::DraggableSquare(const DraggableSquare &other)
 // Copy assignment operator
 DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::DEBUG,
+                                     "Assigning DraggableSquare");
     if (this == &other) {
         return *this;
     }
@@ -76,6 +80,8 @@ DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
 
 void DraggableSquare::setProcess(Process *proc)
 {
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Setting process for DraggableSquare");
     process = proc;
     if (process) {
         this->id = process->getId();
@@ -104,18 +110,23 @@ void DraggableSquare::setDragStartPosition(QPoint dragStartPosition)
 
 DraggableSquare::~DraggableSquare()
 {
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "Destroying DraggableSquare with ID: " + std::to_string(id));
     if (label) {
         delete label;
         label = nullptr;
     }
-
-    qDebug() << "DraggableSquare with ID" << id << "is being destroyed.";
 }
 
 void DraggableSquare::mousePressEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::RightButton) {
         if (id < 0 || id > 4) {  // Prevent menu for IDs 1 to 4
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::DEBUG,
+                "Right-click on DraggableSquare with ID: " +
+                    std::to_string(id));
             QMenu contextMenu(this);
 
             QAction *editAction = contextMenu.addAction("Edit");
@@ -132,6 +143,9 @@ void DraggableSquare::mousePressEvent(QMouseEvent *event)
         }
     }
     else if (event->button() == Qt::LeftButton) {
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::DEBUG,
+            "Left-click on DraggableSquare with ID: " + std::to_string(id));
         dragStartPosition = event->pos();
         dragging = true;
     }
@@ -152,12 +166,18 @@ void DraggableSquare::mouseMoveEvent(QMouseEvent *event)
 
     move(newPos);
     dragStartPosition = newPos;
+    MainWindow::guiLogger.logMessage(logger::LogLevel::DEBUG,
+                                     "DraggableSquare moved to: (" +
+                                         std::to_string(newPos.x()) + ", " +
+                                         std::to_string(newPos.y()) + ")");
 }
 
 void DraggableSquare::mouseReleaseEvent(QMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton) {
         dragging = false;
+        MainWindow::guiLogger.logMessage(logger::LogLevel::DEBUG,
+                                         "DraggableSquare drag ended");
     }
 
     QWidget::mouseReleaseEvent(event);
@@ -174,6 +194,9 @@ void DraggableSquare::editSquare(int id)
 
 void DraggableSquare::deleteSquare(int id)
 {
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "Editing DraggableSquare with ID: " + std::to_string(id));
     MainWindow *mainWindow =
         qobject_cast<MainWindow *>(parentWidget()->window());
     if (mainWindow) {

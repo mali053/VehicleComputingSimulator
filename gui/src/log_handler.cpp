@@ -1,8 +1,8 @@
 #include "log_handler.h"
 #include "draggable_square.h"
 #include "simulation_data_manager.h"
+#include "main_window.h"
 #include <QCoreApplication>
-#include <QDebug>
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -24,9 +24,15 @@ void LogHandler::readLogFile(const QString &fileName)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug() << "Cannot open file:" << fileName;
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Cannot open file: " + fileName.toStdString());
         return;
     }
+
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "File successfully opened: " + fileName.toStdString());
 
     QByteArray fileData = file.readAll();
     file.close();
@@ -37,7 +43,9 @@ void LogHandler::readLogFile(const QString &fileName)
         QStringList fields = trimmedLine.split(' ');
 
         if (fields.size() < 6) {
-            qWarning() << "Skipping malformed line:" << trimmedLine;
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::DEBUG,
+                "Skipping malformed line: " + trimmedLine.toStdString());
             continue;
         }
 
@@ -49,8 +57,7 @@ void LogHandler::readLogFile(const QString &fileName)
         entry.timestamp =
             QDateTime::fromString(dateTimeString, "yyyy-MM-dd HH:mm:ss.zzz");
         if (!entry.timestamp.isValid()) {
-            qWarning() << "Skipping line with invalid timestamp:"
-                       << trimmedLine;
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Skipping line with invalid timestamp: " + trimmedLine.toStdString());
             continue;
         }
 
@@ -61,7 +68,8 @@ void LogHandler::readLogFile(const QString &fileName)
         logEntries.push_back(entry);
     }
 
-    qDebug() << "Log file successfully read";
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Log file successfully read.");
 }
 
 void LogHandler::sortLogEntries()
@@ -75,17 +83,28 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
     if (realTime) {
         // if the simulation runs time the squares are present on the window
         /// Otherwise, quarters are reloaded according to the data in Gison
+        MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                         "Analyzing log entries in real-time.");
     }
     else {
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO, "Analyzing log entries from JSON file: " +
+                                        jsonFileName.toStdString());
+
         SimulationDataManager dataManager;
         QJsonObject jsonObject =
             dataManager.loadSimulationData(jsonFileName.toStdString());
         if (jsonObject.isEmpty()) {
-            qWarning() << "Failed to load JSON data";
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to load JSON data");
             return;
         }
 
-        // Update the process map according to information from the JSON file
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO,
+            "Successfully loaded simulation data from: " +
+                jsonFileName.toStdString());
+
+        // Update process map with JSON data
         QJsonArray processesArray = jsonObject["processes"].toArray();
         for (const QJsonValue &value : processesArray) {
             QJsonObject processObject = value.toObject();
@@ -108,7 +127,10 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
         }
     }
 
-    qDebug() << "Size of logEntries:" << logEntries.size();
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "Size of logEntries: " + std::to_string(logEntries.size()));
+
     for (const auto &logEntry : logEntries) {
         int srcId = logEntry.srcId;
         int dstId = logEntry.dstId;
@@ -131,6 +153,11 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
 
         srcSquare->setSquareColor(color);
         dstSquare->setSquareColor(color);
+
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::DEBUG,
+            "Updated square colors for srcId: " + std::to_string(srcId) +
+                " dstId: " + std::to_string(dstId));
 
         // Increase communication count
         communicationCounts[srcId][dstId]++;

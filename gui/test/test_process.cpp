@@ -5,7 +5,8 @@ class ProcessTests : public QObject {
     Q_OBJECT
 
 private slots:
-    void testProcessConstructor() {
+    void testProcessConstructor()
+    {
         Process process(1, "Test Process", "TestProject", "TestPlatform");
         QCOMPARE(process.getId(), 1);
         QCOMPARE(process.getName(), QString("Test Process"));
@@ -13,7 +14,8 @@ private slots:
         QCOMPARE(process.getQEMUPlatform(), QString("TestPlatform"));
     }
 
-    void testDefaultConstructor() {
+    void testDefaultConstructor()
+    {
         Process process;
         QCOMPARE(process.getId(), -1);
         QCOMPARE(process.getName(), QString(""));
@@ -21,7 +23,8 @@ private slots:
         QCOMPARE(process.getQEMUPlatform(), QString(""));
     }
 
-    void testSetters() {
+    void testSetters()
+    {
         Process process;
         process.setId(2);
         process.setName("New Process");

@@ -33,7 +33,7 @@
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
-   public:
+public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void startProcesses();
@@ -42,18 +42,33 @@ class MainWindow : public QMainWindow {
     void timerTimeout();
     void openImageDialog();
     void createProcessConfigFile(int id, const QString &processPath);
-    QLineEdit *getTimeInput() const { return timeInput; }
-    QPushButton *getStartButton() const { return startButton; }
-    QTimer *getTimer() const { return timer; }
-    QTextEdit *getLogOutput() const { return logOutput; }
-    QString getCurrentImagePath() const { return currentImagePath; }
+    QLineEdit *getTimeInput() const
+    {
+        return timeInput;
+    }
+    QPushButton *getStartButton() const
+    {
+        return startButton;
+    }
+    QTimer *getTimer() const
+    {
+        return timer;
+    }
+    QTextEdit *getLogOutput() const
+    {
+        return logOutput;
+    }
+    QString getCurrentImagePath() const
+    {
+        return currentImagePath;
+    }
     static logger guiLogger;
-   public slots:
+public slots:
     void createNewProcess();
     void editSquare(int id);
     void deleteSquare(int id);
 
-   private:
+private:
     friend class TestMainWindow;
     friend class DraggableSquareTest;
     friend class UserInteractionTests;

@@ -6,7 +6,8 @@
 
 using json = nlohmann::json;
 
-int main() {
+int main()
+{
     // Read JSON file
     std::ifstream file("../config.json");  // Replace with your JSON file name
     if (!file.is_open()) {

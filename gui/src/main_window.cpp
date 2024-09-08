@@ -1,7 +1,6 @@
 #include <QMessageBox>
 #include <QHBoxLayout>
 #include <QFileInfo>
-#include <QDebug>
 #include <QPixmap>
 #include <QFileDialog>
 #include <QTimer>
@@ -20,8 +19,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
 {
     QWidget *centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
-
-    MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "MainWindow::MainWindow()  Log file successfully read");
 
     QHBoxLayout *mainLayout = new QHBoxLayout(centralWidget);
 
@@ -45,8 +42,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     toolboxLayout->addWidget(addProcessButton);
     toolboxLayout->addStretch();
 
-    connect(addProcessButton, &QPushButton::clicked, this, &MainWindow::createNewProcess);
-    connect(startButton, &QPushButton::clicked, this, &MainWindow::startProcesses);
+    connect(addProcessButton, &QPushButton::clicked, this,
+            &MainWindow::createNewProcess);
+    connect(startButton, &QPushButton::clicked, this,
+            &MainWindow::startProcesses);
     connect(endButton, &QPushButton::clicked, this, &MainWindow::endProcesses);
     connect(timerButton, &QPushButton::clicked, this,
             &MainWindow::showTimerInput);
@@ -102,7 +101,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     addId(id++);
 }
 
-
 MainWindow::~MainWindow()
 {
     qDeleteAll(squares);
@@ -118,15 +116,20 @@ void MainWindow::createNewProcess()
     if (dialog.exec() == QDialog::Accepted && dialog.isValid()) {
         int id = dialog.getId();
         if (id <= 4) {
-            QMessageBox::warning(this, "Invalid ID", "The ID must be greater than 4.");
-           MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "MainWindow", "createNewProcess", "Invalid ID entered: " + std::to_string(id));
+            QMessageBox::warning(this, "Invalid ID",
+                                 "The ID must be greater than 4.");
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::ERROR, "MainWindow", "createNewProcess",
+                "Invalid ID entered: " + std::to_string(id));
             return;
         }
         if (!isUniqueId(id)) {
             QMessageBox::warning(this, "Non-unique ID",
                                  "The ID entered is already in use. Please "
                                  "choose a different ID.");
-            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "MainWindow", "createNewProcess", "Non-unique ID entered: " + std::to_string(id));
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::ERROR, "MainWindow", "createNewProcess",
+                "Non-unique ID entered: " + std::to_string(id));
             return;
         }
         Process *newProcess =
@@ -134,7 +137,9 @@ void MainWindow::createNewProcess()
                         dialog.getQEMUPlatform());
         addProcessSquare(newProcess);
         addId(id);
-        MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, "MainWindow", "createNewProcess", "New process created with ID: " + std::to_string(id));
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO, "MainWindow", "createNewProcess",
+            "New process created with ID: " + std::to_string(id));
     }
 }
 
@@ -207,14 +212,18 @@ void MainWindow::startProcesses()
         QMessageBox::warning(this, "Invalid Input",
                              "Please enter a valid number of seconds.");
         timeInput->clear();
-        MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "MainWindow", "startProcesses", "Invalid timer input: " + inputText.toStdString());
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::ERROR, "MainWindow", "startProcesses",
+            "Invalid timer input: " + inputText.toStdString());
         return;
     }
 
     if (time > 0) {
         logOutput->append("Timer started for " + QString::number(time) +
                           " seconds.");
-        MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, "MainWindow", "startProcesses", "Timer started for " + std::to_string(time) + " seconds");
+        MainWindow::guiLogger.logMessage(
+            logger::LogLevel::INFO, "MainWindow", "startProcesses",
+            "Timer started for " + std::to_string(time) + " seconds");
 
         if (timer) {
             timer->stop();
@@ -235,7 +244,9 @@ void MainWindow::startProcesses()
 void MainWindow::endProcesses()
 {
     logOutput->append("Ending processes...");
-    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, "MainWindow::endProcesses()   Ending processes");
+    MainWindow::guiLogger.logMessage(
+        logger::LogLevel::INFO,
+        "MainWindow::endProcesses()   Ending processes");
 
     if (timer) {
         timer->stop();
@@ -247,8 +258,11 @@ void MainWindow::endProcesses()
     timeLabel->show();
     timeInput->clear();
 
-    dataManager->saveSimulationData("simulation_data.bson", squares, currentImagePath);
-    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, "MainWindow::endProcesses  Simulation data saved to simulation_data.bson");
+    dataManager->saveSimulationData("simulation_data.bson", squares,
+                                    currentImagePath);
+    MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "MainWindow::endProcesses  Simulation "
+                                     "data saved to simulation_data.bson");
 
     QString filePath = "../log_file.log";
     logHandler.readLogFile(filePath);
@@ -259,7 +273,7 @@ void MainWindow::endProcesses()
     framesLayout->addWidget(frames);
     workspace->setLayout(framesLayout);
 
-    for (QProcess* process : runningProcesses) {
+    for (QProcess *process : runningProcesses) {
         if (process->state() != QProcess::NotRunning) {
             logOutput->append("Ending process...");
             process->terminate();
@@ -275,7 +289,9 @@ void MainWindow::showTimerInput()
     timeLabel->show();
     timeInput->show();
 
-    guiLogger.logMessage(logger::LogLevel::DEBUG, "showTimerInput() called: Timer input elements are shown.");
+    guiLogger.logMessage(
+        logger::LogLevel::DEBUG,
+        "showTimerInput() called: Timer input elements are shown.");
 }
 
 void MainWindow::timerTimeout()
@@ -290,11 +306,11 @@ void MainWindow::openImageDialog()
 {
     QString imagePath = QFileDialog::getOpenFileName(
         this, tr("Select Image"), "", tr("Image Files (*.png *.jpg *.jpeg)"));
-    
+
     if (!imagePath.isEmpty()) {
         currentImagePath = imagePath;
         QPixmap pixmap(imagePath);
-        
+
         if (!pixmap.isNull()) {
             // Clear the workspace before adding the new image
             QLayout *layout = workspace->layout();
@@ -320,13 +336,22 @@ void MainWindow::openImageDialog()
             // Add a new layout to the workspace
             QVBoxLayout *newLayout = new QVBoxLayout(workspace);
             workspace->setLayout(newLayout);
-            
-            guiLogger.logMessage(logger::LogLevel::INFO, "openImageDialog() called: Image loaded and displayed.");
-        } else {
-            guiLogger.logMessage(logger::LogLevel::ERROR, "openImageDialog() failed: Unable to load image from path " + imagePath.toStdString());
+
+            guiLogger.logMessage(
+                logger::LogLevel::INFO,
+                "openImageDialog() called: Image loaded and displayed.");
         }
-    } else {
-        guiLogger.logMessage(logger::LogLevel::INFO, "openImageDialog() canceled: No image path selected.");
+        else {
+            guiLogger.logMessage(
+                logger::LogLevel::ERROR,
+                "openImageDialog() failed: Unable to load image from path " +
+                    imagePath.toStdString());
+        }
+    }
+    else {
+        guiLogger.logMessage(
+            logger::LogLevel::INFO,
+            "openImageDialog() canceled: No image path selected.");
     }
 }
 
@@ -336,25 +361,26 @@ QString MainWindow::getExecutableName(const QString &buildDirPath)
 
     // Check if the directory exists
     if (!buildDir.exists()) {
-        qWarning() << "Error: The directory" << buildDirPath
-                   << "does not exist.";
         QMessageBox::critical(this, "Directory Error",
                               "The specified build directory does not exist.");
-        guiLogger.logMessage(logger::LogLevel::ERROR, "getExecutableName() failed: Directory does not exist: " + buildDirPath.toStdString());
+        guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "getExecutableName() failed: Directory does not exist: " +
+                buildDirPath.toStdString());
         return QString();
     }
-
 
     QStringList files = buildDir.entryList(QDir::Files | QDir::NoSymLinks);
 
     // If the directory is empty or has no files
     if (files.isEmpty()) {
-        qWarning() << "Error: No files found in the directory" << buildDirPath
-                   << ".";
         QMessageBox::critical(
             this, "File Error",
             "No files found in the specified build directory.");
-        guiLogger.logMessage(logger::LogLevel::ERROR, "getExecutableName() failed: No files found in directory: " + buildDirPath.toStdString());
+        guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "getExecutableName() failed: No files found in directory: " +
+                buildDirPath.toStdString());
         return QString();
     }
 
@@ -372,18 +398,20 @@ QString MainWindow::getExecutableName(const QString &buildDirPath)
     }
 
     // No executable found
-    qWarning() << "Error: No executable file found in the directory"
-               << buildDirPath << ".";
     QMessageBox::critical(
         this, "Executable Not Found",
         "No executable file found in the specified build directory.");
-    guiLogger.logMessage(logger::LogLevel::ERROR, "getExecutableName() failed: No executable file found in directory: " + buildDirPath.toStdString());
+    guiLogger.logMessage(
+        logger::LogLevel::ERROR,
+        "getExecutableName() failed: No executable file found in directory: " +
+            buildDirPath.toStdString());
     return QString();
 }
 
 void MainWindow::compileAndRunProjects()
 {
-    guiLogger.logMessage(logger::LogLevel::INFO, "Compiling and running projects started.");
+    guiLogger.logMessage(logger::LogLevel::INFO,
+                         "Compiling and running projects started.");
 
     // Clear previous running processes
     for (QProcess *process : runningProcesses) {
@@ -398,7 +426,9 @@ void MainWindow::compileAndRunProjects()
             // Check if it's a shell script
             QFile scriptFile(cmakePath);
             if (!scriptFile.exists()) {
-                guiLogger.logMessage(logger::LogLevel::ERROR, "Shell script file does not exist: " + cmakePath.toStdString());
+                guiLogger.logMessage(logger::LogLevel::ERROR,
+                                     "Shell script file does not exist: " +
+                                         cmakePath.toStdString());
                 logOutput->append("Shell script file does not exist: " +
                                   cmakePath);
                 continue;
@@ -415,7 +445,9 @@ void MainWindow::compileAndRunProjects()
                                       cmakePath);
                     continue;
                 }
-                guiLogger.logMessage(logger::LogLevel::INFO, "Script is now executable: " + cmakePath.toStdString());
+                guiLogger.logMessage(
+                    logger::LogLevel::INFO,
+                    "Script is now executable: " + cmakePath.toStdString());
                 logOutput->append("Script is now executable: " + cmakePath);
             }
 
@@ -434,7 +466,8 @@ void MainWindow::compileAndRunProjects()
                 });
         }
         else {
-            guiLogger.logMessage(logger::LogLevel::INFO, "Compiling " + cmakePath.toStdString());
+            guiLogger.logMessage(logger::LogLevel::INFO,
+                                 "Compiling " + cmakePath.toStdString());
             logOutput->append("Compiling " + cmakePath);
 
             QDir cmakeDir(cmakePath);
@@ -448,7 +481,10 @@ void MainWindow::compileAndRunProjects()
                     if (fileInfo.isDir()) {
                         QDir dir(fileInfo.absoluteFilePath());
                         if (!dir.removeRecursively()) {
-                            guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to remove directory: " + fileInfo.absoluteFilePath().toStdString());
+                            guiLogger.logMessage(
+                                logger::LogLevel::ERROR,
+                                "Failed to remove directory: " +
+                                    fileInfo.absoluteFilePath().toStdString());
                             logOutput->append("Failed to remove directory: " +
                                               fileInfo.absoluteFilePath());
                             continue;
@@ -456,7 +492,10 @@ void MainWindow::compileAndRunProjects()
                     }
                     else {
                         if (!QFile::remove(fileInfo.absoluteFilePath())) {
-                            guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to remove file: " + fileInfo.absoluteFilePath().toStdString());
+                            guiLogger.logMessage(
+                                logger::LogLevel::ERROR,
+                                "Failed to remove file: " +
+                                    fileInfo.absoluteFilePath().toStdString());
                             logOutput->append("Failed to remove file: " +
                                               fileInfo.absoluteFilePath());
                             continue;
@@ -467,7 +506,9 @@ void MainWindow::compileAndRunProjects()
             else {
                 // Create the build directory if it doesn't exist
                 if (!buildDir.mkpath(".")) {
-                    guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to create build directory " + buildDirPath.toStdString());
+                    guiLogger.logMessage(logger::LogLevel::ERROR,
+                                         "Failed to create build directory " +
+                                             buildDirPath.toStdString());
                     logOutput->append("Failed to create build directory " +
                                       buildDirPath);
                     continue;
@@ -478,7 +519,9 @@ void MainWindow::compileAndRunProjects()
             cmakeProcess->setWorkingDirectory(buildDirPath);
             cmakeProcess->start("cmake", QStringList() << "..");
             if (!cmakeProcess->waitForFinished()) {
-                guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to run cmake in " + buildDirPath.toStdString());
+                guiLogger.logMessage(
+                    logger::LogLevel::ERROR,
+                    "Failed to run cmake in " + buildDirPath.toStdString());
                 logOutput->append("Failed to run cmake in " + buildDirPath);
                 logOutput->append(cmakeProcess->readAllStandardError());
                 delete cmakeProcess;
@@ -488,13 +531,14 @@ void MainWindow::compileAndRunProjects()
             logOutput->append(cmakeProcess->readAllStandardError());
             delete cmakeProcess;
 
-
             // Run make
             QProcess *makeProcess = new QProcess(this);
             makeProcess->setWorkingDirectory(buildDirPath);
             makeProcess->start("make", QStringList());
             if (!makeProcess->waitForFinished()) {
-                guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to compile in " + buildDirPath.toStdString());
+                guiLogger.logMessage(
+                    logger::LogLevel::ERROR,
+                    "Failed to compile in " + buildDirPath.toStdString());
                 logOutput->append("Failed to compile in " + buildDirPath);
                 logOutput->append(makeProcess->readAllStandardError());
                 delete makeProcess;
@@ -502,11 +546,13 @@ void MainWindow::compileAndRunProjects()
             }
             logOutput->append(makeProcess->readAllStandardOutput());
             logOutput->append(makeProcess->readAllStandardError());
-            guiLogger.logMessage(logger::LogLevel::INFO, "Successfully compiled " + buildDirPath.toStdString());
+            guiLogger.logMessage(
+                logger::LogLevel::INFO,
+                "Successfully compiled " + buildDirPath.toStdString());
             logOutput->append("Successfully compiled " + buildDirPath);
             delete makeProcess;
             logOutput->append("Successfully compiled " + buildDirPath);
-             // Run the compiled program
+            // Run the compiled program
             QString exeFile = getExecutableName(buildDirPath);
             QString executablePath = buildDir.absoluteFilePath(exeFile);
             QProcess *runProcess = new QProcess(this);
@@ -522,7 +568,9 @@ void MainWindow::compileAndRunProjects()
                     });
             runProcess->start(executablePath, QStringList());
             if (!runProcess->waitForStarted()) {
-                guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to start the program in " + buildDirPath.toStdString());
+                guiLogger.logMessage(logger::LogLevel::ERROR,
+                                     "Failed to start the program in " +
+                                         buildDirPath.toStdString());
                 logOutput->append("Failed to start the program in " +
                                   buildDirPath);
                 logOutput->append(runProcess->readAllStandardError());
@@ -533,12 +581,14 @@ void MainWindow::compileAndRunProjects()
         }
     }
 
-    guiLogger.logMessage(logger::LogLevel::INFO, "Compiling and running projects finished.");
+    guiLogger.logMessage(logger::LogLevel::INFO,
+                         "Compiling and running projects finished.");
 }
 
 void MainWindow::editSquare(int id)
 {
-    guiLogger.logMessage(logger::LogLevel::INFO, "Editing square with ID: " + std::to_string(id));
+    guiLogger.logMessage(logger::LogLevel::INFO,
+                         "Editing square with ID: " + std::to_string(id));
 
     for (DraggableSquare *square : squares) {
         if (square->getProcess()->getId() == id) {
@@ -555,7 +605,9 @@ void MainWindow::editSquare(int id)
                     dialog.getId(), dialog.getName(), dialog.getCMakeProject(),
                     dialog.getQEMUPlatform());
                 square->setProcess(updatedProcess);
-                guiLogger.logMessage(logger::LogLevel::INFO, "Updated process details for square ID: " + std::to_string(id));
+                guiLogger.logMessage(logger::LogLevel::INFO,
+                                     "Updated process details for square ID: " +
+                                         std::to_string(id));
             }
             break;
         }
@@ -564,9 +616,8 @@ void MainWindow::editSquare(int id)
 
 void MainWindow::deleteSquare(int id)
 {
-    guiLogger.logMessage(logger::LogLevel::INFO, "Deleting square with ID: " + std::to_string(id));
-    qDebug() << "Deleting square with ID:" << id;
-
+    guiLogger.logMessage(logger::LogLevel::INFO,
+                         "Deleting square with ID: " + std::to_string(id));
     auto it = std::find_if(
         squares.begin(), squares.end(), [id](DraggableSquare *square) {
             return square && square->getProcess()->getId() == id;
@@ -577,19 +628,22 @@ void MainWindow::deleteSquare(int id)
         it = squares.erase(it);
         if (toDelete) {
             toDelete->deleteLater();
-            qDebug() << "Square with ID:" << id << "deleted.";
-            guiLogger.logMessage(logger::LogLevel::INFO, "Square with ID: " + std::to_string(id) + " deleted.");
+            guiLogger.logMessage(
+                logger::LogLevel::INFO,
+                "Square with ID: " + std::to_string(id) + " deleted.");
         }
     }
     else {
-        qDebug() << "Square with ID:" << id << "not found.";
-        guiLogger.logMessage(logger::LogLevel::ERROR, "Square with ID: " + std::to_string(id) + " not found.");
+        guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Square with ID: " + std::to_string(id) + " not found.");
     }
     usedIds.remove(id);
     squarePositions.remove(id);
 }
 
-void MainWindow::createProcessConfigFile(int id, const QString &processPath) {
+void MainWindow::createProcessConfigFile(int id, const QString &processPath)
+{
     // Creating a JSON object with the process ID
     QJsonObject jsonObject;
     jsonObject["ID"] = id;
@@ -605,15 +659,15 @@ void MainWindow::createProcessConfigFile(int id, const QString &processPath) {
     if (configFile.open(QIODevice::WriteOnly)) {
         configFile.write(jsonDoc.toJson());
         configFile.close();
-        qDebug() << "Config file created at:" << filePath;
 
-        // Log the successful creation of the config file
-        guiLogger.logMessage(logger::LogLevel::INFO, "Config file created at: " + filePath.toStdString());
-    } else {
-        qWarning() << "Failed to create config file at:" << filePath;
-
-        // Log the failure to create the config file
-        guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to create config file at: " + filePath.toStdString());
+        guiLogger.logMessage(
+            logger::LogLevel::INFO,
+            "Config file created at: " + filePath.toStdString());
+    }
+    else {
+        guiLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Failed to create config file at: " + filePath.toStdString());
     }
 }
 #include "moc_main_window.cpp"

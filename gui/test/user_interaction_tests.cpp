@@ -2,8 +2,7 @@
 #include <QFileDialog>
 #include "../src/main_window.h"
 
-class UserInteractionTests : public QObject
-{
+class UserInteractionTests : public QObject {
     Q_OBJECT
 
 private slots:
@@ -11,6 +10,7 @@ private slots:
     void cleanupTestCase();
     void testOpenImageDialog();
     void testGetExecutableName();
+
 private:
     MainWindow *mainWindow;
 };
@@ -31,10 +31,12 @@ void UserInteractionTests::testOpenImageDialog()
 {
     MainWindow window;
     window.openImageDialog();
-    QVERIFY(!window.getCurrentImagePath().isEmpty()); // Ensure image path is set
+    QVERIFY(
+        !window.getCurrentImagePath().isEmpty());  // Ensure image path is set
 }
 
-void UserInteractionTests::testGetExecutableName() {
+void UserInteractionTests::testGetExecutableName()
+{
     MainWindow window;
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());

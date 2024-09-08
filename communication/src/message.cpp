@@ -9,7 +9,8 @@ Message::Message(uint32_t srcID, void *data, int dlc, bool isBroadcast, uint32_t
         uint8_t packetData[8];
         size_t copySize = std::min(size - i * 8, (size_t)8); // Determine how much data to copy for each packet
         std::memcpy(packetData, (uint8_t *)data + i * 8, copySize);
-        packets.emplace_back(i, tps, srcID, destID, packetData, copySize, isBroadcast, false, false);
+        uint32_t id = srcID + destID;
+        packets.emplace_back(id, i, tps, srcID, destID, packetData, copySize, isBroadcast, false, false);
     }
 }
 

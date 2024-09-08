@@ -2,6 +2,7 @@
 BUILD/
 build/
 
+runFile/
 # Ignore log files
 *.log
 
@@ -10,7 +11,7 @@ build/
 *.a
 *.so
 *.exe
-
+*.sh
 # Ignore temporary files
 *.tmp
 *.swp
@@ -24,3 +25,8 @@ build/
 # Ignore system-specific files
 .DS_Store
 Thumbs.db
+
+user_1.cpp
+user_2.cpp
+user_3.cpp
+main_bus.cpp

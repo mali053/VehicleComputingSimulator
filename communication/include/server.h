@@ -23,6 +23,7 @@ private:
     std::vector<std::thread> clientThreads;
     std::vector<int> sockets;
     std::mutex socketMutex;
+    std::mutex threadMutex;
     std::function<void(void *)> receiveDataCallback;
     std::map<int, uint32_t> clientIDMap;
     std::mutex IDMapMutex;

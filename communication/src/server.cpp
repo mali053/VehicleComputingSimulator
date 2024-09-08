@@ -51,9 +51,11 @@ void Server::startThread()
         if (clientSocket < 0) {
             return;
         }
-        
         // Opens a new thread for handleClient - listening to messages from the process
-        clientThreads.emplace_back(&Server::handleClient, this, clientSocket);
+        {
+            std::lock_guard<std::mutex> lock(threadMutex);
+            clientThreads.emplace_back(&Server::handleClient, this, clientSocket);
+        } 
     }
 }
 
@@ -68,15 +70,17 @@ void Server::stopServer()
 {
     running = false;
     socketInterface->close(serverSocket);
-
-    std::lock_guard<std::mutex> lock(socketMutex);
-    for (int sock : sockets)
-        socketInterface->close(sock);
-
-    for (auto &th : clientThreads)
+    {
+        std::lock_guard<std::mutex> lock(socketMutex);
+        for (int sock : sockets)
+            socketInterface->close(sock);
+    }
+    {
+        std::lock_guard<std::mutex> lock(threadMutex);
+        for (auto &th : clientThreads)
         if (th.joinable())
             th.join();
-
+    }
     if(mainThread.joinable())
         mainThread.join();
 }

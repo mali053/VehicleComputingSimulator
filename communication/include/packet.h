@@ -31,7 +31,7 @@ struct Packet
     Packet() = default;
 
     // Constructor for sending message
-    Packet(uint32_t psn, uint32_t tps, uint32_t srcID, uint32_t destID, uint8_t *data, int dlc, bool isBroadcast, bool RTR = false, bool passive=false);
+    Packet(uint32_t id, uint32_t psn, uint32_t tps, uint32_t srcID, uint32_t destID, uint8_t *data, int dlc, bool isBroadcast, bool RTR = false, bool passive=false);
     
     // Constructor for receiving message
     Packet(uint32_t id);

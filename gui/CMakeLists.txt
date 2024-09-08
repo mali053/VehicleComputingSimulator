@@ -31,6 +31,7 @@ add_executable(DraggableSquares
     src/simulation_data_manager.cpp
     src/log_handler.cpp
     src/frames.cpp
+    ../logger/logger.cpp
 )
 
 # Add headers to the executable target
@@ -41,6 +42,7 @@ target_sources(DraggableSquares PRIVATE
     include/simulation_data_manager.h
     include/log_handler.h
     include/frames.h
+    ../logger/logger.h
 )
 
 # Include BSON directories

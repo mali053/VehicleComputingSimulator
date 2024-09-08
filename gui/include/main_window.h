@@ -28,6 +28,7 @@
 #include "process.h"
 #include "process_dialog.h"
 #include "simulation_data_manager.h"
+#include "../logger/logger.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -46,6 +47,7 @@ class MainWindow : public QMainWindow {
     QTimer *getTimer() const { return timer; }
     QTextEdit *getLogOutput() const { return logOutput; }
     QString getCurrentImagePath() const { return currentImagePath; }
+    static logger guiLogger;
    public slots:
     void createNewProcess();
     void editSquare(int id);

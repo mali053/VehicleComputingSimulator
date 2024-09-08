@@ -19,7 +19,7 @@ QVector<LogHandler::LogEntry> LogHandler::getLogEntries()
 {
     return logEntries;
 }
-// Reading data from a file
+
 void LogHandler::readLogFile(const QString &fileName)
 {
     QFile file(fileName);
@@ -85,7 +85,7 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
             return;
         }
 
-        // עדכון מפת התהליכים לפי מידע מהקובץ JSON
+        // Update the process map according to information from the JSON file
         QJsonArray processesArray = jsonObject["processes"].toArray();
         for (const QJsonValue &value : processesArray) {
             QJsonObject processObject = value.toObject();
@@ -143,37 +143,6 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
         square
             ->print();  // For example, a call to the print function we defined
     }
-}
-
-QVector<int> LogHandler::findProcessCoordinatesById(int processId,
-                                                    const QString &fileName)
-{
-    QVector<int> coordinates;
-
-    // Load JSON from file
-    QFile file(fileName);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning("Could not open file");
-        return coordinates;
-    }
-    QByteArray jsonData = file.readAll();
-    file.close();
-
-    QJsonDocument document = QJsonDocument::fromJson(jsonData);
-    QJsonObject rootObject = document.object();
-    QJsonArray processesArray = rootObject["processes"].toArray();
-
-    // Searching for the process ID and finding its coordinatesFi
-    for (const QJsonValue &value : processesArray) {
-        QJsonObject processObject = value.toObject();
-        if (processObject["id"].toInt() == processId) {
-            coordinates.append(processObject["x"].toInt());
-            coordinates.append(processObject["y"].toInt());
-            break;
-        }
-    }
-
-    return coordinates;
 }
 
 const QMap<int, DraggableSquare *> &LogHandler::getProcessSquares() const

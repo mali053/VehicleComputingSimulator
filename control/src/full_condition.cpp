@@ -29,7 +29,7 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
     if (condition.empty())
-        throw "Condition string is empty!";
+        cout << "Condition string is empty!" << endl;
 
     // Handling sensor reference
     if (condition[index] == '[')
@@ -38,10 +38,12 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
     int openBracketIndex =
         find(condition.begin() + index, condition.end(), '(') -
         condition.begin();
+
     // Generates a key for the condition with the current sensor's ID (if exists)
     string key =
         (currentSensor ? to_string(currentSensor->id) : "") +
         condition.substr(index, bracketIndexes[openBracketIndex] - index + 1);
+
     // Check if the key already exists in the existingConditions map
     if (s_existingConditions.find(key) != s_existingConditions.end()) {
         index = bracketIndexes[openBracketIndex] + 1;
@@ -101,6 +103,7 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
         int closeBracket = bracketIndexes[openBracketIndex];
         basicCondition->value =
             condition.substr(commaIndex + 1, closeBracket - commaIndex - 1);
+
         // Add the sensor reference to this leaf
         currentSensor->fields[name].second.push_back(basicCondition);
     }
@@ -133,7 +136,7 @@ map<int, int> findBrackets(string condition)
 }
 
 // Constructor: Builds the condition tree.
-FullCondition::FullCondition(string condition, map<int, string> &actions)
+FullCondition::FullCondition(string condition, vector<pair<int, string>> &actions)
     : actions(actions)
 {
     // Sets a unique ID for the condition and creates the root of the condition tree

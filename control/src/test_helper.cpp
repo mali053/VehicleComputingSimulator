@@ -11,8 +11,8 @@ void testCondition(string condition, int sensorId, string field, string value)
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
     // Creates a `FullCondition` object with the given parameters
-    map<int, string> map = {{8, "the condition is true"}};
-    FullCondition *cond = new FullCondition(condition, map);
+   vector<pair<int, string>> vec = {{8, "the condition is true"}};
+    FullCondition *cond = new FullCondition(condition, vec);
     instanceGP.conditions[cond->id] = cond;
 
     // Updates a specified sensor with the provided field and value

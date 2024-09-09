@@ -7,12 +7,14 @@
 #include <iostream>
 #include <stack>
 #include <unordered_map>
+
 #include "sensor.h"
 #include "or_operator.h"
 #include "and_operator.h"
 #include "basic_condition.h"
 #include "root.h"
 #include "condition_factory.h"
+
 using namespace std;
 
 class Root;
@@ -32,11 +34,11 @@ public:
     int id;
     // Root node of the condition tree
     Root *root;
-    // Map of actions associated with this condition
-    map<int, string> actions;
+    // Vector of actions associated with this condition
+    vector<pair<int, string>> actions;
 
     // Constructor: Initializes the FullCondition object, parses the condition string, and builds the condition tree.
-    FullCondition(string condition, map<int, string> &actions);
+    FullCondition(string condition, vector<pair<int, string>> &actions);
     void activateActions();
 };
 #endif  // _FULL_CONDITION_H_

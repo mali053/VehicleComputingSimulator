@@ -4,8 +4,11 @@
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <memory>
+
 #include "input.h"
 #include "full_condition.h"
+
 using namespace std;
 
 class FullCondition;

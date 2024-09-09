@@ -42,9 +42,9 @@ TEST(InDifferentTrees, IdenticalSubtrees)
         8, "code", "800");
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
-    map<int, string> map = {{8, "the condition is true"}};
+    vector<pair<int, string>> vec = {{8, "the condition is true"}};
     FullCondition *cond =
-        new FullCondition("[5]|(=(code,500),<(status,\"high\"))", map);
+        new FullCondition("[5]|(=(code,500),<(status,\"high\"))", vec);
     instanceGP.conditions[cond->id] = cond;
 
     // Check correct building

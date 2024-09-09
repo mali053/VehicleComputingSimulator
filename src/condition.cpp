@@ -2,7 +2,16 @@
 
 Condition::~Condition()
 {
-    // destructor implementation
+    QLayoutItem *item;
+    while ((item = this->takeAt(0)) != nullptr) {
+        QWidget *widget = item->widget(); 
+        if (widget) {
+            widget->setParent(nullptr); 
+        }
+        delete item; 
+    }
+    delete slectActions;
+    mainWindow->saveCondition(showCondition);
 }
 
 QString Condition::getShowCondition()
@@ -112,9 +121,14 @@ void Condition::setupUi()
 
     keyboardBox->setLayout(keyboardLayout);
 
+    slectActions = new QPushButton("Pass to selection of actions");
+    slectActions->setFixedSize(160, 50);
+
     // הוספת ה-QGroupBoxים ל-layout הראשי
     this->addWidget(screenBox);    // מסך מחשב
     this->addWidget(keyboardBox);  // מקלדת
+    this->addWidget(slectActions);  
+
 
     andBtn->setStyleSheet("background-color: #3498db; color: white; font-size: 18px;");
     andBtn->setFixedSize(80, 40);
@@ -150,9 +164,10 @@ void Condition::connectSignals()
     connect(submit, &QPushButton::clicked, [&](){ submitHandler(); });
     connect(sensors, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &Condition::sensorSelectionHandler);
-
     connect(operators, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &Condition::operatorSelectionHandler);
+    connect(slectActions, &QPushButton::clicked, this, [this]() {
+        mainWindow->goNext();});
 
     // טיימר לעדכון הצגת הסמן
     QTimer *timer = new QTimer(this);
@@ -398,6 +413,7 @@ void Condition::updateColors()
     cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
     cursor->setCharFormat(formatRed);    
 }
+
 
 void Condition::fillSensorsFields(map<int, string> pathesToJsonFiles)
 {

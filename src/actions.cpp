@@ -1,6 +1,19 @@
 #include "actions.h"
 
-Actions::~Actions() {}
+Actions::~Actions() 
+{
+    QLayoutItem *item;
+    while ((item = this->takeAt(0)) != nullptr) {
+        QWidget *widget = item->widget(); // מקבל את הווידג'ט (אם קיים)
+        if (widget) {
+            widget->setParent(nullptr); // מסיר את הווידג'ט מה-layout
+        }
+        delete item; // מוחק את ה-LayoutItem
+    }
+    delete finishBtn;
+    delete addCond;
+
+}
 
 void Actions::setupLogicalMembers()
 {
@@ -91,6 +104,8 @@ void Actions::setupUi(QString showCondition)
 
     keyboardBox->setLayout(keyboardLayout);
 
+    QHBoxLayout *nextLayout = new QHBoxLayout;
+
     addCond = new QPushButton("add condition");
     addCond->setFixedSize(180,50);
     addCond->setFont(QFont("Arial", 15));
@@ -101,20 +116,19 @@ void Actions::setupUi(QString showCondition)
     finishBtn->setFont(QFont("Arial", 15));
     finishBtn->setEnabled(false);
 
-    QHBoxLayout *nextLayout = new QHBoxLayout;
 
+    nextLayout->addItem(spacer);
     nextLayout->addWidget(addCond);
     nextLayout->addWidget(finishBtn);
-    nextLayout->addItem(spacer);
 
     this->addWidget(screenBox);   
     this->addWidget(keyboardBox);
     this->addLayout(nextLayout);
 
 
-    for (const auto &sensor : sensorList) {
+    for (const auto &sensor : sensorList) 
         sensors->addItem(sensor.first);
-    }
+    
 }
 
 void Actions::connectSignals() 
@@ -123,8 +137,12 @@ void Actions::connectSignals()
                 this, &Actions::sensorSelectionHandler);
     connect(OKBtn, &QPushButton::clicked, this, &Actions::OKBtnHandler);
     connect(addBtn, &QPushButton::clicked, this, &Actions::addBtnHandler );
-    connect(addCond, &QPushButton::clicked, this, &Actions::addCondHandler );
-
+    connect(addCond, &QPushButton::clicked, this,  [this]() {
+        messages.push_back({currentSensor,currentMessage});
+        mainWindow->goNext();});
+    connect(finishBtn, &QPushButton::clicked, this,  [this]() {
+        messages.push_back({currentSensor,currentMessage});
+        mainWindow->close();});
 }
 
 void Actions::sensorSelectionHandler(int index) 
@@ -181,8 +199,3 @@ void Actions::addBtnHandler()
     sensors->setCurrentIndex(0);
 }
 
-void Actions::addCondHandler() 
-{
-//    mainWindow->goNext();
-    delete this;
-}

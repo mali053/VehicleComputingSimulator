@@ -30,18 +30,21 @@ class MainWindow : public QWidget
 private:
    QGroupBox* box;
    QVBoxLayout* boxLayout;
-   QPushButton* next;
+   bool isConditionsWindow;
+   QString condition;
     // Q type
 
 
 
 public:
     MainWindow(QWidget *parent = nullptr) : QWidget(parent) {
+        isConditionsWindow = true;
         setupUi();
         connectSignals(); 
     }
     ~MainWindow();
     void goNext();
+    void saveCondition(QString condition);
 
 
 private:

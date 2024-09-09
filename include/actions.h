@@ -26,13 +26,15 @@
 #include <algorithm>
 #include <math.h>
 
-//#include "main_window.h"
+#include "main_window.h"
 using namespace std;
+
+class MainWindow;
 
 class Actions :  public QVBoxLayout {
     Q_OBJECT
 private:
-    // QWidget *mainWindow;
+    MainWindow *mainWindow;
     map<QString, int> sensorList;
     vector<pair<int,string>> messages;
     int currentSensor; 
@@ -52,9 +54,9 @@ private:
     // Q type
 
 public:
-    Actions(QString showCondition)
+    Actions(MainWindow *mainWindow, QString showCondition)
     {
-        // this->mainWindow = mainWindow;
+        this->mainWindow = mainWindow;
         setupLogicalMembers();
         setupUi(showCondition);
         connectSignals();
@@ -68,6 +70,5 @@ private:
     void sensorSelectionHandler(int index);
     void OKBtnHandler();
     void addBtnHandler();
-    void addCondHandler();
 };
 #endif

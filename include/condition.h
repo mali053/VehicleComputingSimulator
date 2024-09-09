@@ -24,17 +24,20 @@
 #include <fstream>
 #include <algorithm>
 #include <math.h>
+#include "main_window.h"
 
 #include "json.hpp"
 
 using json = nlohmann::json;
 using namespace std;
+class MainWindow;
 
 class Condition : public QVBoxLayout 
 {
     Q_OBJECT
 private:
     // Regular
+    MainWindow *mainWindow;
     map<int, vector<QString>> sensorsFieldsList;
     map<QString, int> sensorList;
     map<QString, QString> operatorsMap;
@@ -73,10 +76,11 @@ private:
     QComboBox *operators;
     QComboBox *sensors;
     QComboBox *sensorsFields;
-
+    QPushButton *slectActions;
 
 public:
-   explicit Condition() {
+   explicit Condition( MainWindow *mainWindow) {
+        this->mainWindow = mainWindow;
         setupLogicalMembers();
         setupUi();
         connectSignals(); 

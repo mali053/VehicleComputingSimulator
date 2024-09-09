@@ -12,17 +12,18 @@ private:
     // Singleton instance
     static BusManager* instance;
     static std::mutex managerMutex;
+    //SyncCommunication syncCommunication;
     
     // Sending according to broadcast variable
     int sendToClients(const Packet &packet);
 
     // Private constructor
-    BusManager();
+    BusManager(std::vector<uint32_t> idShouldConnect, uint32_t limit);
 
 public:
     
     //Static function to return a singleton instance
-    static BusManager* getInstance();
+    static BusManager* getInstance(std::vector<uint32_t> idShouldConnect, uint32_t limit);
 
     // Sends to the server to listen for requests
     int startConnection();

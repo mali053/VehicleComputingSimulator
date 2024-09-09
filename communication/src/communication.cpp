@@ -14,7 +14,12 @@ Communication::Communication(uint32_t id, void (*passDataCallback)(void *)) : cl
 // Sends the client to connect to server
 void Communication::startConnection()
 {
-    client.connectToServer();
+    //Waiting for manager
+    //syncCommunication.isManagerRunning()
+    int isConnected = client.connectToServer();
+    //Increases the shared memory and blocks the process - if not all are connected
+    //syncCommunication.registerProcess()
+    return isConnected;
 }
 
 // Sends a message sync

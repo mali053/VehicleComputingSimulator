@@ -4,19 +4,19 @@ BusManager* BusManager::instance = nullptr;
 std::mutex BusManager::managerMutex;
 
 //Private constructor
-BusManager::BusManager() : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1))
+BusManager::BusManager(std::vector<uint32_t> idShouldConnect, uint32_t limit) : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1)) //,syncCommunication(idShouldConnect, limit)
 {
     // Setup the signal handler for SIGINT
     signal(SIGINT, BusManager::signalHandler);
 }
 
 // Static function to return a singleton instance
-BusManager* BusManager::getInstance() {
+BusManager* BusManager::getInstance(std::vector<uint32_t> idShouldConnect, uint32_t limit) {
     if (instance == nullptr) {
         // Lock the mutex to prevent multiple threads from creating instances simultaneously
         std::lock_guard<std::mutex> lock(managerMutex);
         if (instance == nullptr) {
-            instance = new BusManager();
+            instance = new BusManager(idShouldConnect, limit);
         }
     }
     return instance;
@@ -25,7 +25,10 @@ BusManager* BusManager::getInstance() {
 // Sends to the server to listen for requests
 int BusManager::startConnection()
 {
-    return server.startConnection();
+    
+    int isConnected = server.startConnection();
+    //syncCommunication.notifyProcess()
+    return isConnected;
 }
 
 // Receives the packet that arrived and checks it before sending it out

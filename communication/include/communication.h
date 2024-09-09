@@ -9,6 +9,7 @@ private:
     std::unordered_map<std::string, Message> receivedMessages;
     void (*passData)(void *); 
     uint32_t id;
+    //SyncCommunication syncCommunication;
     // A static variable that holds an instance of the class
     static Communication* instance;
 

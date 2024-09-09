@@ -105,7 +105,7 @@ void Output::addNewCondition(string strCondition)
     BSON_APPEND_UTF8(currentCond, "if", strCondition.c_str());
 }
 
-void Output::addActionsToLastCondition(map<int, string> actions)
+void Output::addActionsToLastCondition(vector<pair<int, string>> actions)
 {
     bson_t send;
     BSON_APPEND_ARRAY_BEGIN(currentCond, "send", &send);

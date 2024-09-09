@@ -14,6 +14,9 @@
 #include <QLineEdit>
 #include <QGroupBox>
 #include <QTextEdit>
+#include <QTextCursor>
+#include <QTextCharFormat>
+
 
 #include <map>
 #include <stack>
@@ -53,6 +56,13 @@ private:
     QTextEdit *label;
     QLabel *label1;
 
+    QTextCursor *cursor;
+
+    // הגדרת פורמטים לצבעים שונים
+    QTextCharFormat formatRed;
+    QTextCharFormat formatGreen;
+    QTextCharFormat formatBlue;
+
     // יצירת כפתורים עם טקסט
     QPushButton *andBtn;
     QPushButton *orBtn;
@@ -89,6 +99,7 @@ private:
     void submitHandler();
     void updateSkipButtonState();
     void updateButtonVisible();
+    void updateColors();
 
     void fillSensorsFields(map<int, string> pathesToJsonFiles);
     // This function should be written in another ststic class (like "input" in the main)

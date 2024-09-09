@@ -46,6 +46,12 @@ void Condition::setupUi()
     label1 = new QLabel("");
     label1->setFont(font);
 
+    cursor = new QTextCursor(label->document());
+
+    formatRed.setForeground(Qt::red);
+    formatGreen.setForeground(QColor("#00B521"));
+    formatBlue.setForeground(Qt::blue);
+
     // יצירת מסגרת למסך מחשב (לקבוצה הראשונה)
     QGroupBox *screenBox = new QGroupBox("Screen");
     QVBoxLayout *screenLayout = new QVBoxLayout;
@@ -172,7 +178,9 @@ void Condition::updateDisplay()
         // Insert space at the current index
         displayedShowCondition.insert(ind, " ");
     }
-    label->setText(displayedShowCondition); // Update the QLabel with the new text
+    label->setPlainText(displayedShowCondition); // Update the QLabel with the new text
+    updateColors();
+    label->show();
 
     label1->setText(condition);  // Update the QLabel with the internal condition
 }
@@ -182,7 +190,10 @@ void Condition::buttonClickHandler(QPushButton *button)
 {
     QString buttonText = "";
     int tempInd = ind;  // Store current index
+    // If it is the first click in the current brackets
     if (typeCurrent.first == "if" || typeCurrent.first == "") {
+        QTextCharFormat formatRed;
+        formatRed.setForeground(Qt::red);
         // Insert new condition block
         buttonText += "(  )";
         ind += 2;
@@ -230,12 +241,9 @@ void Condition::skipHandler()
     
     ind++;
 
-    if (showCondition[ind - 1] == ')') {
-        indCondition = condition.toStdString().find(')', indCondition - 1) - 1;
-    } else {
+    if (showCondition[ind - 1] != ')')
         indCondition = std::max(static_cast<int>(
                         condition.toStdString().find(',', indCondition)) + 1, indCondition);
-    }
     updateButtonVisible();
     updateSensorComboBoxState();
     updateSkipButtonState();
@@ -293,7 +301,7 @@ void Condition::operatorSelectionHandler(int index)
 
 void Condition::submitHandler()
 {
-  QString currentField = sensorsFields->currentText();
+    QString currentField = sensorsFields->currentText();
     QString currentOperator = operators->currentText();
     QString enteredText = textBox->text();
 
@@ -353,6 +361,42 @@ void Condition::updateButtonVisible()
     else if (typeCurrent.first == "OR") 
         andBtn->hide();
     }
+}
+
+void Condition::updateColors()
+{
+    // Color the cursor- in ind position
+    cursor->setPosition(ind);
+    cursor->setPosition(ind + 1, QTextCursor::KeepAnchor);
+    cursor->setCharFormat(formatBlue);
+    // Color the close bracket
+    cursor->setPosition(ind + 2);
+    cursor->setPosition(ind + 3, QTextCursor::KeepAnchor);
+    cursor->setCharFormat(formatRed);
+
+    // Color the open bracket and the sensor
+    int tempIndex = ind - 1, count = 0;
+    while(showCondition[tempIndex] != '(' || count != 0) {
+        if (showCondition[tempIndex] == ')')
+            count++;
+        else if (showCondition[tempIndex] == '(')
+            count--;
+        else if (showCondition[tempIndex] == ']' && !count) {
+            cursor->setPosition(tempIndex - 5);
+            cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
+            cursor->setCharFormat(formatGreen); 
+            tempIndex -= 5;
+        }
+        else if (!count) {
+            cursor->setPosition(tempIndex);
+            cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
+            cursor->setCharFormat(formatRed); 
+        }
+        tempIndex--;
+    }
+    cursor->setPosition(tempIndex);
+    cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
+    cursor->setCharFormat(formatRed);    
 }
 
 void Condition::fillSensorsFields(map<int, string> pathesToJsonFiles)

@@ -37,7 +37,7 @@ public:
     static Output &getInstance();
 
     void addNewCondition(string condition);
-    void addActionsToLastCondition(map<int, string> actions);
+    void addActionsToLastCondition(vector<pair<int, string>> actions);
     // Or move it into the d-tor
     void saveToFile();
 };

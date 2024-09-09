@@ -5,7 +5,6 @@ Condition::~Condition()
     // destructor implementation
 }
 
-
 QString Condition::getShowCondition()
 {
     return showCondition;
@@ -40,7 +39,7 @@ void Condition::setupLogicalMembers()
 void Condition::setupUi()
 {
     label = new QLabel("");
-    QFont font("Arial", 25);  // מגדיר את סוג הכתב ואת גודלו
+    QFont font("Arial", 25);
     label->setFont(font);
 
     label1 = new QLabel("");
@@ -54,7 +53,6 @@ void Condition::setupUi()
     screenLayout->addWidget(label1);
     screenBox->setLayout(screenLayout);
 
-
     // יצירת כפתורים עם טקסט
     andBtn = new QPushButton("AND");
     orBtn = new QPushButton("OR");
@@ -65,14 +63,17 @@ void Condition::setupUi()
     
     sensors = new QComboBox();
     sensors->addItem("Sensors");  // Placeholder item
+    sensors->setItemData(0, QVariant(0), Qt::UserRole - 1); // Disable placeholder
     sensors->setCurrentIndex(0);
 
     sensorsFields = new QComboBox();
-    sensorsFields->addItem("sensors fields");
+    sensorsFields->addItem("sensors fields");  // Placeholder item
+    sensorsFields->setItemData(0, QVariant(0), Qt::UserRole - 1); // Disable placeholder
     sensorsFields->setCurrentIndex(0);
 
     operators = new QComboBox();
     operators->addItem("Operators");  // Placeholder item
+    operators->setItemData(0, QVariant(0), Qt::UserRole - 1); // Disable placeholder
     operators->setCurrentIndex(0);
 
     // יצירת מסגרת למקלדת (לקבוצה השנייה)
@@ -91,7 +92,6 @@ void Condition::setupUi()
 
     QGroupBox *basicConditionBox = new QGroupBox("---create basic condition---");
     QVBoxLayout *basicConditionLayout = new QVBoxLayout;
-
     
     // הוספת שאר הוויידג'טים למסגרת המקלדת
     QHBoxLayout *textLayout = new QHBoxLayout;
@@ -129,7 +129,6 @@ void Condition::setupUi()
     for (const auto &op : operatorList) {
         operators->addItem(op);
     }
-
 }
 
 void Condition::connectSignals()
@@ -147,7 +146,6 @@ void Condition::connectSignals()
 
     connect(operators, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &Condition::operatorSelectionHandler);
-
 
     // טיימר לעדכון הצגת הסמן
     QTimer *timer = new QTimer(this);
@@ -178,7 +176,6 @@ void Condition::updateDisplay()
     label1->setText(condition);  // Update the QLabel with the internal condition
 }
 
-
 // פונקציה כללית שמופעלת על כל כפתור שנלחץ
 void Condition::buttonClickHandler(QPushButton *button)
 {
@@ -191,7 +188,7 @@ void Condition::buttonClickHandler(QPushButton *button)
         condition.insert(indCondition,
                         operatorsMap[button->text()] + "(,)");
         indCondition += 2;
-        layersStack.push({button->text(), layersStack.top().second});
+        layersStack.push({button->text(), typeCurrent.second});
     }
     else {
         ind += button->text().length() + 4;
@@ -212,7 +209,7 @@ void Condition::buttonClickHandler(QPushButton *button)
 void Condition::skipHandler()
 {
     // Check if the cursor is at the end of the string
-    if (ind == showCondition.length() - 2)
+    if (ind >= showCondition.length() - 2)
         return;
 
     // Find the nearest closing parenthesis
@@ -247,7 +244,12 @@ void Condition::skipHandler()
 void Condition::resetButtonState()
 {
     setupLogicalMembers();
+    sensors->setCurrentIndex(0);
+    sensorsFields->setCurrentIndex(0);
+    operators->setCurrentIndex(0);
+    textBox->clear();
     sensorSelectionHandler(0);
+    updateButtonVisible();
     updateSensorComboBoxState();
     updateSkipButtonState();
     updateDisplay();
@@ -267,10 +269,15 @@ void Condition::sensorSelectionHandler(int index)
             2 + QString::number(sensorList[selectedSensor]).length();
         sensorsFields->clear();
         sensorsFields->addItem(QString("sensor %1 fields").arg(typeCurrent.second));
+        sensorsFields->setItemData(0, QVariant(0), Qt::UserRole - 1); // Disable placeholder
+
         sensorsFields->setCurrentIndex(0);
         for (const auto &sf : sensorsFieldsList[typeCurrent.second]) {
             sensorsFields->addItem(sf);
         }
+
+        operators->setCurrentIndex(0);  // Reset operators to placeholder
+
         updateSensorComboBoxState();
         updateDisplay();
     }
@@ -285,12 +292,9 @@ void Condition::operatorSelectionHandler(int index)
 
 void Condition::submitHandler()
 {
-    QString currentField = sensorsFields->currentText();
-
+  QString currentField = sensorsFields->currentText();
     QString currentOperator = operators->currentText();
-
     QString enteredText = textBox->text();
-    textBox->setText("");
 
     QString finalCondition = currentField + " " + currentOperator + " " + enteredText;
     showCondition.insert(ind, finalCondition);
@@ -300,27 +304,54 @@ void Condition::submitHandler()
     condition.insert(indCondition, finalCondition);
     indCondition += finalCondition.length();
     typeCurrent.first = "Basic";
+
+    // Reset combo boxes and text box for the next input
+    sensorsFields->setCurrentIndex(0);
+    operators->setCurrentIndex(0);
+    textBox->clear();
+
+    updateButtonVisible();
     skipHandler();
 }
 
 void Condition::updateSensorComboBoxState()
 {
+    bool enableBasicCondition = typeCurrent.second != -1;
+    bool enableSUbmit = typeCurrent.second != -1 && sensorsFields->currentIndex() != 0 && operators->currentIndex() != 0 && !textBox->text().isEmpty();
+    
     sensors->setEnabled(typeCurrent.second == -1);
+
+    // Enable or disable basic condition widgets
+    sensorsFields->setEnabled(enableBasicCondition);
+    operators->setEnabled(enableBasicCondition);
+    textBox->setEnabled(enableBasicCondition);
+    submit->setEnabled(enableSUbmit);
+
+    // If sensors combo box is enabled, set it to the default placeholder value
+    if (sensors->isEnabled()) {
+        sensors->setCurrentIndex(0); // Set to placeholder item
+    }
 }
 
 void Condition::updateSkipButtonState()
 {
-    skip->setVisible(!typeCurrent.first.isEmpty() || ind == showCondition.length() - 2);
+    bool disableSkip = (typeCurrent.first.isEmpty() || ind >= showCondition.length() - 2);
+    skip->setVisible(!disableSkip); // Enable or disable based on the condition
 }
 
 void Condition::updateButtonVisible()
 {
-    andBtn->show();
-    orBtn->show();
+    if (layersStack.size() <= 1 && typeCurrent.first == "Basic") {
+        andBtn->hide();
+        orBtn->hide();
+    } else {
+        andBtn->show();
+        orBtn->show();
     if (typeCurrent.first == "AND") 
         orBtn->hide();
     else if (typeCurrent.first == "OR") 
         andBtn->hide();
+    }
 }
 
 void Condition::fillSensorsFields(map<int, string> pathesToJsonFiles)
@@ -357,4 +388,3 @@ vector<QString> Condition::getFieldsOfSensor(string psthToSensorJson)
 
     return fields;
 }
-

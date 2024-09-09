@@ -83,9 +83,9 @@ private:
     void skipHandler();
     void resetButtonState();
     void sensorSelectionHandler(int index);
+    void updateSensorComboBoxState();
     void operatorSelectionHandler(int index);
     void submitHandler();
-    void updateSensorComboBoxState();  
     void updateSkipButtonState();
     void updateButtonVisible();
 

@@ -1,5 +1,51 @@
 #include "output.h"
 
+
+// Initializes the sensors based on a JSON file
+Output::Output(string pathToFileSave, map<int, string> sensorsMap) : fileName(pathToFileSave)
+{
+    counter = 0;
+    document = bson_new();
+
+    // Add the sensors to the bson file
+    bson_t sensors;
+    BSON_APPEND_ARRAY_BEGIN(document, "Sensors", &sensors);
+
+    for(auto sensor : sensorsMap) {
+        bson_t bsonSensor;
+        char key[16];
+        snprintf(key, sizeof(key), "%d", sensor.first);
+        BSON_APPEND_DOCUMENT_BEGIN(&sensors, key, &bsonSensor);
+
+        BSON_APPEND_INT32(&bsonSensor, "id", sensor.first);
+        BSON_APPEND_UTF8(&bsonSensor, "name", sensor.second.c_str());
+
+        bson_append_document_end(&sensors, &bsonSensor);
+    }
+
+    bson_append_array_end(document, &sensors);
+
+    // Initialize the conditions
+    BSON_APPEND_ARRAY_BEGIN(document, "Conditions", &conditions);
+}
+
+// Gets the singleton instance
+Output &Output::getInstance()
+{
+    // Creates the instance if it does not exist
+    if (!instance) {
+        instance = unique_ptr<Output>(new Output("my_bson.bson", {{1, "speed"}, {2, "tire pressure"}}));
+    }
+    // return Reference to the singleton `GlobalProperties` instance
+    return *instance;
+}
+
+// Static member to hold the single instance of `GlobalProperties`
+unique_ptr<Output> Output::instance = NULL;
+
+
+#pragma region helper
+
 // Functions to open bson for reading
 QJsonObject bsonToJsonObject(const bson_t *document) 
 {
@@ -46,33 +92,8 @@ void printJson(QJsonObject jsonObject)
     std::cout << jsonBytes.toStdString() << std::endl;
 }
 
+#pragma endregion
 
-Output::Output(string pathToFileSave, map<int, string> sensorsMap) : fileName(pathToFileSave)
-{
-    counter = 0;
-    document = bson_new();
-
-    // Add the sensors to the bson file
-    bson_t sensors;
-    BSON_APPEND_ARRAY_BEGIN(document, "Sensors", &sensors);
-
-    for(auto sensor : sensorsMap) {
-        bson_t bsonSensor;
-        char key[16];
-        snprintf(key, sizeof(key), "%d", sensor.first);
-        BSON_APPEND_DOCUMENT_BEGIN(&sensors, key, &bsonSensor);
-
-        BSON_APPEND_INT32(&bsonSensor, "id", sensor.first);
-        BSON_APPEND_UTF8(&bsonSensor, "name", sensor.second.c_str());
-
-        bson_append_document_end(&sensors, &bsonSensor);
-    }
-
-    bson_append_array_end(document, &sensors);
-
-    // Initialize the conditions
-    BSON_APPEND_ARRAY_BEGIN(document, "Conditions", &conditions);
-}
 
 void Output::addNewCondition(string strCondition)
 {

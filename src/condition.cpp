@@ -29,16 +29,17 @@ void Condition::setupLogicalMembers()
     operatorList = {"=", "!=", ">", "<", "<=", ">="};
     // Map sensor IDs to their respective JSON files
     fillSensorsFields({
-        {1, "speed_sensor.json"},
-        {2, "tire_pressure_sensor.json"},
-        {3, "communication_sensor.json"},
-        {4, "camera_sensor.json"}
+        {1, "sensors_data/speed_sensor.json"},
+        {2, "sensors_data/tire_pressure_sensor.json"},
+        {3, "sensors_data/communication_sensor.json"},
+        {4, "sensors_data/camera_sensor.json"}
     });
 }
 
 void Condition::setupUi()
 {
-    label = new QLabel("");
+    label = new QTextEdit("");
+    label->setReadOnly(true);
     QFont font("Arial", 25);
     label->setFont(font);
 

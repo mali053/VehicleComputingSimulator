@@ -13,6 +13,7 @@
 #include <QRandomGenerator>
 #include <QLineEdit>
 #include <QGroupBox>
+#include <QTextEdit>
 
 #include <map>
 #include <stack>
@@ -49,7 +50,7 @@ private:
     // Q type
 
     // יצירת QLabel להצגת הטקסט
-    QLabel *label;
+    QTextEdit *label;
     QLabel *label1;
 
     // יצירת כפתורים עם טקסט

@@ -25,20 +25,28 @@ void MainWindow::connectSignals()
 
 void MainWindow::goNext() 
 {
-    // נקה את הפריסה הקודמת אם קיימת
+    static bool isConditionsWindow = true;
+
     QLayout *oldLayout = box->layout();
-    QString showCondition = static_cast<Condition*>(oldLayout)->getShowCondition();
-    if (oldLayout) {
-        // נקה את כל הווידג'טים בפריסה הישנה
-        QLayoutItem *item;
-        while ((item = oldLayout->takeAt(0))) {
-            delete item->widget(); // מחק את הווידג'ט
-            delete item; // מחק את פריט הפריסה
-        }
-        delete oldLayout; // מחק את הפריסה הישנה
+
+    if(isConditionsWindow){
+        QString showCondition = static_cast<Condition*>(oldLayout)->getShowCondition();
+        boxLayout = new Actions(showCondition);
     }
+    else {
+        boxLayout = new Condition();
+    }
+    box->setLayout(boxLayout);
+
+    // if (oldLayout) {
+    //     // נקה את כל הווידג'טים בפריסה הישנה
+    //     QLayoutItem *item;
+    //     while ((item = oldLayout->takeAt(0))) {
+    //         delete item->widget(); // מחק את הווידג'ט
+    //         delete item; // מחק את פריט הפריסה
+    //     }
+    //     delete oldLayout; // מחק את הפריסה הישנה
+    // }
 
     // צור את הפריסה החדשה
-    boxLayout = new Actions(showCondition);
-    box->setLayout(boxLayout);
 }

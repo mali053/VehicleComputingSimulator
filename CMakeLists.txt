@@ -18,6 +18,8 @@ find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 # Collect source and header files
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 file(GLOB_RECURSE HEADERS "include/*.h")
+file(GLOB_RECURSE ICONS "src/icons*.png")
+
 
 # Add the executable target
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -28,6 +30,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
 # Link Qt to the executable
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Widgets)
 
+
 # Find libbson using pkg-config
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBBSON REQUIRED libbson-1.0)
@@ -36,11 +39,10 @@ pkg_check_modules(LIBBSON REQUIRED libbson-1.0)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LIBBSON_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBSON_LIBRARIES})
 
-# Copy JSON files to the build directory
-configure_file(${CMAKE_SOURCE_DIR}/speed_sensor.json ${CMAKE_BINARY_DIR}/speed_sensor.json COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/tire_pressure_sensor.json ${CMAKE_BINARY_DIR}/tire_pressure_sensor.json COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/communication_sensor.json ${CMAKE_BINARY_DIR}/communication_sensor.json COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/camera_sensor.json ${CMAKE_BINARY_DIR}/camera_sensor.json COPYONLY)
+# העתקת כל התיקייה של האייקונים לתוך תיקיית הבילד
+file(COPY ${CMAKE_SOURCE_DIR}/src/icons DESTINATION ${CMAKE_BINARY_DIR})
+# Copy .json to the build directory
+file(COPY ${CMAKE_SOURCE_DIR}/src/sensors_data DESTINATION ${CMAKE_BINARY_DIR})
 
 # Copy BSON file to the build directory
 configure_file(${CMAKE_SOURCE_DIR}/my_bson.bson ${CMAKE_BINARY_DIR}/my_bson.bson COPYONLY)

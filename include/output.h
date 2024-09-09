@@ -20,14 +20,22 @@ using namespace std;
 class Output
 {
 private:
+    // Private constructor
+    Output(string pathToFileSave, map<int, string> sensors);
+    // Single instance of the class
+    static unique_ptr<Output> instance;
+
     bson_t *document;
     bson_t conditions;
     bson_t *currentCond;
     int counter;
     string fileName;
 
+
 public:
-    Output(string pathToFileSave, map<int, string> sensors);
+    // Gets the singleton instance
+    static Output &getInstance();
+
     void addNewCondition(string condition);
     void addActionsToLastCondition(map<int, string> actions);
     // Or move it into the d-tor

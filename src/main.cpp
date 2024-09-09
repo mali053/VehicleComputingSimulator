@@ -1,20 +1,21 @@
 #include <QApplication>
 #include "main_window.h"
-#include "output.h"
+// #include "output.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
     MainWindow window;
-    window.setWindowTitle("Build Condition");
+    window.setWindowTitle("Build Conditions");
     window.resize(800, 600);
     window.show();
 
     return app.exec();
 
-    // Output output("my_bson.bson", {{1, "speed"}, {2, "tire pressure"}});
+    // Output &output = Output::getInstance();
     // output.addNewCondition("&([5]=(code,500),[4]<(status,700))");
-    // output.addActionsToLastCondition({{5, "decrease speed"}, {7, "slow down"}});
-    // output.saveToFile();
+    // Output &output2 = Output::getInstance();
+    // output2.addActionsToLastCondition({{5, "decrease speed"}, {7, "slow down"}});
+    // output2.saveToFile();
 }

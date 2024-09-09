@@ -13,28 +13,48 @@
 #include <QRandomGenerator>
 #include <QLineEdit>
 #include <QGroupBox>
+#include <QIcon>
+#include <QTextEdit>
+#include <QDir>
+
 
 #include <map>
+#include <vector>
 #include <stack>
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 #include <math.h>
+
+//#include "main_window.h"
 using namespace std;
 
 class Actions :  public QVBoxLayout {
     Q_OBJECT
 private:
+    // QWidget *mainWindow;
+    map<QString, int> sensorList;
+    vector<pair<int,string>> messages;
+    int currentSensor; 
+    string currentMessage;
+
     QString action;
-    QLabel *label;
+    QTextEdit *actions;
+    QTextEdit *label;
     QComboBox *sensors;
     QLineEdit *textBox;
+    QPushButton *OKBtn;
+    QPushButton *addBtn;
+    QPushButton *addCond;
+    QPushButton *finishBtn;
+
 
     // Q type
 
 public:
     Actions(QString showCondition)
     {
+        // this->mainWindow = mainWindow;
         setupLogicalMembers();
         setupUi(showCondition);
         connectSignals();
@@ -45,5 +65,9 @@ private:
     void setupLogicalMembers();
     void setupUi(QString showCondition);
     void connectSignals();
+    void sensorSelectionHandler(int index);
+    void OKBtnHandler();
+    void addBtnHandler();
+    void addCondHandler();
 };
 #endif

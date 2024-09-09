@@ -41,10 +41,11 @@ public:
         connectSignals(); 
     }
     ~MainWindow();
+    void goNext();
+
 
 private:
     void setupUi();
     void connectSignals();
-    void goNext();
 };
 #endif

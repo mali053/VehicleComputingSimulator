@@ -76,7 +76,7 @@ private:
     QComboBox *operators;
     QComboBox *sensors;
     QComboBox *sensorsFields;
-    QPushButton *slectActions;
+    QPushButton *selectActions;
 
 public:
    explicit Condition( MainWindow *mainWindow) {
@@ -86,7 +86,6 @@ public:
         connectSignals(); 
     }
     ~Condition();
-    QString getShowCondition();
 
 private:
     void setupLogicalMembers();

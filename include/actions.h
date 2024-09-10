@@ -27,6 +27,8 @@
 #include <math.h>
 
 #include "main_window.h"
+#include "output.h"
+
 using namespace std;
 
 class MainWindow;
@@ -70,5 +72,7 @@ private:
     void sensorSelectionHandler(int index);
     void OKBtnHandler();
     void addBtnHandler();
+    void addCondHandler();
+    void finishBtnHandler();
 };
 #endif

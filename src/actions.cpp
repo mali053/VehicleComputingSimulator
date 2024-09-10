@@ -136,13 +136,9 @@ void Actions::connectSignals()
     connect(sensors, QOverload<int>::of(&QComboBox::currentIndexChanged),
                 this, &Actions::sensorSelectionHandler);
     connect(OKBtn, &QPushButton::clicked, this, &Actions::OKBtnHandler);
-    connect(addBtn, &QPushButton::clicked, this, &Actions::addBtnHandler );
-    connect(addCond, &QPushButton::clicked, this,  [this]() {
-        messages.push_back({currentSensor,currentMessage});
-        mainWindow->goNext();});
-    connect(finishBtn, &QPushButton::clicked, this,  [this]() {
-        messages.push_back({currentSensor,currentMessage});
-        mainWindow->close();});
+    connect(addBtn, &QPushButton::clicked, this, &Actions::addBtnHandler);
+    connect(addCond, &QPushButton::clicked, this,  &Actions::addCondHandler);
+    connect(finishBtn, &QPushButton::clicked, this, &Actions::finishBtnHandler);
 }
 
 void Actions::sensorSelectionHandler(int index) 
@@ -166,7 +162,6 @@ void Actions::sensorSelectionHandler(int index)
 
 void Actions::OKBtnHandler() 
 {
-    
     QString enteredText = textBox->text();
     textBox->setText("");
     currentMessage = enteredText.toStdString();
@@ -199,3 +194,30 @@ void Actions::addBtnHandler()
     sensors->setCurrentIndex(0);
 }
 
+void Actions::addCondHandler()
+{
+    messages.push_back({currentSensor,currentMessage});
+
+    // Add the actions to the condition in the bson
+    cout << "Add the actions to the condition in the bson" << endl;
+    Output &output = Output::getInstance();
+    output.addActionsToLastCondition(messages);
+
+    mainWindow->goNext();
+}
+
+void Actions::finishBtnHandler()
+{
+    messages.push_back({currentSensor,currentMessage});
+
+    // Add the actions to the condition in the bson
+    cout << "Add the actions to the condition in the bson" << endl;
+    Output &output = Output::getInstance();
+    output.addActionsToLastCondition(messages);
+
+    // Save the conditions to a bson file
+    cout << "Save the conditions to a bson file" << endl;
+    output.saveToFile();
+
+    mainWindow->close();
+}

@@ -13,9 +13,10 @@ int main(int argc, char *argv[])
 
     return app.exec();
 
-    // Output &output = Output::getInstance();
-    // output.addNewCondition("&([5]=(code,500),[4]<(status,700))");
+    // Output &output1 = Output::getInstance();
+    // output1.addNewCondition("&([5]=(code,500),[4]<(status,700))");
     // Output &output2 = Output::getInstance();
     // output2.addActionsToLastCondition({{5, "decrease speed"}, {7, "slow down"}});
-    // output2.saveToFile();
+    // Output &output3 = Output::getInstance();
+    // output3.saveToFile();
 }

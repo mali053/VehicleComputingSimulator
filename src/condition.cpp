@@ -2,6 +2,11 @@
 
 Condition::~Condition()
 {
+    // Add the condition to the bson
+    cout << "Add the condition to the bson" << endl;
+    Output &output = Output::getInstance();
+    output.addNewCondition(condition.toStdString());
+
     QLayoutItem *item;
     while ((item = this->takeAt(0)) != nullptr) {
         QWidget *widget = item->widget(); 
@@ -10,13 +15,8 @@ Condition::~Condition()
         }
         delete item; 
     }
-    delete slectActions;
+    delete selectActions;
     mainWindow->saveCondition(showCondition);
-}
-
-QString Condition::getShowCondition()
-{
-    return showCondition;
 }
 
 void Condition::setupLogicalMembers()
@@ -121,13 +121,13 @@ void Condition::setupUi()
 
     keyboardBox->setLayout(keyboardLayout);
 
-    slectActions = new QPushButton("Pass to selection of actions");
-    slectActions->setFixedSize(160, 50);
+    selectActions = new QPushButton("Pass to selection of actions");
+    selectActions->setFixedSize(200, 50);
 
     // הוספת ה-QGroupBoxים ל-layout הראשי
     this->addWidget(screenBox);    // מסך מחשב
     this->addWidget(keyboardBox);  // מקלדת
-    this->addWidget(slectActions);  
+    this->addWidget(selectActions);  
 
 
     andBtn->setStyleSheet("background-color: #3498db; color: white; font-size: 18px;");
@@ -166,7 +166,7 @@ void Condition::connectSignals()
         this, &Condition::sensorSelectionHandler);
     connect(operators, QOverload<int>::of(&QComboBox::currentIndexChanged),
         this, &Condition::operatorSelectionHandler);
-    connect(slectActions, &QPushButton::clicked, this, [this]() {
+    connect(selectActions, &QPushButton::clicked, this, [this]() {
         mainWindow->goNext();});
 
     // טיימר לעדכון הצגת הסמן
@@ -198,6 +198,9 @@ void Condition::updateDisplay()
     label->show();
 
     label1->setText(condition);  // Update the QLabel with the internal condition
+    bool enableSelectActions = !condition.isEmpty() && ind >= showCondition.length() - 3 && (showCondition[ind - 1] == ')' || typeCurrent.first == "Basic");
+    selectActions->setVisible(enableSelectActions);
+    label->setTextInteractionFlags(Qt::NoTextInteraction);
 }
 
 // פונקציה כללית שמופעלת על כל כפתור שנלחץ
@@ -236,8 +239,10 @@ void Condition::buttonClickHandler(QPushButton *button)
 void Condition::skipHandler()
 {
     // Check if the cursor is at the end of the string
-    if (ind >= showCondition.length() - 2)
+    if (ind >= showCondition.length() - 2) {
+        ind = showCondition.length() - 2;
         return;
+    }
 
     // Find the nearest closing parenthesis
     ind = showCondition.toStdString().find(')', ind);
@@ -329,6 +334,10 @@ void Condition::submitHandler()
     indCondition += finalCondition.length();
     typeCurrent.first = "Basic";
 
+    // sensorsFields->setEnabled(false);
+    // operators->setEnabled(false);
+    // textBox->setEnabled(false);
+
     // Reset combo boxes and text box for the next input
     sensorsFields->setCurrentIndex(0);
     operators->setCurrentIndex(0);
@@ -340,7 +349,8 @@ void Condition::submitHandler()
 
 void Condition::updateSensorComboBoxState()
 {
-    bool enableBasicCondition = typeCurrent.second != -1;
+    bool enableBasicCondition = (typeCurrent.second != -1 && typeCurrent.first != "AND" && typeCurrent.first != "OR") && !( layersStack.size() <= 1 && typeCurrent.first == "Basic");
+
     bool enableSUbmit = typeCurrent.second != -1 && sensorsFields->currentIndex() != 0 && operators->currentIndex() != 0 && !textBox->text().isEmpty();
     
     sensors->setEnabled(typeCurrent.second == -1);
@@ -384,34 +394,46 @@ void Condition::updateColors()
     cursor->setPosition(ind);
     cursor->setPosition(ind + 1, QTextCursor::KeepAnchor);
     cursor->setCharFormat(formatBlue);
-    // Color the close bracket
+    // Color the closing bracket
     cursor->setPosition(ind + 2);
     cursor->setPosition(ind + 3, QTextCursor::KeepAnchor);
     cursor->setCharFormat(formatRed);
 
-    // Color the open bracket and the sensor
+    // Color the opening bracket and the sensor
     int tempIndex = ind - 1, count = 0;
-    while(showCondition[tempIndex] != '(' || count != 0) {
+    bool current = true;
+    while(tempIndex != 0) {
         if (showCondition[tempIndex] == ')')
             count++;
-        else if (showCondition[tempIndex] == '(')
-            count--;
-        else if (showCondition[tempIndex] == ']' && !count) {
+        else if (showCondition[tempIndex] == '(') {
+            // Color the opening bracket
+            if (!count && current) {
+                current = false;
+                cursor->setPosition(tempIndex);
+                cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
+                cursor->setCharFormat(formatRed);
+            }
+            else
+                count--;
+        }
+        // Color the current sensor
+        else if (showCondition[tempIndex] == ']' && count <= 0) {
             cursor->setPosition(tempIndex - 5);
             cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
             cursor->setCharFormat(formatGreen); 
             tempIndex -= 5;
+            if (!current)
+                break;
         }
-        else if (!count) {
+        // Color the operator
+        else if (current && !count && typeCurrent.first != "Basic") {
             cursor->setPosition(tempIndex);
             cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
             cursor->setCharFormat(formatRed); 
         }
         tempIndex--;
     }
-    cursor->setPosition(tempIndex);
-    cursor->setPosition(tempIndex + 1, QTextCursor::KeepAnchor);
-    cursor->setCharFormat(formatRed);    
+    
 }
 
 

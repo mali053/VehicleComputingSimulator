@@ -36,7 +36,7 @@ class MainWindow : public QMainWindow {
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    void startProcesses();
+    void updateTimer();
     void endProcesses();
     void showTimerInput();
     void timerTimeout();
@@ -48,7 +48,7 @@ public:
     }
     QPushButton *getStartButton() const
     {
-        return startButton;
+        return runButton;
     }
     QTimer *getTimer() const
     {
@@ -77,7 +77,8 @@ private:
     void addId(int id);
     void addProcessSquare(Process *&process, int index,
                           const QString &color = "background-color: green;");
-    void compileAndRunProjects();
+    void compileProjects();
+    void runProjects();
     QString getExecutableName(const QString &buildDirPath);
     Process *getProcessById(int id);
 
@@ -86,7 +87,8 @@ private:
     QVector<DraggableSquare *> squares;
     QMap<int, QPoint> squarePositions;
     QSet<int> usedIds;
-    QPushButton *startButton;
+    QPushButton *compileButton;
+    QPushButton *runButton;
     QPushButton *endButton;
     QPushButton *timerButton;
     QLineEdit *timeInput;

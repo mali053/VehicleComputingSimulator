@@ -9,7 +9,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-include_directories(src)
+include_directories(include)
 
 # make the library with the src files
 file(GLOB SOURCES "src/*.cpp")  

@@ -1,5 +1,5 @@
-#ifndef CONDITION
-#define CONDITION
+#ifndef __CONDITION__
+#define __CONDITION__
 
 #include <QApplication>
 #include <QPushButton>
@@ -17,7 +17,6 @@
 #include <QTextCursor>
 #include <QTextCharFormat>
 
-
 #include <map>
 #include <stack>
 #include <iostream>
@@ -32,67 +31,74 @@ using json = nlohmann::json;
 using namespace std;
 class MainWindow;
 
-class Condition : public QVBoxLayout 
-{
+// Class that will be a layout in the main window
+// Contain the condition configuration
+class Condition : public QVBoxLayout {
     Q_OBJECT
 private:
-    // Regular
+    // Logical members
+
+    // Father window pointer
     MainWindow *mainWindow;
+    // Variables contains the sensors and operators
     map<int, vector<QString>> sensorsFieldsList;
     map<QString, int> sensorList;
     map<QString, QString> operatorsMap;
     vector<QString> operatorList;
+    // Internal and showing conditions
     QString showCondition;
     QString condition;
-    int ind;           // המיקום ההתחלתי של האינדקס
-    int indCondition;  // המיקום ההתחלתי של האינדקס
-    
-    bool isCursorVisible;    // מוצג או לא "I" משתנה שיאפשר לנו לדעת אם הסימון
+    // Indexes for the conditions
+    int ind;
+    int indCondition;
+    bool isCursorVisible;
 
+    // Variables contains the sensor and the operator types
     pair<QString, int> typeCurrent;
     stack<pair<QString, int>> layersStack;
 
+    // Q type - UI members
 
-    // Q type
-
-    // יצירת QLabel להצגת הטקסט
+    // Labels for showing the conditions
     QTextEdit *label;
     QLabel *label1;
-
+    // Cursor for label- for coloring it
     QTextCursor *cursor;
 
-    // הגדרת פורמטים לצבעים שונים
+    // Formats for different colors
     QTextCharFormat formatRed;
     QTextCharFormat formatGreen;
     QTextCharFormat formatBlue;
 
-    // יצירת כפתורים עם טקסט
+    // Keyboard buttons
     QPushButton *andBtn;
     QPushButton *orBtn;
     QPushButton *skip;
     QPushButton *reset;
+    // Objects for the sensors and basic conditions
     QLineEdit *textBox;
     QPushButton *submit;
     QComboBox *operators;
     QComboBox *sensors;
     QComboBox *sensorsFields;
+    // Button for move the other window
     QPushButton *selectActions;
 
 public:
-   explicit Condition( MainWindow *mainWindow) {
-        this->mainWindow = mainWindow;
-        setupLogicalMembers();
-        setupUi();
-        connectSignals(); 
-    }
+    // C-tor that setup the layout
+    explicit Condition(MainWindow *mainWindow);
+   
+    // D-tor that handles cleanup and saving of conditions
     ~Condition();
 
 private:
+    // Setup functions
     void setupLogicalMembers();
     void setupUi();
     void connectSignals();
-    void updateDisplay();
 
+    // Functions for the UI logic
+    void updateDisplay();
     void buttonClickHandler(QPushButton *button);
     void skipHandler();
     void resetButtonState();
@@ -104,8 +110,16 @@ private:
     void updateButtonVisible();
     void updateColors();
 
+    // Functions for initialize the sensors fields
     void fillSensorsFields(map<int, string> pathesToJsonFiles);
-    // This function should be written in another ststic class (like "input" in the main)
+    // NOTE: This function should be written in another ststic class (like "input" in the main control)
     vector<QString> getFieldsOfSensor(string psthToSensorJson);
+
+    friend class basicCondition_buildCondition_Test ;
+    friend class oneOperatorDifferentSensors_buildCondition_Test ;
+    friend class operatorInOperator_buildCondition_Test ;
+    friend class oneOperatorOneSensor_buildCondition_Test ;
+    friend class differentOperatorsDifferentSensors_buildCondition_Test ;
 };
-#endif
+
+#endif // __CONDITION__

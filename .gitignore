@@ -1,6 +1,2 @@
-.vs/
 .vscode/
-x64/
-out/
 build/
-googletest/

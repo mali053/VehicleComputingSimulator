@@ -15,7 +15,6 @@ private:
     uint32_t tps;
                   
 public:
-
     // Default
     Message() = default;
 

@@ -10,14 +10,14 @@
 #include "../sockets/mock_socket.h"
 #include "../sockets/real_socket.h"
 #include <string>
+#include "error_code.h"
 
 #define PORT 8080
 #define IP "127.0.0.1"
 
-class Client
+class ClientConnection
 {
 private:
-    uint32_t id;
     int clientSocket;
     sockaddr_in servAddress;
     std::atomic<bool> connected;
@@ -27,21 +27,27 @@ private:
 
 public:
     // Constructor
-    Client(uint32_t id, std::function<void(Packet &)> callback, ISocket* socketInterface = new RealSocket());
+    ClientConnection(std::function<void(Packet &)> callback, ISocket* socketInterface = new RealSocket());
 
     // Requesting a connection to the server
-    int connectToServer();
+    ErrorCode connectToServer(int id);
 
     // Sends the packet to the manager-sync
-    int sendPacket(Packet &packet);
+    ErrorCode sendPacket(Packet &packet);
 
     // Waits for a message and forwards it to Communication
     void receivePacket();
 
     // Closes the connection
-    void closeConnection();
+    ErrorCode closeConnection();
 
-    //For testing
+    // Setter for passPacketCom
+    void setCallback(std::function<void(Packet&)> callback);
+    
+    // Setter for socketInterface
+    void setSocketInterface(ISocket* socketInterface);
+
+    // For testing
     int getClientSocket();
     
     int isConnected();
@@ -49,6 +55,6 @@ public:
     bool isReceiveThreadRunning();
 
     //Destructor
-    ~Client();
+    ~ClientConnection();
 };
 

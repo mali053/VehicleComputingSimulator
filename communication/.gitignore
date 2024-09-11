@@ -26,7 +26,7 @@ runFile/
 .DS_Store
 Thumbs.db
 
-user_1.cpp
-user_2.cpp
-user_3.cpp
-main_bus.cpp
+user_1/
+user_2/
+user_3/
+main_bus/

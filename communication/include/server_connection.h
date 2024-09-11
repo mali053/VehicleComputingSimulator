@@ -11,8 +11,9 @@
 #include "message.h"
 #include "../sockets/Isocket.h"
 #include "../sockets/real_socket.h"
+#include "error_code.h"
 
-class Server
+class ServerConnection
 {
 private:
     int serverSocket;
@@ -24,7 +25,7 @@ private:
     std::vector<int> sockets;
     std::mutex socketMutex;
     std::mutex threadMutex;
-    std::function<void(void *)> receiveDataCallback;
+    std::function<void(Packet&)> receiveDataCallback;
     std::map<int, uint32_t> clientIDMap;
     std::mutex IDMapMutex;
     ISocket* socketInterface;
@@ -44,25 +45,46 @@ private:
 public:
 
     // Constructor
-    Server(int port, std::function<void(void *)> callback, ISocket* socketInterface = new RealSocket());
+    ServerConnection(int port, std::function<void(Packet&)> callback, ISocket* socketInterface = new RealSocket());
     
     // Initializes the listening socket
-    int startConnection();
+    ErrorCode startConnection();
     
     // Closes the sockets and the threads
     void stopServer();
 
     // Sends the message to all connected processes - broadcast
-    int sendBroadcast(const Packet &packet);
+    ErrorCode sendBroadcast(const Packet &packet);
+
+    // Sets the server's port number, throws an exception if the port is invalid.
+    void setPort(int port);
+
+    // Sets the callback for receiving data, throws an exception if the callback is null.
+    void setReceiveDataCallback(std::function<void(Packet&)> callback);
+
+    // Sets the socket interface, throws an exception if the socketInterface is null.
+    void setSocketInterface(ISocket *socketInterface);              
 
     // Sends the message to destination
-    int sendDestination(const Packet &packet);
+    ErrorCode sendDestination(const Packet &packet);
     
     // For testing
     int getServerSocket();
 
     int isRunning();
-    
+
+    std::vector<int>* getSockets();
+
+    std::mutex* getSocketMutex();
+
+    std::mutex* getIDMapMutex();
+
+    std::map<int, uint32_t>* getClientIDMap();
+
+    void testHandleClient(int clientSocket);
+
+    int testGetClientSocketByID(uint32_t destID);
+
     // Destructor
-     ~Server();
+     ~ServerConnection();
 };

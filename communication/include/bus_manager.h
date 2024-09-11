@@ -1,13 +1,13 @@
 #pragma once
 #include <mutex>
 #include <utility>
-#include "server.h"
+#include "server_connection.h"
 #include <iostream>
 
 class BusManager
 {
 private:
-    Server server;
+    ServerConnection server;
 
     // Singleton instance
     static BusManager* instance;
@@ -15,21 +15,20 @@ private:
     //SyncCommunication syncCommunication;
     
     // Sending according to broadcast variable
-    int sendToClients(const Packet &packet);
+    ErrorCode sendToClients(const Packet &packet);
 
     // Private constructor
     BusManager(std::vector<uint32_t> idShouldConnect, uint32_t limit);
 
 public:
-    
     //Static function to return a singleton instance
     static BusManager* getInstance(std::vector<uint32_t> idShouldConnect, uint32_t limit);
 
     // Sends to the server to listen for requests
-    int startConnection();
+    ErrorCode startConnection();
 
     // Receives the packet that arrived and checks it before sending it out
-    void receiveData(void *data);
+    void receiveData(Packet &p);
 
     // Implementation according to the conflict management of the CAN bus protocol
     Packet checkCollision(Packet &currentPacket);

@@ -1,6 +1,6 @@
 #include "../include/packet.h"
 // Constructor to initialize Packet for sending
-Packet::Packet(uint32_t id, uint32_t psn, uint32_t tps, uint32_t srcID, uint32_t destID, uint8_t *data, int dlc, bool isBroadcast, bool RTR, bool passive)
+Packet::Packet(uint32_t id, uint32_t psn, uint32_t tps, uint32_t srcID, uint32_t destID, void *data, uint8_t dlc, bool isBroadcast, bool RTR, bool passive)
 {
     header.ID = id;
     header.PSN = psn;
@@ -25,9 +25,21 @@ Packet::Packet(uint32_t id)
 }
 
 // Implementation according to the CAN BUS
-uint16_t Packet::calculateCRC(const uint8_t *data, size_t length)
+uint16_t Packet::calculateCRC(const void *data, size_t length)
 {
     uint16_t crc = 0xFFFF;
     // Calculate CRC for the given data and length
     return crc;
+}
+
+// A function to convert the data to hexa (logger)
+std::string Packet::pointerToHex(const void* data, size_t size) const
+{
+    const unsigned char* byteData = reinterpret_cast<const unsigned char*>(data);
+    std::ostringstream oss;
+    oss<<"0x";
+    for (size_t i = 0; i < size; ++i)
+        oss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(byteData[i]);
+
+    return oss.str();
 }

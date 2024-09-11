@@ -4,11 +4,11 @@
 Message::Message(uint32_t srcID, void *data, int dlc, bool isBroadcast, uint32_t destID)
 {
     size_t size = dlc;
-    uint32_t tps = (size + 7) / 8; // Calculate the number of packets needed
+    uint32_t tps = (size + SIZE_PACKET-1) / SIZE_PACKET; // Calculate the number of packets needed
     for (uint32_t i = 0; i < tps; ++i) {
-        uint8_t packetData[8];
-        size_t copySize = std::min(size - i * 8, (size_t)8); // Determine how much data to copy for each packet
-        std::memcpy(packetData, (uint8_t *)data + i * 8, copySize);
+        uint8_t packetData[SIZE_PACKET];
+        size_t copySize = std::min(size - i * SIZE_PACKET, (size_t)SIZE_PACKET); // Determine how much data to copy for each packet
+        std::memcpy(packetData, (uint8_t *)data + i * SIZE_PACKET, copySize);
         uint32_t id = srcID + destID;
         packets.emplace_back(id, i, tps, srcID, destID, packetData, copySize, isBroadcast, false, false);
     }
@@ -43,10 +43,10 @@ bool Message::isComplete() const
 // Get the complete data of the message
 void *Message::completeData() const
 {
-    size_t totalSize = (tps - 1) * 8 + packets.back().header.DLC;
+    size_t totalSize = (tps - 1) * SIZE_PACKET + packets.back().header.DLC;
     void *data = malloc(totalSize);
     for (const auto &packet : packets) {
-        std::memcpy((uint8_t *)data + packet.header.PSN * 8, packet.data, packet.header.DLC);
+        std::memcpy(static_cast<char*>(data) + packet.header.PSN * SIZE_PACKET, packet.data, packet.header.DLC);
     }
     return data;
 }

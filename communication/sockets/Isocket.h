@@ -2,6 +2,7 @@
 #define ISOCKET_H
 
 #include <sys/socket.h>
+#include "../../logger/logger.h"
 
 class ISocket {
 public:

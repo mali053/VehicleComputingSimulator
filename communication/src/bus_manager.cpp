@@ -4,7 +4,7 @@ BusManager* BusManager::instance = nullptr;
 std::mutex BusManager::managerMutex;
 
 //Private constructor
-BusManager::BusManager(std::vector<uint32_t> idShouldConnect, uint32_t limit) : server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1)) //,syncCommunication(idShouldConnect, limit)
+BusManager::BusManager(std::vector<uint32_t> idShouldConnect, uint32_t limit) :server(8080, std::bind(&BusManager::receiveData, this, std::placeholders::_1))//,syncCommunication(idShouldConnect, limit)
 {
     // Setup the signal handler for SIGINT
     signal(SIGINT, BusManager::signalHandler);
@@ -23,19 +23,19 @@ BusManager* BusManager::getInstance(std::vector<uint32_t> idShouldConnect, uint3
 }
 
 // Sends to the server to listen for requests
-int BusManager::startConnection()
+ErrorCode BusManager::startConnection()
 {
     
-    int isConnected = server.startConnection();
+    ErrorCode isConnected = server.startConnection();
     //syncCommunication.notifyProcess()
     return isConnected;
 }
 
 // Receives the packet that arrived and checks it before sending it out
-void BusManager::receiveData(void *data)
+void BusManager::receiveData(Packet &p)
 {
-    Packet *p = static_cast<Packet *>(data);
-    int res = sendToClients(*p);
+    ErrorCode res = sendToClients(p);
+
     // Checking the case of collision and priority in functions : checkCollision,packetPriority
     // Packet* resolvedPacket = checkCollision(*p);
     // if (resolvedPacket)
@@ -43,7 +43,7 @@ void BusManager::receiveData(void *data)
 }
 
 // Sending according to broadcast variable
-int BusManager::sendToClients(const Packet &packet)
+ErrorCode BusManager::sendToClients(const Packet &packet)
 {
     if(packet.header.isBroadcast)
         return server.sendBroadcast(packet);

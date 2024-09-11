@@ -4,51 +4,68 @@
 Communication* Communication::instance = nullptr;
 
 // Constructor
-Communication::Communication(uint32_t id, void (*passDataCallback)(void *)) : client(id, std::bind(&Communication::receivePacket, this, std::placeholders::_1)), passData(passDataCallback), id(id)
+Communication::Communication(uint32_t id, void (*passDataCallback)(uint32_t, void *)) : 
+    client(std::bind(&Communication::receivePacket, this, std::placeholders::_1))
 {
+    setId(id);
+    setPassDataCallback(passDataCallback);
+
     instance = this;
-    // Setup the signal handler for SIGINT
-    signal(SIGINT, Communication::signalHandler);
+
+    auto signalResult = signal(SIGINT, Communication::signalHandler);
+    if (signalResult == SIG_ERR)
+        throw std::runtime_error("Failed to set signal handler for SIGINT");
 }
 
 // Sends the client to connect to server
-void Communication::startConnection()
+ErrorCode Communication::startConnection()
 {
     //Waiting for manager
     //syncCommunication.isManagerRunning()
-    int isConnected = client.connectToServer();
+    ErrorCode isConnected = client.connectToServer(id);
     //Increases the shared memory and blocks the process - if not all are connected
     //syncCommunication.registerProcess()
     return isConnected;
 }
 
 // Sends a message sync
-int Communication::sendMessage(void *data, size_t dataSize, uint32_t destID, uint32_t srcID, bool isBroadcast)
+ErrorCode Communication::sendMessage(void *data, size_t dataSize, uint32_t destID, uint32_t srcID, bool isBroadcast)
 {
-    // Creating a message and dividing it into packets
+    if (dataSize == 0)
+        return ErrorCode::INVALID_DATA_SIZE;
+
+    if (data == nullptr)
+        return ErrorCode::INVALID_DATA;
+
+    if (!client.isConnected())
+        return ErrorCode::CONNECTION_FAILED;
+
     Message msg(srcID, data, dataSize, isBroadcast, destID);
     
+    //Sending the message to logger
+    RealSocket::log.logMessage(logger::LogLevel::INFO,std::to_string(srcID),std::to_string(destID),"Complete message:" + msg.getPackets().at(0).pointerToHex(data, dataSize));
+    
     for (auto &packet : msg.getPackets()) {
-        int res = client.sendPacket(packet);
-        if(res < 0)
+        ErrorCode res = client.sendPacket(packet);
+        if (res != ErrorCode::SUCCESS)
             return res;
     }
 
-    return 0;  
+    return ErrorCode::SUCCESS;  
 }
 
 // Sends a message Async
-void Communication::sendMessageAsync(void *data, size_t dataSize, uint32_t destID, uint32_t srcID, std::function<void(int)> sendCallback, bool isBroadcast)
+void Communication::sendMessageAsync(void *data, size_t dataSize, uint32_t destID, uint32_t srcID, std::function<void(ErrorCode)> sendCallback, bool isBroadcast)
 {
-    std::promise<int> resultPromise;
-    std::future<int> resultFuture = resultPromise.get_future();
+    std::promise<ErrorCode> resultPromise;
+    std::future<ErrorCode> resultFuture = resultPromise.get_future();
 
     std::thread([this, data, dataSize, destID, srcID, isBroadcast, &resultPromise]() {
-        int res = this->sendMessage(data, dataSize, destID, srcID, isBroadcast);
+        ErrorCode res = this->sendMessage(data, dataSize, destID, srcID, isBroadcast);
         resultPromise.set_value(res);
     }).detach();
     
-    int res = resultFuture.get();
+    ErrorCode res = resultFuture.get();
     sendCallback(res);
 }
 
@@ -100,9 +117,7 @@ Packet Communication::hadArrived()
 // Adding the packet to the complete message
 void Communication::addPacketToMessage(Packet &p)
 {
-    // messageId may have to change according to the CAN bus
-    std::string messageId = std::to_string(p.header.SrcID) + "-" + std::to_string(p.header.DestID);
-    
+    std::string messageId = std::to_string(p.header.ID);
     // If the message already exists, we will add the packet
     if (receivedMessages.find(messageId) != receivedMessages.end()) {
         receivedMessages[messageId].addPacket(p);
@@ -116,7 +131,7 @@ void Communication::addPacketToMessage(Packet &p)
     // If the message is complete, we pass the data to the passData function
     if (receivedMessages[messageId].isComplete()) {
         void *completeData = receivedMessages[messageId].completeData();
-        passData(completeData);
+        passData(p.header.SrcID, completeData);
         receivedMessages.erase(messageId); // Removing the message once completed
     }
 }
@@ -124,11 +139,23 @@ void Communication::addPacketToMessage(Packet &p)
 // Static method to handle SIGINT signal
 void Communication::signalHandler(int signum)
 {
-    std::cout << "Interrupt signal (" << signum << ") received.\n";
-    if (instance) {
-        instance->client.closeConnection();  // Call the closeConnection method
-    }
+    if (instance)
+        instance->client.closeConnection();
+    
     exit(signum);
+}
+
+void Communication::setId(uint32_t newId)
+{
+    id = newId;
+}
+
+void Communication::setPassDataCallback(void (*callback)(uint32_t, void *))
+{
+    if (callback == nullptr)
+        throw std::invalid_argument("Invalid callback function: passDataCallback cannot be null");
+    
+    passData = callback;
 }
 
 //Destructor

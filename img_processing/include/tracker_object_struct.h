@@ -5,10 +5,10 @@
 #include "object_type_enum.h"
 
 struct TrackerObject {
-  int id;
-  ObjectType type;
-  cv::Rect prePosition;
-  cv::Rect currentPosition;
+    int id;
+    ObjectType type;
+    cv::Rect prevPosition;
+    cv::Rect currentPosition;
 };
 
 #endif  //__TRACKER_OBJECT_STRUCT_H__

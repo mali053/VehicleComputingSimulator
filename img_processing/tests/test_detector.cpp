@@ -2,14 +2,18 @@
 #include <gtest/gtest.h>
 #include "detector.h"
 
-bool is_cuda = false;  // or true
+using namespace std;
+using namespace cv;
+
+// or true
+bool is_cuda = false;  
 
 // Helper function to load an image from a file
-cv::Mat loadImage(const std::string &filename)
+Mat loadImage(const string &filename)
 {
-    cv::Mat img = cv::imread(filename);
+    Mat img = imread(filename);
     if (img.empty()) {
-        throw std::runtime_error("Could not open or find the image");
+        throw runtime_error("Could not open or find the image");
     }
     return img;
 }
@@ -18,17 +22,17 @@ cv::Mat loadImage(const std::string &filename)
 TEST(DetectorTest, DetectTwoCars)
 {
     // Load a real image from file
-    std::string imagePath = "../tests/images/two_cars_image.png";
-    cv::Mat testImage;
+    string imagePath = "../tests/images/two_cars_image.png";
+    Mat testImage;
     try {
         testImage = loadImage(imagePath);
     }
-    catch (const std::runtime_error &e) {
+    catch (const runtime_error &e) {
         FAIL() << e.what();
     }
 
     // Wrap it in a shared_ptr
-    std::shared_ptr<cv::Mat> frame = std::make_shared<cv::Mat>(testImage);
+    shared_ptr<Mat> frame = make_shared<Mat>(testImage);
 
     // Create Detector instance
     Detector detector;
@@ -37,7 +41,7 @@ TEST(DetectorTest, DetectTwoCars)
     detector.init(is_cuda);
 
     // Perform detection
-    detector.detect(frame);
+    detector.detect(frame, true);
 
     // Get output
     const auto &output = detector.getOutput();
@@ -48,10 +52,9 @@ TEST(DetectorTest, DetectTwoCars)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        std::cout << "Detection ID: " << detection.id
-                  << ", Type: " << detection.type
-                  << ", Confidence: " << detection.confidence
-                  << ", Position: " << detection.position << std::endl;
+        cout << "Detection ID: " << detection.id << ", Type: " << detection.type
+             << ", Confidence: " << detection.confidence
+             << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             carCount++;
@@ -69,17 +72,17 @@ TEST(DetectorTest, DetectTwoCars)
 TEST(DetectorTest, DetectThreeCars)
 {
     // Load a real image from file
-    std::string imagePath = "../tests/images/three_cars_image.png";
-    cv::Mat testImage;
+    string imagePath = "../tests/images/three_cars_image.png";
+    Mat testImage;
     try {
         testImage = loadImage(imagePath);
     }
-    catch (const std::runtime_error &e) {
+    catch (const runtime_error &e) {
         FAIL() << e.what();
     }
 
     // Wrap it in a shared_ptr
-    std::shared_ptr<cv::Mat> frame = std::make_shared<cv::Mat>(testImage);
+    shared_ptr<Mat> frame = make_shared<Mat>(testImage);
 
     // Create Detector instance
     Detector detector;
@@ -87,7 +90,7 @@ TEST(DetectorTest, DetectThreeCars)
     detector.init(is_cuda);
 
     // Perform detection
-    detector.detect(frame);
+    detector.detect(frame, true);
 
     // Get output
     const auto &output = detector.getOutput();
@@ -98,10 +101,9 @@ TEST(DetectorTest, DetectThreeCars)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        std::cout << "Detection ID: " << detection.id
-                  << ", Type: " << detection.type
-                  << ", Confidence: " << detection.confidence
-                  << ", Position: " << detection.position << std::endl;
+        cout << "Detection ID: " << detection.id << ", Type: " << detection.type
+             << ", Confidence: " << detection.confidence
+             << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             carCount++;
@@ -119,17 +121,17 @@ TEST(DetectorTest, DetectThreeCars)
 TEST(DetectorTest, DetectTwoPeoples)
 {
     // Load a real image from file
-    std::string imagePath = "../tests/images/two_peoples_image.jpg";
-    cv::Mat testImage;
+    string imagePath = "../tests/images/two_peoples_image.jpg";
+    Mat testImage;
     try {
         testImage = loadImage(imagePath);
     }
-    catch (const std::runtime_error &e) {
+    catch (const runtime_error &e) {
         FAIL() << e.what();
     }
 
     // Wrap it in a shared_ptr
-    std::shared_ptr<cv::Mat> frame = std::make_shared<cv::Mat>(testImage);
+    shared_ptr<Mat> frame = make_shared<Mat>(testImage);
 
     // Create Detector instance
     Detector detector;
@@ -137,7 +139,7 @@ TEST(DetectorTest, DetectTwoPeoples)
     detector.init(is_cuda);
 
     // Perform detection
-    detector.detect(frame);
+    detector.detect(frame, true);
 
     // Get output
     const auto &output = detector.getOutput();
@@ -148,10 +150,9 @@ TEST(DetectorTest, DetectTwoPeoples)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        std::cout << "Detection ID: " << detection.id
-                  << ", Type: " << detection.type
-                  << ", Confidence: " << detection.confidence
-                  << ", Position: " << detection.position << std::endl;
+        cout << "Detection ID: " << detection.id << ", Type: " << detection.type
+             << ", Confidence: " << detection.confidence
+             << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             peopleCount++;
@@ -165,27 +166,23 @@ TEST(DetectorTest, DetectTwoPeoples)
     ASSERT_EQ(peopleCount, 2);
 }
 
-TEST(DetectChangesTest, detect)
+TEST(DetectorTest, DetectChangesTest)
 {
-    cv::Mat first, second;
-    //load video
-    cv::VideoCapture capture("../tests/images/cars4.mp4");
-    if (!capture.isOpened()) {
-        throw std::runtime_error("Error while opening video media\n");
-    }
-    //load first frame from video
-    capture.read(first);
+    Mat first, second;
+    string imagePath1 = "../tests/images/track_2_cars_first_frame.jpg";
+    first = loadImage(imagePath1);
     if (first.empty()) {
-        throw std::runtime_error("CMedia finished\n");
+        throw runtime_error("Could not open or find the image");
     }
-    //load second frame from video
-    capture.read(second);
+    string imagePath2 = "../tests/images/track_2_cars_second_frame.jpg";
+    second = loadImage(imagePath2);
     if (second.empty()) {
-        throw std::runtime_error("CMedia finished\n");
+        throw runtime_error("Could not open or find the image");
     }
+
     // Wrap it in a shared_ptr
-    std::shared_ptr<cv::Mat> firstFrame = std::make_shared<cv::Mat>(first);
-    std::shared_ptr<cv::Mat> secondFrame = std::make_shared<cv::Mat>(second);
+    shared_ptr<Mat> firstFrame = make_shared<Mat>(first);
+    shared_ptr<Mat> secondFrame = make_shared<Mat>(second);
     //preper detectAll and detectChanges
     // Create Detector instance
     Detector detectAll;
@@ -194,9 +191,9 @@ TEST(DetectChangesTest, detect)
     detectAll.init(is_cuda);
     detectChanges.init(is_cuda);
     // Perform detection
-    detectAll.detect(secondFrame);
-    detectChanges.detect(firstFrame);
-    detectChanges.detect(secondFrame);
+    detectAll.detect(secondFrame, false);
+    detectChanges.detect(firstFrame, false);
+    detectChanges.detect(secondFrame, false);
     // Get output
     const auto &detectAllOutput = detectAll.getOutput();
     const auto &detectChangesOutput = detectChanges.getOutput();

@@ -4,22 +4,42 @@ using namespace std;
 
 Alert::Alert(){};
 
-Alert::Alert(bool messageType, int level, ObjectType objectType,
-             double distance, int carSpeed, int objectSpeed)
-    : alertDetails{messageType, level, (int)objectType},
-      objectDistance(distance), carSpeed(carSpeed), objectSpeed(objectSpeed){};
+Alert::Alert(bool messageType, int level, int type, double distance,
+             int carSpeed, int objectSpeed)
+    : alertDetails{messageType, level, type},
+      objectDistance(distance),
+      carSpeed(carSpeed),
+      objectSpeed(objectSpeed){};
 
-int Alert::getMessageType() const { return alertDetails.messageType; };
+int Alert::getMessageType() const
+{
+    return alertDetails.messageType;
+};
 
-int Alert::getObjectType() const { return alertDetails.objectType; };
+int Alert::getObjectType() const
+{
+    return alertDetails.objectType;
+};
 
-int Alert::getLevel() const { return alertDetails.level; };
+int Alert::getLevel() const
+{
+    return alertDetails.level;
+};
 
-double Alert::getObjectDistance() const { return objectDistance; };
+double Alert::getObjectDistance() const
+{
+    return objectDistance;
+};
 
-int Alert::getCarSpeed() const { return carSpeed; };
+int Alert::getCarSpeed() const
+{
+    return carSpeed;
+};
 
-int Alert::getObjectSpeed() const { return objectSpeed; };
+int Alert::getObjectSpeed() const
+{
+    return objectSpeed;
+};
 
 vector<char> Alert::serialize() {
   vector<char> buffer;
@@ -31,19 +51,19 @@ vector<char> Alert::serialize() {
   buffer.insert(buffer.end(), alertDetailsPtr,
                 alertDetailsPtr + sizeof(AlertDetails));
 
-  // serialize distance
-  char *distancePtr = reinterpret_cast<char *>(&objectDistance);
-  buffer.insert(buffer.end(), distancePtr, distancePtr + sizeof(double));
+    // serialize distance
+    char *distancePtr = reinterpret_cast<char *>(&objectDistance);
+    buffer.insert(buffer.end(), distancePtr, distancePtr + sizeof(double));
 
-  // serialize carSpeed
-  char *carSpeedPtr = reinterpret_cast<char *>(&carSpeed);
-   buffer.insert(buffer.end(), carSpeedPtr, carSpeedPtr + sizeof(int));
+    // serialize carSpeed
+    char *carSpeedPtr = reinterpret_cast<char *>(&carSpeed);
+    buffer.insert(buffer.end(), carSpeedPtr, carSpeedPtr + sizeof(int));
 
-  // serialize objectSpeed
-  char *objectSpeedPtr = reinterpret_cast<char *>(&objectSpeed);
-  buffer.insert(buffer.end(), objectSpeedPtr, objectSpeedPtr + sizeof(int));
+    // serialize objectSpeed
+    char *objectSpeedPtr = reinterpret_cast<char *>(&objectSpeed);
+    buffer.insert(buffer.end(), objectSpeedPtr, objectSpeedPtr + sizeof(int));
   
-  return buffer;
+    return buffer;
 };
 
 void Alert::deserialize(const char *buffer) {

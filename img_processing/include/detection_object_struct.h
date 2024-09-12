@@ -5,10 +5,11 @@
 #include "object_type_enum.h"
 
 struct DetectionObject {
-  int id;
-  ObjectType type;
-  float confidence;
-  cv::Rect position;
+    int id;
+    ObjectType type;
+    float confidence;
+    cv::Rect position;
+    double distance;
 };
 
 #endif  //__DETECTION_OBJECT_STRUCT_H__

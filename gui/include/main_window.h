@@ -38,6 +38,7 @@ public:
     ~MainWindow();
     void updateTimer();
     void endProcesses();
+    void stopProcess(int deleteId);
     void showTimerInput();
     void timerTimeout();
     void openImageDialog();
@@ -67,8 +68,8 @@ public slots:
     void createNewProcess();
     void editSquare(int id);
     void deleteSquare(int id);
-
 private:
+    void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
     friend class TestMainWindow;
     friend class DraggableSquareTest;
     friend class UserInteractionTests;
@@ -96,7 +97,7 @@ private:
     QTextEdit *logOutput;
     QTimer *timer;
     QLabel *imageLabel;
-    QVector<QProcess *> runningProcesses;
+    QVector<QPair<QProcess*, int>> runningProcesses;
     QString currentImagePath;
     SimulationDataManager *dataManager;
     LogHandler logHandler;

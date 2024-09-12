@@ -33,13 +33,15 @@ public:
     }
     ~DraggableSquare() override;
     void print() const;
-
+    void setStopButtonVisible(bool visible);  
 protected:
+
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
+    QPushButton *stopButton;  
     QPoint dragStartPosition;
     QPoint initialPosition;
     QLabel *label;
@@ -50,6 +52,7 @@ private:
 private slots:
     void editSquare(int id);
     void deleteSquare(int id);
+    void handleStopButtonClicked();
 };
 
 #endif  // __DRAGGABLE_SQUARE_H__

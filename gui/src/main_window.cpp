@@ -272,15 +272,37 @@ void MainWindow::endProcesses()
     framesLayout->addWidget(frames);
     workspace->setLayout(framesLayout);
 
-    for (QProcess *process : runningProcesses) {
+    for (const QPair<QProcess*, int>& pair : runningProcesses) {
+        QProcess* process = pair.first;
+        int id = pair.second;
         if (process->state() != QProcess::NotRunning) {
-            logOutput->append("Ending process...");
             process->terminate();
             process->waitForFinished();
         }
+
         delete process;
     }
     runningProcesses.clear();
+}
+
+void MainWindow::stopProcess(int deleteId)
+{
+    for (int i = 0; i < runningProcesses.size(); ++i) {
+        QProcess* process = runningProcesses[i].first;
+        int id = runningProcesses[i].second;
+
+        if (id == deleteId && id > 3) {
+            if (process->state() != QProcess::NotRunning) {
+                logOutput->append("Ending process...");
+                process->terminate();
+                process->waitForFinished();
+            }
+
+            process->deleteLater(); 
+            runningProcesses.removeAt(i); 
+            break; 
+        }
+    }
 }
 
 void MainWindow::showTimerInput()
@@ -416,15 +438,17 @@ void MainWindow::compileProjects() {
     runButton->setEnabled(false);
 
     // Clear previous running processes
-    for (QProcess *process : runningProcesses) {
+    for (const QPair<QProcess*, int>& pair : runningProcesses) {
+        QProcess* process = pair.first;
         process->terminate();
         process->waitForFinished();
+        delete process;
     }
-    runningProcesses.clear();
 
+    runningProcesses.clear();
     bool compileSuccessful = true;  // Track if all compilations succeed
 
-    for (const DraggableSquare *square : squares) {
+    for (DraggableSquare *square : squares) {
         QString cmakePath = square->getProcess()->getCMakeProject();
 
         if (cmakePath.endsWith(".sh")) {
@@ -454,6 +478,23 @@ void MainWindow::compileProjects() {
                     "Script is now executable: " + cmakePath.toStdString());
                 logOutput->append("Script is now executable: " + cmakePath);
             }
+
+            // Run the shell script
+            QProcess *scriptProcess = new QProcess(this);
+            scriptProcess->start("bash", QStringList() << cmakePath);
+            connect(
+                scriptProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &MainWindow::processFinished);
+            connect(
+                scriptProcess, &QProcess::readyReadStandardOutput,
+                [this, scriptProcess]() {
+                    logOutput->append(scriptProcess->readAllStandardOutput());
+                });
+            connect(
+                scriptProcess, &QProcess::readyReadStandardError,
+                [this, scriptProcess]() {
+                    logOutput->append(scriptProcess->readAllStandardError());
+                });
         }
         else {
             guiLogger.logMessage(logger::LogLevel::INFO,
@@ -510,6 +551,10 @@ void MainWindow::compileProjects() {
             QProcess *cmakeProcess = new QProcess(this);
             cmakeProcess->setWorkingDirectory(buildDirPath);
             cmakeProcess->start("cmake", QStringList() << "..");
+            connect(
+                cmakeProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &MainWindow::processFinished);
+
             if (!cmakeProcess->waitForFinished()) {
                 guiLogger.logMessage(
                     logger::LogLevel::ERROR,
@@ -528,6 +573,11 @@ void MainWindow::compileProjects() {
             QProcess *makeProcess = new QProcess(this);
             makeProcess->setWorkingDirectory(buildDirPath);
             makeProcess->start("make", QStringList());
+            connect(
+                makeProcess,
+                 QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                 this, &MainWindow::processFinished);
+
             if (!makeProcess->waitForFinished()) {
                 guiLogger.logMessage(
                     logger::LogLevel::ERROR,
@@ -559,7 +609,7 @@ void MainWindow::compileProjects() {
 
 void MainWindow::runProjects() {
     updateTimer();
-    for (const DraggableSquare *square : squares) {
+    for (DraggableSquare *square : squares) {
         QString cmakePath = square->getProcess()->getCMakeProject();
         
         if (cmakePath.endsWith(".sh")) {
@@ -589,6 +639,9 @@ void MainWindow::runProjects() {
             connect(runProcess, &QProcess::readyReadStandardError, [this, runProcess]() {
                 logOutput->append(runProcess->readAllStandardError());
             });
+            connect(runProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), 
+                    this, &MainWindow::processFinished
+                    );
             runProcess->start(executablePath, QStringList());
             if (!runProcess->waitForStarted()) {
                 guiLogger.logMessage(logger::LogLevel::ERROR,
@@ -600,8 +653,9 @@ void MainWindow::runProjects() {
                 delete runProcess;
                 continue;
             }
-            runningProcesses.append(runProcess);
+            runningProcesses.append(qMakePair(runProcess,square->getProcess()->getId()));
         }
+        square->setStopButtonVisible(true);
     }
 
     guiLogger.logMessage(logger::LogLevel::INFO,
@@ -693,4 +747,26 @@ void MainWindow::createProcessConfigFile(int id, const QString &processPath)
             "Failed to create config file at: " + filePath.toStdString());
     }
 }
+
+void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    QProcess *finishedProcess = qobject_cast<QProcess *>(sender());
+    if (finishedProcess) {
+        // Find the ID of the process that finished
+        for (const QPair<QProcess*, int>& pair : runningProcesses) {
+            if (pair.first == finishedProcess) {
+                int finishedProcessId = pair.second;
+                // Find the corresponding DraggableSquare
+                for (DraggableSquare *square : squares) {
+                    if (square->getProcess()->getId() == finishedProcessId) {
+                        square->setStopButtonVisible(false);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
 #include "moc_main_window.cpp"

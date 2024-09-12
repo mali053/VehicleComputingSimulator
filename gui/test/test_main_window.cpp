@@ -11,6 +11,7 @@ private slots:
     void testIsUniqueId();
     void testStartProcesses();
     void testEndProcesses();
+    void testStopProcesses();
     void testDeleteSquare();
     void testShowTimerInput();
     void addId(int id);
@@ -70,6 +71,20 @@ void TestMainWindow::testEndProcesses()
     window.startProcesses();
     window.endProcesses();
     QVERIFY(window.runningProcesses.isEmpty());  // Ensure processes are stopped
+}
+
+void TestMainWindow::testStopProcesses()
+{
+    MainWindow window;
+    QProcess* testProcess = new QProcess();
+    int testId = 6;
+
+    window.runningProcesses.append(QPair<QProcess*, int>(testProcess, testId));
+
+    window.stopProcess(testId);
+
+    QCOMPARE(window.runningProcesses.size(), 0); // Ensure the process is removed from the list
+    QCOMPARE(testProcess->state(), QProcess::NotRunning); // Verify that the process is not running
 }
 
 void TestMainWindow::testDeleteSquare()

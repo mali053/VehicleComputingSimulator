@@ -13,11 +13,15 @@ class DraggableSquare : public QWidget {
 public:
     friend class DraggableSquareTest;
     explicit DraggableSquare(QWidget *parent = nullptr,
-                             const QString &color = "background-color: green;",
-                             int width = 100, int height = 100);
+                             const QString &color =  "QWidget {"
+            "  background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
+            "    stop: 0 #E0F7F7, stop: 1 #00BFAE);"  // Gradient from mint to cyan
+            "  border: 3px solid silver;"  // Silver-colored borders
+            "  border-radius: 10px;"       // Rounded corners
+            "}",int width = 120, int height = 120);
     DraggableSquare(const DraggableSquare &other);  // Copy constructor
     DraggableSquare &operator=(
-        const DraggableSquare &other);  // Copy assignment operator
+    const DraggableSquare &other);  // Copy assignment operator
     void setProcess(Process *process);
     Process *getProcess() const;
     const QPoint getDragStartPosition() const;

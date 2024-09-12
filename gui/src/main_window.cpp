@@ -77,29 +77,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     dataManager = new SimulationDataManager(this);
 
     int id = 0;
+    const QString styleSheet ="QWidget {"
+    "  background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
+    "    stop: 0 #FDE1E1, stop: 1 #D4A5FF);"  // Gradient from purple to pink
+    "  border: 3px solid silver;"  // Silver-colored borders
+    "  border-radius: 10px;"       // Rounded corners
+    "}";
+
     Process *mainProcess =
         new Process(id, "Main", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(mainProcess, id,
-                     "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
-                     "stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(mainProcess, id,styleSheet);
     addId(id++);
     Process *hsmProcess =
         new Process(id, "HSM", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(hsmProcess, id,
-                     "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
-                     "stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(hsmProcess, id,styleSheet);
     addId(id++);
     Process *logsDbProcess =
         new Process(id, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(logsDbProcess, id,
-                     "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
-                     "stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(logsDbProcess, id,styleSheet);
     addId(id++);
     Process *busManagerProcess =
         new Process(id, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(busManagerProcess, id,
-                     "background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
-                     "stop: 0 #0000FF, stop: 1 #800080);");
+    addProcessSquare(busManagerProcess, id,styleSheet);
     addId(id++);
 }
 
@@ -375,6 +374,7 @@ void MainWindow::openImageDialog()
             "openImageDialog() canceled: No image path selected.");
     }
 }
+
 
 QString MainWindow::getExecutableName(const QString &buildDirPath)
 {

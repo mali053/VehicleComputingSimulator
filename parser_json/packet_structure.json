@@ -1,0 +1,124 @@
+{
+  "description": "This JSON file describes the format for defining packet fields. Each field type has specific rules, especially for 'bit_field' types which can contain nested fields.",
+  "endianness": "Indicates the byte order of the data. Use either 'little' or 'big'.",
+  "rules": {
+    "endianness": {
+      "description": "Specifies the byte order of the data.",
+      "allowed_values": ["little", "big"]
+    },
+    "fields": {
+      "description": "An array of field definitions. Each field has the following properties:",
+      "properties": {
+        "name": {
+          "description": "The name of the field. This is a string that will be used to identify the field.",
+          "example": "CharArrayField"
+        },
+        "type": {
+          "description": "The type of the field. Must be one of the following:",
+          "allowed_values": [
+            "char_array",
+            "float_fixed",
+            "float_mantissa",
+            "double",
+            "signed_int",
+            "unsigned_int",
+            "bit_field"
+          ],
+          "example": "float_fixed"
+        },
+        "size": {
+          "description": "The size of the field in bits. Must be a multiple of 8, or 16, 32, 64, etc.",
+          "example": 32
+        },
+        "fields": {
+          "description": "An array of sub-fields for composite bit fields. This property is only applicable for fields of type 'bit_field'. For all other field types, the 'fields' property should be omitted.",
+          "properties": {
+            "name": {
+              "description": "The name of the sub-field.",
+              "example": "SubFieldName"
+            },
+            "type": {
+              "description": "The type of the sub-field. Must be one of the supported types.",
+              "allowed_values": [
+                "char_array",
+                "float_fixed",
+                "float_mantissa",
+                "double",
+                "signed_int",
+                "unsigned_int",
+                "bit_field"
+              ],
+              "example": "float_fixed"
+            },
+            "size": {
+              "description": "The size of the sub-field in bits.",
+              "example": 32
+            }
+          },
+          "example": [
+            {
+              "name": "FloatField1",
+              "type": "float_fixed",
+              "size": 32
+            },
+            {
+              "name": "DoubleField1",
+              "type": "double",
+              "size": 64
+            }
+          ]
+        }
+      },
+      "examples": [
+        {
+          "name": "CharArrayField",
+          "type": "char_array",
+          "size": 64
+        },
+        {
+          "name": "FloatField",
+          "type": "float_fixed",
+          "size": 32
+        },
+        {
+          "name": "DoubleField",
+          "type": "double",
+          "size": 64
+        },
+        {
+          "name": "SignedIntField",
+          "type": "signed_int",
+          "size": 32
+        },
+        {
+          "name": "UnsignedIntField",
+          "type": "unsigned_int",
+          "size": 16
+        },
+        {
+          "name": "FloatMantissaField",
+          "type": "float_mantissa",
+          "size": 32
+        },
+        {
+          "name": "BitFieldExample1",
+          "type": "bit_field",
+          "size": 96,
+          "fields": [
+            {
+              "name": "FloatField1",
+              "type": "float_fixed",
+              "size": 32
+            },
+            {
+              "name": "DoubleField1",
+              "type": "double",
+              "size": 64
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types."
+}

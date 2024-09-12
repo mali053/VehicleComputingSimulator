@@ -12,6 +12,7 @@ set(src_files
     ../src/process_dialog.cpp
     ../src/main_window.cpp
     ../src/simulation_data_manager.cpp
+    ../src/log_handler.cpp
 )
 # Set the test executable name for MainWindowTests
 add_executable(MainWindowTests
@@ -38,13 +39,18 @@ add_executable(ProcessDialogTests
     test_process_dialog.cpp
     ${src_files}
 )
+
+add_executable(LogHandlerTests
+    test_log_handler.cpp
+    ${src_files}
+)
 # Include BSON directories for both targets
 target_include_directories(MainWindowTests PRIVATE ${BSON_INCLUDE_DIRS})
 target_include_directories(DraggableSquareTests PRIVATE ${BSON_INCLUDE_DIRS})
 target_include_directories(UserInteractionTests PRIVATE ${BSON_INCLUDE_DIRS})
 target_include_directories(ProcessTests PRIVATE ${BSON_INCLUDE_DIRS})
 target_include_directories(ProcessDialogTests PRIVATE ${BSON_INCLUDE_DIRS})
-
+target_include_directories(LogHandlerTests PRIVATE ${BSON_INCLUDE_DIRS})
 
 # Link the test executables to the necessary Qt5 components and BSON library
 target_link_libraries(MainWindowTests
@@ -82,6 +88,13 @@ target_link_libraries(ProcessDialogTests
     Qt5::Gui
     ${BSON_LIBRARIES}
 )
+target_link_libraries(LogHandlerTests
+    Qt5::Test
+    Qt5::Widgets
+    Qt5::Core
+    Qt5::Gui
+    ${BSON_LIBRARIES}
+)
 set(CMAKE_PREFIX_PATH "/usr/local" ${CMAKE_PREFIX_PATH})
 # Include directories
 include_directories(${GTEST_INCLUDE_DIRS} ${GMOCK_INCLUDE_DIRS})
@@ -91,9 +104,11 @@ target_link_libraries(DraggableSquareTests ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES}
 target_link_libraries(UserInteractionTests ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES} pthread)
 target_link_libraries(ProcessTests ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES} pthread)
 target_link_libraries(ProcessDialogTests ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES} pthread)
+target_link_libraries(LogHandlerTests ${GTEST_LIBRARIES} ${GMOCK_LIBRARIES} pthread)
 
 add_test(NAME MainWindowTests COMMAND MainWindowTests)
 add_test(NAME DraggableSquareTests COMMAND DraggableSquareTests)
 add_test(NAME UserInteractionTests COMMAND UserInteractionTests)
 add_test(NAME ProcessTests COMMAND ProcessTests)
 add_test(NAME ProcessDialogTests COMMAND ProcessDialogTests)
+add_test(NAME LogHandlerTests COMMAND LogHandlerTests)

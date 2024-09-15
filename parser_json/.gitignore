@@ -46,3 +46,4 @@ bin/*
 # Test-specific files
 test/test_runner
 #else
+.clang-format

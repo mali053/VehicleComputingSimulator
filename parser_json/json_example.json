@@ -93,7 +93,7 @@
         {
           "name": "UnsignedIntField",
           "type": "unsigned_int",
-          "size": 16
+          "size": 32
         },
         {
           "name": "FloatMantissaField",
@@ -103,22 +103,22 @@
         {
           "name": "BitFieldExample1",
           "type": "bit_field",
-          "size": 96,
+          "size": 64,
           "fields": [
             {
-              "name": "FloatField1",
-              "type": "float_fixed",
+              "name": "IntField1",
+              "type": "signed_int",
               "size": 32
             },
             {
-              "name": "DoubleField1",
-              "type": "double",
-              "size": 64
+              "name": "UnsignedIntField1",
+              "type": "unsigned_int",
+              "size": 32
             }
           ]
         }
       ]
     }
   },
-  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types."
+  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types. Additionally, it is recommended to avoid using 'float' and 'double' types within a 'bit_field', as these types are not properly decoded within bit fields and should be parsed separately."
 }

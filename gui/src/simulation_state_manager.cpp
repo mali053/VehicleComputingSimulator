@@ -10,6 +10,7 @@
 #include <QDebug>
 #include "main_window.h"
 #include "simulation_state_manager.h"
+#include "main_window.h"
 
 SimulationStateManager::SimulationStateManager(QWidget *parent)
     : QWidget(parent)

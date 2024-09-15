@@ -1,6 +1,7 @@
 #include <QTimer>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 #include "frames.h"
 #include "main_window.h"
 
@@ -21,10 +22,10 @@ Frames::Frames(LogHandler &logHandler, QWidget *parent)
 
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Frames::updateFrames);
-    timer->start(1000);
+    timer->start(100);
 
     MainWindow::guiLogger.logMessage(
-        logger::LogLevel::DEBUG, "Frames initialized with timer set to 1000ms");
+        logger::LogLevel::DEBUG, "Frames initialized with timer set to 100ms");
 }
 
 void Frames::initialFramesMat(int size)
@@ -49,19 +50,21 @@ void Frames::paintEvent(QPaintEvent *event)
 
             if (row < framesMat.size() && col < framesMat[row].size()) {
                 const Frame &frame = framesMat[row][col];
-                painter.setPen(QPen(QColor(frame.color), frame.thickness));
+
+                QPen pen(QColor(frame.color), frame.thickness);
+                pen.setJoinStyle(Qt::RoundJoin);
+                painter.setPen(pen);
 
                 auto square1 = logHandler.getProcessSquares()[log.srcId];
                 auto square2 = logHandler.getProcessSquares()[log.dstId];
 
-                QRect rect1(square1->getDragStartPosition().x(),
-                            square1->getDragStartPosition().y(),
+                QRect rect1(square1->pos().x() - 8, square1->pos().y() - 8,
                             square1->width(), square1->height());
-                QRect rect2(square2->getDragStartPosition().x(),
-                            square2->getDragStartPosition().y(),
+                QRect rect2(square2->pos().x() - 8, square2->pos().y() - 8,
                             square2->width(), square2->height());
-                painter.drawRect(rect1);
-                painter.drawRect(rect2);
+
+                painter.drawRoundedRect(rect1, 10, 10);
+                painter.drawRoundedRect(rect2, 10, 10);
             }
             else {
                 MainWindow::guiLogger.logMessage(
@@ -94,10 +97,10 @@ void Frames::updateFrames()
                 std::max(idMapping[logEntry.dstId], idMapping[logEntry.srcId]);
             int col =
                 std::min(idMapping[logEntry.dstId], idMapping[logEntry.srcId]);
-            if (framesMat[row][col].thickness > 1) {
-                framesMat[row][col].thickness -= 0.01;
-            }
-            it = activeLogEntries.erase(it);
+
+            framesMat[row][col].thickness -= 0.001;
+            if (framesMat[row][col].thickness <= 0.001)
+                it = activeLogEntries.erase(it);
         }
         else {
             ++it;
@@ -117,11 +120,12 @@ void Frames::updateFrames()
                                    idMapping[logEntry.srcId]);
                 int col = std::min(idMapping[logEntry.dstId],
                                    idMapping[logEntry.srcId]);
-                framesMat[row][col].thickness += 0.01;
+                framesMat[row][col].thickness += 0.001;
                 activeLogEntries.emplace(logEntry.timestamp, logEntry);
             }
         }
     }
+
     update();
 }
 
@@ -142,14 +146,11 @@ void Frames::createSequentialIds()
 
 void Frames::fillFramesMat()
 {
-    MainWindow::guiLogger.logMessage(
-        logger::LogLevel::INFO, "Filling frames matrix with random colors");
-
     QSet<QString> usedColors;
     srand(static_cast<unsigned int>(time(0)));
 
     for (int i = 0; i < framesMat.size(); ++i) {
-        for (int j = 0; j <= i; ++j) {
+        for (int j = 0; j < i; ++j) {
             QString randomColor;
             do {
                 randomColor = generateRandomColor();
@@ -169,11 +170,13 @@ void Frames::fillFramesMat()
 
 QString Frames::generateRandomColor()
 {
-    QString color = QString("#%1%2%3")
+    int alpha = 12;
+    QString color = QString("#%1%2%3%4")
                         .arg(rand() % 256, 2, 16, QChar('0'))
                         .arg(rand() % 256, 2, 16, QChar('0'))
-                        .arg(rand() % 256, 2, 16, QChar('0'));
-    return color;
+                        .arg(rand() % 256, 2, 16, QChar('0'))
+                        .arg(alpha, 2, 16, QChar('0'));
+    return color.toUpper();
 }
 
 // Getters

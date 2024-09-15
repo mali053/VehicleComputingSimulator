@@ -25,7 +25,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     QWidget *toolbox = new QWidget(this);
     toolboxLayout = new QVBoxLayout(toolbox);
     compileButton = new QPushButton("Compile", this);
-    runButton = new QPushButton("Run", this);  
+    runButton = new QPushButton("Run", this);
     endButton = new QPushButton("End", this);
     timerButton = new QPushButton("Set Timer", this);
     timeInput = new QLineEdit(this);
@@ -43,8 +43,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     toolboxLayout->addWidget(addProcessButton);
     toolboxLayout->addStretch();
 
-    connect(addProcessButton, &QPushButton::clicked, this, &MainWindow::createNewProcess);
-    connect(compileButton, &QPushButton::clicked, this, &MainWindow::compileProjects);
+    connect(addProcessButton, &QPushButton::clicked, this,
+            &MainWindow::createNewProcess);
+    connect(compileButton, &QPushButton::clicked, this,
+            &MainWindow::compileProjects);
     connect(runButton, &QPushButton::clicked, this, &MainWindow::runProjects);
     connect(endButton, &QPushButton::clicked, this, &MainWindow::endProcesses);
     connect(timerButton, &QPushButton::clicked, this,
@@ -74,31 +76,32 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     mainLayout->addWidget(workspace);
     centralWidget->setLayout(mainLayout);
 
-    dataManager = new SimulationDataManager(this);
+    stateManager = new SimulationStateManager(this);
 
     int id = 0;
-    const QString styleSheet ="QWidget {"
-    "  background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
-    "    stop: 0 #FDE1E1, stop: 1 #D4A5FF);"  // Gradient from purple to pink
-    "  border: 3px solid silver;"  // Silver-colored borders
-    "  border-radius: 10px;"       // Rounded corners
-    "}";
+    const QString styleSheet =
+        "QWidget {"
+        "  background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
+        "    stop: 0 #FDE1E1, stop: 1 #D4A5FF);"  // Gradient from purple to pink
+        "  border: 3px solid silver;"             // Silver-colored borders
+        "  border-radius: 10px;"                  // Rounded corners
+        "}";
 
     Process *mainProcess =
         new Process(id, "Main", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(mainProcess, id,styleSheet);
+    addProcessSquare(mainProcess, id, styleSheet);
     addId(id++);
     Process *hsmProcess =
         new Process(id, "HSM", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(hsmProcess, id,styleSheet);
+    addProcessSquare(hsmProcess, id, styleSheet);
     addId(id++);
     Process *logsDbProcess =
         new Process(id, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(logsDbProcess, id,styleSheet);
+    addProcessSquare(logsDbProcess, id, styleSheet);
     addId(id++);
     Process *busManagerProcess =
         new Process(id, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(busManagerProcess, id,styleSheet);
+    addProcessSquare(busManagerProcess, id, styleSheet);
     addId(id++);
 }
 
@@ -256,8 +259,8 @@ void MainWindow::endProcesses()
     timeLabel->show();
     timeInput->clear();
 
-    dataManager->saveSimulationData("simulation_data.bson", squares,
-                                    currentImagePath);
+    stateManager->saveSimulationState("simulation_state.bson", squares,
+                                      currentImagePath);
     MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
                                      "MainWindow::endProcesses  Simulation "
                                      "data saved to simulation_data.bson");
@@ -271,8 +274,8 @@ void MainWindow::endProcesses()
     framesLayout->addWidget(frames);
     workspace->setLayout(framesLayout);
 
-    for (const QPair<QProcess*, int>& pair : runningProcesses) {
-        QProcess* process = pair.first;
+    for (const QPair<QProcess *, int> &pair : runningProcesses) {
+        QProcess *process = pair.first;
         int id = pair.second;
         if (process->state() != QProcess::NotRunning) {
             process->terminate();
@@ -287,7 +290,7 @@ void MainWindow::endProcesses()
 void MainWindow::stopProcess(int deleteId)
 {
     for (int i = 0; i < runningProcesses.size(); ++i) {
-        QProcess* process = runningProcesses[i].first;
+        QProcess *process = runningProcesses[i].first;
         int id = runningProcesses[i].second;
 
         if (id == deleteId && id > 3) {
@@ -297,9 +300,9 @@ void MainWindow::stopProcess(int deleteId)
                 process->waitForFinished();
             }
 
-            process->deleteLater(); 
-            runningProcesses.removeAt(i); 
-            break; 
+            process->deleteLater();
+            runningProcesses.removeAt(i);
+            break;
         }
     }
 }
@@ -375,7 +378,6 @@ void MainWindow::openImageDialog()
     }
 }
 
-
 QString MainWindow::getExecutableName(const QString &buildDirPath)
 {
     QDir buildDir(buildDirPath);
@@ -428,18 +430,19 @@ QString MainWindow::getExecutableName(const QString &buildDirPath)
             buildDirPath.toStdString());
     return QString();
 }
-  
-void MainWindow::compileProjects() {
+
+void MainWindow::compileProjects()
+{
     guiLogger.logMessage(logger::LogLevel::INFO,
-                        "Compiling and running projects started.");
+                         "Compiling and running projects started.");
     updateTimer();
 
     // Disable the run button until compilation finishes
     runButton->setEnabled(false);
 
     // Clear previous running processes
-    for (const QPair<QProcess*, int>& pair : runningProcesses) {
-        QProcess* process = pair.first;
+    for (const QPair<QProcess *, int> &pair : runningProcesses) {
+        QProcess *process = pair.first;
         process->terminate();
         process->waitForFinished();
         delete process;
@@ -459,7 +462,8 @@ void MainWindow::compileProjects() {
                                      "Shell script file does not exist: " +
                                          cmakePath.toStdString());
 
-                logOutput->append("Shell script file does not exist: " + cmakePath);
+                logOutput->append("Shell script file does not exist: " +
+                                  cmakePath);
                 compileSuccessful = false;
                 continue;
             }
@@ -467,9 +471,11 @@ void MainWindow::compileProjects() {
             if ((scriptFile.permissions() & QFileDevice::ExeUser) == 0) {
                 // Make the script executable
                 QProcess makeExecutableProcess;
-                makeExecutableProcess.start("chmod", QStringList() << "+x" << cmakePath);
+                makeExecutableProcess.start("chmod", QStringList()
+                                                         << "+x" << cmakePath);
                 if (!makeExecutableProcess.waitForFinished()) {
-                    logOutput->append("Failed to make the script executable: " + cmakePath);
+                    logOutput->append("Failed to make the script executable: " +
+                                      cmakePath);
                     compileSuccessful = false;
                     continue;
                 }
@@ -483,7 +489,8 @@ void MainWindow::compileProjects() {
             QProcess *scriptProcess = new QProcess(this);
             scriptProcess->start("bash", QStringList() << cmakePath);
             connect(
-                scriptProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                scriptProcess,
+                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                 this, &MainWindow::processFinished);
             connect(
                 scriptProcess, &QProcess::readyReadStandardOutput,
@@ -507,7 +514,8 @@ void MainWindow::compileProjects() {
             QDir buildDir(buildDirPath);
 
             if (buildDir.exists()) {
-                QFileInfoList fileList = buildDir.entryInfoList(QDir::NoDotAndDotDot | QDir::AllEntries);
+                QFileInfoList fileList = buildDir.entryInfoList(
+                    QDir::NoDotAndDotDot | QDir::AllEntries);
                 foreach (const QFileInfo &fileInfo, fileList) {
                     if (fileInfo.isDir()) {
                         QDir dir(fileInfo.absoluteFilePath());
@@ -517,11 +525,13 @@ void MainWindow::compileProjects() {
                                 "Failed to remove directory: " +
                                     fileInfo.absoluteFilePath().toStdString());
 
-                            logOutput->append("Failed to remove directory: " + fileInfo.absoluteFilePath());
+                            logOutput->append("Failed to remove directory: " +
+                                              fileInfo.absoluteFilePath());
                             compileSuccessful = false;
                             continue;
                         }
-                    } else {
+                    }
+                    else {
                         if (!QFile::remove(fileInfo.absoluteFilePath())) {
                             guiLogger.logMessage(
                                 logger::LogLevel::ERROR,
@@ -534,7 +544,8 @@ void MainWindow::compileProjects() {
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 // Create the build directory
                 if (!buildDir.mkpath(".")) {
                     guiLogger.logMessage(logger::LogLevel::ERROR,
@@ -552,7 +563,8 @@ void MainWindow::compileProjects() {
             cmakeProcess->setWorkingDirectory(buildDirPath);
             cmakeProcess->start("cmake", QStringList() << "..");
             connect(
-                cmakeProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                cmakeProcess,
+                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
                 this, &MainWindow::processFinished);
 
             if (!cmakeProcess->waitForFinished()) {
@@ -575,8 +587,8 @@ void MainWindow::compileProjects() {
             makeProcess->start("make", QStringList());
             connect(
                 makeProcess,
-                 QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                 this, &MainWindow::processFinished);
+                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &MainWindow::processFinished);
 
             if (!makeProcess->waitForFinished()) {
                 guiLogger.logMessage(
@@ -601,27 +613,35 @@ void MainWindow::compileProjects() {
     // Enable the run button only if the compilation was successful
     if (compileSuccessful) {
         runButton->setEnabled(true);
-        logOutput->append("Compilation completed successfully. You can now run the projects.");
-    } else {
+        logOutput->append(
+            "Compilation completed successfully. You can now run the "
+            "projects.");
+    }
+    else {
         logOutput->append("Compilation failed. Please check the logs.");
     }
 }
 
-void MainWindow::runProjects() {
+void MainWindow::runProjects()
+{
     updateTimer();
     for (DraggableSquare *square : squares) {
         QString cmakePath = square->getProcess()->getCMakeProject();
-        
+
         if (cmakePath.endsWith(".sh")) {
             // Run the shell script
             QProcess *scriptProcess = new QProcess(this);
             scriptProcess->start("bash", QStringList() << cmakePath);
-            connect(scriptProcess, &QProcess::readyReadStandardOutput, [this, scriptProcess]() {
-                logOutput->append(scriptProcess->readAllStandardOutput());
-            });
-            connect(scriptProcess, &QProcess::readyReadStandardError, [this, scriptProcess]() {
-                logOutput->append(scriptProcess->readAllStandardError());
-            });
+            connect(
+                scriptProcess, &QProcess::readyReadStandardOutput,
+                [this, scriptProcess]() {
+                    logOutput->append(scriptProcess->readAllStandardOutput());
+                });
+            connect(
+                scriptProcess, &QProcess::readyReadStandardError,
+                [this, scriptProcess]() {
+                    logOutput->append(scriptProcess->readAllStandardError());
+                });
         }
         else {
             // Run the compiled program
@@ -633,15 +653,18 @@ void MainWindow::runProjects() {
             QProcess *runProcess = new QProcess(this);
             runProcess->setWorkingDirectory(buildDirPath);
 
-            connect(runProcess, &QProcess::readyReadStandardOutput, [this, runProcess]() {
-                logOutput->append(runProcess->readAllStandardOutput());
-            });
-            connect(runProcess, &QProcess::readyReadStandardError, [this, runProcess]() {
-                logOutput->append(runProcess->readAllStandardError());
-            });
-            connect(runProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), 
-                    this, &MainWindow::processFinished
-                    );
+            connect(runProcess, &QProcess::readyReadStandardOutput,
+                    [this, runProcess]() {
+                        logOutput->append(runProcess->readAllStandardOutput());
+                    });
+            connect(runProcess, &QProcess::readyReadStandardError,
+                    [this, runProcess]() {
+                        logOutput->append(runProcess->readAllStandardError());
+                    });
+            connect(
+                runProcess,
+                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                this, &MainWindow::processFinished);
             runProcess->start(executablePath, QStringList());
             if (!runProcess->waitForStarted()) {
                 guiLogger.logMessage(logger::LogLevel::ERROR,
@@ -653,7 +676,8 @@ void MainWindow::runProjects() {
                 delete runProcess;
                 continue;
             }
-            runningProcesses.append(qMakePair(runProcess,square->getProcess()->getId()));
+            runningProcesses.append(
+                qMakePair(runProcess, square->getProcess()->getId()));
         }
         square->setStopButtonVisible(true);
     }
@@ -753,7 +777,7 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     QProcess *finishedProcess = qobject_cast<QProcess *>(sender());
     if (finishedProcess) {
         // Find the ID of the process that finished
-        for (const QPair<QProcess*, int>& pair : runningProcesses) {
+        for (const QPair<QProcess *, int> &pair : runningProcesses) {
             if (pair.first == finishedProcess) {
                 int finishedProcessId = pair.second;
                 // Find the corresponding DraggableSquare

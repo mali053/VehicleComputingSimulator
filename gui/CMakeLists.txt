@@ -34,7 +34,7 @@ add_library(DraggableSquaresLib
     src/process.cpp
     src/process_dialog.cpp
     src/main_window.cpp
-    src/simulation_data_manager.cpp
+    src/simulation_state_manager.cpp
     src/log_handler.cpp
     src/frames.cpp
     ../logger/logger.cpp   # Updated logger source file path
@@ -45,7 +45,7 @@ target_sources(DraggableSquaresLib PRIVATE
     include/main_window.h
     include/draggable_square.h
     include/process_dialog.h
-    include/simulation_data_manager.h
+    include/simulation_state_manager.h
     include/log_handler.h
     include/frames.h
     ../logger/logger.h     

@@ -5,7 +5,7 @@ class TestMainWindow : public QObject {
     Q_OBJECT
 
 private slots:
-    void init();  // Setup method, runs before each test
+    void init();     // Setup method, runs before each test
     void cleanup();  // Cleanup method, runs after each test
 
     void testCreateNewProcess();
@@ -21,12 +21,14 @@ private:
     MainWindow *window;  // Pointer to MainWindow to allow reuse in each test
 };
 
-void TestMainWindow::init() {
+void TestMainWindow::init()
+{
     // Initialize the MainWindow before each test
     window = new MainWindow();
 }
 
-void TestMainWindow::cleanup() {
+void TestMainWindow::cleanup()
+{
     // Clean up any resources used during the test
     delete window;
     window = nullptr;
@@ -38,12 +40,13 @@ void TestMainWindow::testCreateNewProcess()
     QString processName = "NewProcess";
     QString cmakeProject = "../src/dummy_program1";
     QString qemuPlatform = "QEMUPlatform";
-    
-    Process* newProcess = new Process(newProcessId, processName, cmakeProject, qemuPlatform);
+
+    Process *newProcess =
+        new Process(newProcessId, processName, cmakeProject, qemuPlatform);
     window->addProcessSquare(newProcess);
     window->addId(newProcessId);
 
-    Process* retrievedProcess = window->getProcessById(newProcessId);
+    Process *retrievedProcess = window->getProcessById(newProcessId);
     QVERIFY(retrievedProcess != nullptr);
     QCOMPARE(retrievedProcess->getName(), processName);
     QCOMPARE(retrievedProcess->getCMakeProject(), cmakeProject);
@@ -55,25 +58,28 @@ void TestMainWindow::testCreateNewProcess()
 
 void TestMainWindow::testAddProcessSquare()
 {
-    Process *newProcess = new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
+    Process *newProcess =
+        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
     window->addProcessSquare(newProcess);
-    QCOMPARE(window->squares.size(), 5); // Check if square is added
-    
+    QCOMPARE(window->squares.size(), 5);  // Check if square is added
+
     delete newProcess;  // Ensure we clean up the process
 }
 
 void TestMainWindow::testIsUniqueId()
 {
     window->addId(5);
-    QCOMPARE(window->isUniqueId(5), false); // Check if the ID is unique
-    QCOMPARE(window->isUniqueId(10), true); // Check if a different ID is unique
+    QCOMPARE(window->isUniqueId(5), false);  // Check if the ID is unique
+    QCOMPARE(window->isUniqueId(10),
+             true);  // Check if a different ID is unique
 }
 
 void TestMainWindow::testStartProcesses()
 {
     window->compileProjects();
     window->runProjects();
-    QVERIFY(!window->runningProcesses.isEmpty()); // Ensure processes are started
+    QVERIFY(
+        !window->runningProcesses.isEmpty());  // Ensure processes are started
     window->endProcesses();
 }
 
@@ -82,13 +88,15 @@ void TestMainWindow::testEndProcesses()
     window->compileProjects();
     window->runProjects();
     window->endProcesses();
-    QVERIFY(window->runningProcesses.isEmpty()); // Ensure processes are stopped
+    QVERIFY(
+        window->runningProcesses.isEmpty());  // Ensure processes are stopped
 }
 
 void TestMainWindow::testDeleteSquare()
 {
     QString cmakeProject = "../src/dummy_program1";
-    Process *process = new Process(5, "Test Process", cmakeProject, "QEMUPlatform");
+    Process *process =
+        new Process(5, "Test Process", cmakeProject, "QEMUPlatform");
     window->addProcessSquare(process);
 
     window->deleteSquare(5);

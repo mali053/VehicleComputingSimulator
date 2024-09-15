@@ -12,16 +12,19 @@ class DraggableSquare : public QWidget {
 
 public:
     friend class DraggableSquareTest;
-    explicit DraggableSquare(QWidget *parent = nullptr,
-                             const QString &color =  "QWidget {"
+    explicit DraggableSquare(
+        QWidget *parent = nullptr,
+        const QString &color =
+            "QWidget {"
             "  background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 1, "
             "    stop: 0 #E0F7F7, stop: 1 #00BFAE);"  // Gradient from mint to cyan
-            "  border: 3px solid silver;"  // Silver-colored borders
-            "  border-radius: 10px;"       // Rounded corners
-            "}",int width = 120, int height = 120);
+            "  border: 3px solid silver;"             // Silver-colored borders
+            "  border-radius: 10px;"                  // Rounded corners
+            "}",
+        int width = 120, int height = 120);
     DraggableSquare(const DraggableSquare &other);  // Copy constructor
     DraggableSquare &operator=(
-    const DraggableSquare &other);  // Copy assignment operator
+        const DraggableSquare &other);  // Copy assignment operator
     void setProcess(Process *process);
     Process *getProcess() const;
     const QPoint getDragStartPosition() const;
@@ -37,15 +40,15 @@ public:
     }
     ~DraggableSquare() override;
     void print() const;
-    void setStopButtonVisible(bool visible);  
-protected:
+    void setStopButtonVisible(bool visible);
 
+protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
-    QPushButton *stopButton;  
+    QPushButton *stopButton;
     QPoint dragStartPosition;
     QPoint initialPosition;
     QLabel *label;

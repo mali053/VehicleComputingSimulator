@@ -64,12 +64,15 @@ void Frames::paintEvent(QPaintEvent *event)
                 painter.drawRect(rect2);
             }
             else {
-                MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, 
-                "Invalid index: row " + std::to_string(row) + " col " + std::to_string(col));
+                MainWindow::guiLogger.logMessage(
+                    logger::LogLevel::ERROR, "Invalid index: row " +
+                                                 std::to_string(row) + " col " +
+                                                 std::to_string(col));
             }
         }
         else {
-            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Invalid ID index");
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR,
+                                             "Invalid ID index");
         }
     }
 }

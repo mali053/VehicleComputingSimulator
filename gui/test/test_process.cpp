@@ -5,7 +5,7 @@ class ProcessTests : public QObject {
     Q_OBJECT
 
 private slots:
-    void testProcessConstructor() 
+    void testProcessConstructor()
     {
         Process process(1, "Test Process", "TestProject", "TestPlatform");
         QCOMPARE(process.getId(), 1);

@@ -27,8 +27,8 @@
 #include "log_handler.h"
 #include "process.h"
 #include "process_dialog.h"
-#include "simulation_data_manager.h"
-#include "../../logger/logger.h"
+#include "simulation_state_manager.h"
+#include "../logger/logger.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -69,7 +69,7 @@ public slots:
     void createNewProcess();
     void editSquare(int id);
     void deleteSquare(int id);
-    
+
 private:
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
     friend class TestMainWindow;
@@ -99,9 +99,9 @@ private:
     QTextEdit *logOutput;
     QTimer *timer;
     QLabel *imageLabel;
-    QVector<QPair<QProcess*, int>> runningProcesses;
+    QVector<QPair<QProcess *, int>> runningProcesses;
     QString currentImagePath;
-    SimulationDataManager *dataManager;
+    SimulationStateManager *stateManager;
     LogHandler logHandler;
     Frames *frames;
 };

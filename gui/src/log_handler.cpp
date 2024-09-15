@@ -1,7 +1,3 @@
-#include "log_handler.h"
-#include "draggable_square.h"
-#include "simulation_data_manager.h"
-#include "main_window.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -14,6 +10,10 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+#include "log_handler.h"
+#include "draggable_square.h"
+#include "simulation_state_manager.h"
+#include "main_window.h"
 
 QVector<LogHandler::LogEntry> LogHandler::getLogEntries()
 {
@@ -57,7 +57,10 @@ void LogHandler::readLogFile(const QString &fileName)
         entry.timestamp =
             QDateTime::fromString(dateTimeString, "yyyy-MM-dd HH:mm:ss.zzz");
         if (!entry.timestamp.isValid()) {
-            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Skipping line with invalid timestamp: " + trimmedLine.toStdString());
+            MainWindow::guiLogger.logMessage(
+                logger::LogLevel::ERROR,
+                "Skipping line with invalid timestamp: " +
+                    trimmedLine.toStdString());
             continue;
         }
 
@@ -91,11 +94,12 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
             logger::LogLevel::INFO, "Analyzing log entries from JSON file: " +
                                         jsonFileName.toStdString());
 
-        SimulationDataManager dataManager;
+        SimulationStateManager stateManager;
         QJsonObject jsonObject =
-            dataManager.loadSimulationData(jsonFileName.toStdString());
+            stateManager.loadSimulationState(jsonFileName.toStdString());
         if (jsonObject.isEmpty()) {
-            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR, "Failed to load JSON data");
+            MainWindow::guiLogger.logMessage(logger::LogLevel::ERROR,
+                                             "Failed to load JSON data");
             return;
         }
 

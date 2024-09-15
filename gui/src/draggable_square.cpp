@@ -15,35 +15,40 @@ void DraggableSquare::print() const
     std::stringstream ss;
     ss << "DraggableSquare:\n"
        << "  Process ID: " << process->getId() << "\n"
-       << "  Drag Start Position: (" << dragStartPosition.x() << ", " 
+       << "  Drag Start Position: (" << dragStartPosition.x() << ", "
        << dragStartPosition.y() << ")\n"
-       << "  Initial Position: (" << initialPosition.x() << ", " 
+       << "  Initial Position: (" << initialPosition.x() << ", "
        << initialPosition.y() << ")\n"
        << "  Color: " << label->styleSheet().toStdString() << "\n"
        << "  Size: (" << this->width() << ", " << this->height() << ")";
-       
+
     MainWindow::guiLogger.logMessage(logger::LogLevel::INFO, ss.str());
 }
 
 void DraggableSquare::setSquareColor(const QString &color)
 {
     setStyleSheet(color);
-    stopButton->setStyleSheet(QString("background-color: %1; border: none;  color: white; font-size: 12px;").arg(color));
+    stopButton->setStyleSheet(QString("background-color: %1; border: none;  "
+                                      "color: white; font-size: 12px;")
+                                  .arg(color));
 }
 // constructor
 DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
                                  int width, int height)
-    : QWidget(parent), label(new QLabel(this)), stopButton(new QPushButton("STOP", this))
+    : QWidget(parent),
+      label(new QLabel(this)),
+      stopButton(new QPushButton("STOP", this))
 {
     setFixedSize(width, height);
     setStyleSheet(color);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(label);
-    layout->addWidget(stopButton);  
+    layout->addWidget(stopButton);
     setLayout(layout);
-    stopButton->hide(); 
-    connect(stopButton, &QPushButton::clicked, this, &DraggableSquare::handleStopButtonClicked);
+    stopButton->hide();
+    connect(stopButton, &QPushButton::clicked, this,
+            &DraggableSquare::handleStopButtonClicked);
 }
 
 // Copy constructor
@@ -208,21 +213,24 @@ void DraggableSquare::deleteSquare(int id)
 }
 void DraggableSquare::setStopButtonVisible(bool visible)
 {
-    if (process->getId()>3){
+    if (process->getId() > 3) {
         if (visible) {
-            stopButton->show();  
-        } else {
-            stopButton->hide(); 
+            stopButton->show();
+        }
+        else {
+            stopButton->hide();
         }
     }
 }
 void DraggableSquare::handleStopButtonClicked()
 {
     if (process) {
-        MainWindow* mainWindow = qobject_cast<MainWindow*>(parentWidget()->window());
+        MainWindow *mainWindow =
+            qobject_cast<MainWindow *>(parentWidget()->window());
         if (mainWindow) {
-            mainWindow->stopProcess(process->getId()); // Pass the process ID to stopProcess
-            stopButton->hide(); 
+            mainWindow->stopProcess(
+                process->getId());  // Pass the process ID to stopProcess
+            stopButton->hide();
         }
     }
 }

@@ -19,14 +19,16 @@ private slots:
     void testGetProcessSquares();
 };
 
-void LogHandlerTests::testReadLogFile() {
+void LogHandlerTests::testReadLogFile()
+{
     LogHandler logHandler;
     logHandler.readLogFile("../log_file.log");
 
     QVERIFY(!logHandler.getLogEntries().isEmpty());
 }
 
-void LogHandlerTests::testSortLogEntries() {
+void LogHandlerTests::testSortLogEntries()
+{
     LogHandler logHandler;
     logHandler.readLogFile("../log_file.log");
 
@@ -38,7 +40,8 @@ void LogHandlerTests::testSortLogEntries() {
     }
 }
 
-void LogHandlerTests::testGetProcessSquares() {
+void LogHandlerTests::testGetProcessSquares()
+{
     LogHandler logHandler;
 
     // Create objects to test
@@ -47,11 +50,14 @@ void LogHandlerTests::testGetProcessSquares() {
     square1.setProcess(&process1);
     // Let's say you want to check that the DraggableSquare has been added to the QMap.
     // Add the DraggableSquare to the map
-    QMap<int, DraggableSquare *> &processSquares = const_cast<QMap<int, DraggableSquare *> &>(logHandler.getProcessSquares());
+    QMap<int, DraggableSquare *> &processSquares =
+        const_cast<QMap<int, DraggableSquare *> &>(
+            logHandler.getProcessSquares());
     processSquares.insert(1, &square1);
 
-   // Now the contents of the map can be checked
-    const QMap<int, DraggableSquare *> &squares = logHandler.getProcessSquares();
+    // Now the contents of the map can be checked
+    const QMap<int, DraggableSquare *> &squares =
+        logHandler.getProcessSquares();
     QVERIFY(squares.contains(1));
     QCOMPARE(squares[1]->getProcess()->getId(), 1);
 }

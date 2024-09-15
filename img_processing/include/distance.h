@@ -13,6 +13,7 @@ class Distance {
    private:
     static Distance *instance;
     double focalLength;
+    
     Distance(const cv::Mat &image);
     Distance(const Distance &) = delete;
     Distance &operator=(const Distance &) = delete;

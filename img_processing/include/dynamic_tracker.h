@@ -5,21 +5,21 @@
 #include "detection_object_struct.h"
 #include "object_type_enum.h"
 #include "tracker_object_struct.h"
-
 class DynamicTracker {
    public:
-    // loading the moodle
     void init();
-    void track(const std::shared_ptr<cv::Mat> &prevFrame,
-               const std::shared_ptr<cv::Mat> &currentFrame,
-               const std::vector<DetectionObject> &prevOutput,
-               const std::vector<DetectionObject> &currentOutput);
-    //--maybe--:--pre and after process
+    void startTracking(const std::shared_ptr<cv::Mat> &frame,
+                       const std::vector<DetectionObject> &detectionOutput);
+    std::vector<TrackerObject> getOutput() const;
+    void tracking(const std::shared_ptr<cv::Mat> &frame);
 
    private:
-    std::shared_ptr<cv::Mat> prevFrame;
-    std::shared_ptr<cv::Mat> currentFrame;
+    int id_counter = 0;
+    std::shared_ptr<cv::Mat> frame;
     std::vector<TrackerObject> output;
+    std::vector<cv::Ptr<cv::Tracker>> trackers;
+    std::vector<int> failedCount;
+    int maxFailures = 1;
 };
 
 #endif  // __DYNAMIC_TRACKER_H__

@@ -238,8 +238,8 @@ void Detector::loadNet(bool isCuda)
 bool Detector::isValidObjectType(int value) const
 {
     switch (value) {
-        case PEOPLE:
         case CAR:
+        case PEOPLE:
             return true;
         default:
             return false;

@@ -26,9 +26,9 @@ class Detector {
     cv::Mat formatYolov5(const std::shared_ptr<cv::Mat> &frame);
     void loadNet(bool isCuda);
     bool isValidObjectType(int value) const;
+    void detectChanges();
     void detectObjects(const std::shared_ptr<cv::Mat> &frame,
                        const cv::Point &position);
-    void detectChanges();
     std::vector<cv::Rect> findDifference();
     std::vector<cv::Rect> unionOverlappingRectangels(
         std::vector<cv::Rect> allChanges);

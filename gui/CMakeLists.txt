@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
 project(DraggableSquares VERSION 1.0)
+
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,16 +15,21 @@ set(CMAKE_AUTORCC ON)
 # Include current source directory
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# Set the -fPIC flag to enable Position Independent Code for all targets
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# Set the output directory for executables
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 # Find the Qt5 library
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core Gui Test)
 
-# Find the BSON library
+# Find the BSON library using pkg-config
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(BSON REQUIRED libbson-1.0)
 
-# Add the main application files
-add_executable(DraggableSquares
-    src/main.cpp
+# Create a library for the common code
+add_library(DraggableSquaresLib
     src/draggable_square.cpp
     src/process.cpp
     src/process_dialog.cpp
@@ -31,33 +37,41 @@ add_executable(DraggableSquares
     src/simulation_data_manager.cpp
     src/log_handler.cpp
     src/frames.cpp
-    ../logger/logger.cpp
+    ../logger/logger.cpp   # Updated logger source file path
 )
 
-# Add headers to the executable target
-target_sources(DraggableSquares PRIVATE
+# Add headers to the library target
+target_sources(DraggableSquaresLib PRIVATE
     include/main_window.h
     include/draggable_square.h
     include/process_dialog.h
     include/simulation_data_manager.h
     include/log_handler.h
     include/frames.h
-    ../logger/logger.h
+    ../logger/logger.h     
 )
 
-# Include BSON directories
-target_include_directories(DraggableSquares PRIVATE ${BSON_INCLUDE_DIRS})
+# Include BSON directories and project include directory
+target_include_directories(DraggableSquaresLib PRIVATE
+    ${BSON_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/../logger   
+)
 
-# Link the BSON library and Qt5 components
-target_link_libraries(DraggableSquares PRIVATE ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
+# Link the BSON library and Qt5 components to the library
+target_link_libraries(DraggableSquaresLib PRIVATE ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
 
+# Create the main executable
+add_executable(DraggableSquares src/main.cpp)
 
-# Add the include directory
-target_include_directories(DraggableSquares PRIVATE ${BSON_INCLUDE_DIRS} include)
+# Link the main executable with the library and Qt5 modules
+target_link_libraries(DraggableSquares PRIVATE DraggableSquaresLib Qt5::Core Qt5::Gui Qt5::Widgets)
 
+# Make sure the main executable has access to the include directory
+target_include_directories(DraggableSquares PRIVATE ${CMAKE_SOURCE_DIR}/include ${BSON_INCLUDE_DIRS})
 
-# # Enable testing
-# enable_testing()
+# Enable testing
+enable_testing()
 
-# # Add test directory
-# add_subdirectory(test)
+# Add the test directory
+add_subdirectory(test)

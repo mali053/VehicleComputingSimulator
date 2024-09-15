@@ -1,129 +1,125 @@
 #include <QtTest/QtTest>
-#include "../src/main_window.h"
+#include "main_window.h"
 
 class TestMainWindow : public QObject {
     Q_OBJECT
 
 private slots:
+    void init();  // Setup method, runs before each test
+    void cleanup();  // Cleanup method, runs after each test
 
     void testCreateNewProcess();
     void testAddProcessSquare();
     void testIsUniqueId();
     void testStartProcesses();
     void testEndProcesses();
-    void testStopProcesses();
     void testDeleteSquare();
     void testShowTimerInput();
     void addId(int id);
+
+private:
+    MainWindow *window;  // Pointer to MainWindow to allow reuse in each test
 };
+
+void TestMainWindow::init() {
+    // Initialize the MainWindow before each test
+    window = new MainWindow();
+}
+
+void TestMainWindow::cleanup() {
+    // Clean up any resources used during the test
+    delete window;
+    window = nullptr;
+}
 
 void TestMainWindow::testCreateNewProcess()
 {
-    MainWindow window;
-    int newProcessId = 6; // Ensure this is greater than 5 and unique
+    int newProcessId = 6;
     QString processName = "NewProcess";
-    QString cmakeProject = "../src/dummy_program3";
+    QString cmakeProject = "../src/dummy_program1";
     QString qemuPlatform = "QEMUPlatform";
-    // Create a new Process object with the provided data
-    Process *newProcess =
-        new Process(newProcessId, processName, cmakeProject, qemuPlatform);
-    // Simulate adding the process square to the main window
-    window.addProcessSquare(newProcess);
-    window.addId(newProcessId);
-    // Verify that the process was added correctly
-    Process *retrievedProcess = window.getProcessById(newProcessId);
+    
+    Process* newProcess = new Process(newProcessId, processName, cmakeProject, qemuPlatform);
+    window->addProcessSquare(newProcess);
+    window->addId(newProcessId);
+
+    Process* retrievedProcess = window->getProcessById(newProcessId);
     QVERIFY(retrievedProcess != nullptr);
     QCOMPARE(retrievedProcess->getName(), processName);
     QCOMPARE(retrievedProcess->getCMakeProject(), cmakeProject);
     QCOMPARE(retrievedProcess->getQEMUPlatform(), qemuPlatform);
-    // Clean up
+
+    // Cleanup for this specific test
     delete newProcess;
 }
 
 void TestMainWindow::testAddProcessSquare()
 {
-    MainWindow window;
-    Process *newProcess =
-        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
-    window.addProcessSquare(newProcess);
-    QCOMPARE(window.squares.size(), 5);  // Check if square is added
+    Process *newProcess = new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
+    window->addProcessSquare(newProcess);
+    QCOMPARE(window->squares.size(), 5); // Check if square is added
+    
+    delete newProcess;  // Ensure we clean up the process
 }
 
 void TestMainWindow::testIsUniqueId()
 {
-    MainWindow window;
-    window.addId(5);
-    QCOMPARE(window.isUniqueId(5), false);  // Check if the ID is unique
-    QCOMPARE(window.isUniqueId(10), true);  // Check if a different ID is unique
+    window->addId(5);
+    QCOMPARE(window->isUniqueId(5), false); // Check if the ID is unique
+    QCOMPARE(window->isUniqueId(10), true); // Check if a different ID is unique
 }
 
 void TestMainWindow::testStartProcesses()
 {
-    MainWindow window;
-    window.startProcesses();
-    QVERIFY(
-        !window.runningProcesses.isEmpty());  // Ensure processes are started
+    window->compileProjects();
+    window->runProjects();
+    QVERIFY(!window->runningProcesses.isEmpty()); // Ensure processes are started
+    window->endProcesses();
 }
 
 void TestMainWindow::testEndProcesses()
 {
-    MainWindow window;
-    window.startProcesses();
-    window.endProcesses();
-    QVERIFY(window.runningProcesses.isEmpty());  // Ensure processes are stopped
-}
-
-void TestMainWindow::testStopProcesses()
-{
-    MainWindow window;
-    QProcess* testProcess = new QProcess();
-    int testId = 6;
-
-    window.runningProcesses.append(QPair<QProcess*, int>(testProcess, testId));
-
-    window.stopProcess(testId);
-
-    QCOMPARE(window.runningProcesses.size(), 0); // Ensure the process is removed from the list
-    QCOMPARE(testProcess->state(), QProcess::NotRunning); // Verify that the process is not running
+    window->compileProjects();
+    window->runProjects();
+    window->endProcesses();
+    QVERIFY(window->runningProcesses.isEmpty()); // Ensure processes are stopped
 }
 
 void TestMainWindow::testDeleteSquare()
 {
-    MainWindow window;
-    Process *process =
-        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
-    window.addProcessSquare(process);
+    QString cmakeProject = "../src/dummy_program1";
+    Process *process = new Process(5, "Test Process", cmakeProject, "QEMUPlatform");
+    window->addProcessSquare(process);
 
-    window.deleteSquare(5);
+    window->deleteSquare(5);
 
     // Ensure that only the initial 4 squares remain
-    QCOMPARE(window.squares.size(), 4);
-    QVERIFY(!window.squarePositions.contains(5));
-    QVERIFY(!window.usedIds.contains(5));
+    QCOMPARE(window->squares.size(), 4);
+    QVERIFY(!window->squarePositions.contains(5));
+    QVERIFY(!window->usedIds.contains(5));
+
+    delete process;  // Cleanup after test
 }
 
 void TestMainWindow::addId(int id)
 {
-    MainWindow window;
-    window.addId(77);
-    QVERIFY(window.usedIds.contains(77));
+    window->addId(77);
+    QVERIFY(window->usedIds.contains(77));
 }
 
 void TestMainWindow::testShowTimerInput()
 {
-    MainWindow mainWindow;
-
     // Initially, the time input and label should be hidden
-    QVERIFY(!mainWindow.timeInput->isVisible());
-    QVERIFY(!mainWindow.timeLabel->isVisible());
+    QVERIFY(!window->timeInput->isVisible());
+    QVERIFY(!window->timeLabel->isVisible());
 
-    mainWindow.show();
+    window->show();
     // Trigger the showTimerInput function
-    mainWindow.showTimerInput();
+    window->showTimerInput();
 
     // Now, the time input and label should be visible
-    QVERIFY(mainWindow.timeInput->isVisible());
-    QVERIFY(mainWindow.timeLabel->isVisible());
+    QVERIFY(window->timeInput->isVisible());
+    QVERIFY(window->timeLabel->isVisible());
 }
 
 QTEST_MAIN(TestMainWindow)

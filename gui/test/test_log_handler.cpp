@@ -1,8 +1,8 @@
 #include <QtTest/QtTest>
-#include "../src/log_handler.h"
-#include "../src/simulation_data_manager.h"
-#include "../src/draggable_square.h"
-#include "../src/process.h"
+#include "log_handler.h"
+#include "simulation_data_manager.h"
+#include "draggable_square.h"
+#include "process.h"
 #include <QCoreApplication>
 #include <QVector>
 #include <QString>

@@ -49,12 +49,11 @@ protected:
 
 private:
     QPushButton *stopButton;
-    QPoint dragStartPosition;
-    QPoint initialPosition;
     QLabel *label;
     Process *process;
     int id;
     bool dragging;
+    QPoint dragStartPosition;
 
 private slots:
     void editSquare(int id);

@@ -109,23 +109,23 @@ void LogHandler::analyzeLogEntries(QMainWindow *mainWindow,
                 jsonFileName.toStdString());
 
         // Update process map with JSON data
-        QJsonArray processesArray = jsonObject["processes"].toArray();
+        QJsonArray processesArray = jsonObject["squares"].toArray();
         for (const QJsonValue &value : processesArray) {
             QJsonObject processObject = value.toObject();
             int id = processObject["id"].toInt();
             QString name = processObject["name"].toString();
             QString cmakeProject = processObject["CMakeProject"].toString();
             QString qemuPlatform = processObject["QEMUPlatform"].toString();
-            int x = processObject["coordinate"].toObject()["x"].toInt();
-            int y = processObject["coordinate"].toObject()["y"].toInt();
+            int x = processObject["position"].toObject()["x"].toInt();
+            int y = processObject["position"].toObject()["y"].toInt();
             int width = processObject["width"].toInt();
             int height = processObject["height"].toInt();
 
-            Process process(id, name, cmakeProject, qemuPlatform);
+            Process *process =
+                new Process(id, name, cmakeProject, qemuPlatform);
             DraggableSquare *square =
                 new DraggableSquare(mainWindow, "", width, height);
-            square->setProcess(&process);
-            square->setDragStartPosition(QPoint(x, y));
+            square->setProcess(process);
             square->move(x, y);
             processSquares.insert(id, square);
         }

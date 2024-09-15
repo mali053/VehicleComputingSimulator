@@ -1,6 +1,6 @@
 #include <QtTest/QtTest>
 #include "log_handler.h"
-#include "simulation_data_manager.h"
+#include "simulation_state_manager.h"
 #include "draggable_square.h"
 #include "process.h"
 #include <QCoreApplication>
@@ -11,7 +11,7 @@
 
 class LogHandlerTests : public QObject {
     Q_OBJECT
-    SimulationDataManager manager;
+    SimulationStateManager state;
 
 private slots:
     void testReadLogFile();

@@ -17,8 +17,6 @@ void DraggableSquare::print() const
        << "  Process ID: " << process->getId() << "\n"
        << "  Drag Start Position: (" << dragStartPosition.x() << ", "
        << dragStartPosition.y() << ")\n"
-       << "  Initial Position: (" << initialPosition.x() << ", "
-       << initialPosition.y() << ")\n"
        << "  Color: " << label->styleSheet().toStdString() << "\n"
        << "  Size: (" << this->width() << ", " << this->height() << ")";
 
@@ -55,7 +53,6 @@ DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
 DraggableSquare::DraggableSquare(const DraggableSquare &other)
     : QWidget(other.parentWidget()),
       dragStartPosition(other.dragStartPosition),
-      initialPosition(other.initialPosition),
       label(new QLabel(other.label->text(), this)),
       process(other.process)  // Copy QLabel's text
 {
@@ -75,7 +72,6 @@ DraggableSquare &DraggableSquare::operator=(const DraggableSquare &other)
     }
 
     dragStartPosition = other.dragStartPosition;
-    initialPosition = other.initialPosition;
     delete label;
     label = new QLabel(other.label->text(), this);  // Copy QLabel's text
     process = other.process;
@@ -169,15 +165,15 @@ void DraggableSquare::mouseMoveEvent(QMouseEvent *event)
     }
 
     QPoint newPos = mapToParent(event->pos() - dragStartPosition);
-    newPos.setX(qMax(0, qMin(newPos.x(), parentWidget()->width() - width())));
-    newPos.setY(qMax(0, qMin(newPos.y(), parentWidget()->height() - height())));
+    QRect parentRect = parentWidget()->rect();
+
+    // Calculate new position, based on the parent's boundaries
+    newPos.setX(qMax(parentRect.left(),
+                     qMin(newPos.x(), parentRect.right() - width())));
+    newPos.setY(qMax(parentRect.top(),
+                     qMin(newPos.y(), parentRect.bottom() - height())));
 
     move(newPos);
-    dragStartPosition = newPos;
-    MainWindow::guiLogger.logMessage(logger::LogLevel::DEBUG,
-                                     "DraggableSquare moved to: (" +
-                                         std::to_string(newPos.x()) + ", " +
-                                         std::to_string(newPos.y()) + ")");
 }
 
 void DraggableSquare::mouseReleaseEvent(QMouseEvent *event)

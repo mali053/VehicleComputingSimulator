@@ -28,7 +28,7 @@
 #include "process.h"
 #include "process_dialog.h"
 #include "simulation_state_manager.h"
-#include "../logger/logger.h"
+#include "../../logger/logger.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -65,6 +65,10 @@ public:
     }
     static logger guiLogger;
 
+private slots:
+    void showSimulation();
+    void loadSimulation();
+
 public slots:
     void createNewProcess();
     void editSquare(int id);
@@ -78,8 +82,8 @@ private:
     void addProcessSquare(Process *&process);
     bool isUniqueId(int id);
     void addId(int id);
-    void addProcessSquare(Process *&process, int index,
-                          const QString &color = "background-color: green;");
+    void addProcessSquare(Process *process, QPoint position, int width,
+                          int height, const QString &color);
     void compileProjects();
     void runProjects();
     QString getExecutableName(const QString &buildDirPath);
@@ -103,7 +107,6 @@ private:
     QString currentImagePath;
     SimulationStateManager *stateManager;
     LogHandler logHandler;
-    Frames *frames;
 };
 
 #endif  // MAIN_WINDOW_H

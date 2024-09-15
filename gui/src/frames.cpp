@@ -5,6 +5,15 @@
 #include "frames.h"
 #include "main_window.h"
 
+//Setting constants
+const int timerIntervalMs = 100;
+const int squareOffset = 8;
+const int cornerRadius = 10;
+const double minThickness = 0.001;
+const double maxThickness = 25;
+const int logEntryExpirySecs = 5;
+const int alphaValue = 12;
+
 // Constructor to initialize Frames with a LogHandler reference
 Frames::Frames(LogHandler &logHandler, QWidget *parent)
     : logHandler(logHandler), QWidget(parent), differenceTime(0)
@@ -22,7 +31,7 @@ Frames::Frames(LogHandler &logHandler, QWidget *parent)
 
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Frames::updateFrames);
-    timer->start(100);
+    timer->start(timerIntervalMs);
 
     MainWindow::guiLogger.logMessage(
         logger::LogLevel::DEBUG, "Frames initialized with timer set to 100ms");
@@ -58,13 +67,13 @@ void Frames::paintEvent(QPaintEvent *event)
                 auto square1 = logHandler.getProcessSquares()[log.srcId];
                 auto square2 = logHandler.getProcessSquares()[log.dstId];
 
-                QRect rect1(square1->pos().x() - 8, square1->pos().y() - 8,
+                QRect rect1(square1->pos().x() - squareOffset, square1->pos().y() - squareOffset,
                             square1->width(), square1->height());
-                QRect rect2(square2->pos().x() - 8, square2->pos().y() - 8,
+                QRect rect2(square2->pos().x() - squareOffset, square2->pos().y() - squareOffset,
                             square2->width(), square2->height());
 
-                painter.drawRoundedRect(rect1, 10, 10);
-                painter.drawRoundedRect(rect2, 10, 10);
+                painter.drawRoundedRect(rect1, cornerRadius, cornerRadius);
+                painter.drawRoundedRect(rect2, cornerRadius, cornerRadius);
             }
             else {
                 MainWindow::guiLogger.logMessage(
@@ -91,15 +100,15 @@ void Frames::updateFrames()
 
     // Decrease thickness for expired log entries
     for (auto it = activeLogEntries.begin(); it != activeLogEntries.end();) {
-        if (it->first.addSecs(5) <= currentTime) {
+        if (it->first.addSecs(logEntryExpirySecs) <= currentTime) {
             const LogHandler::LogEntry &logEntry = it->second;
             int row =
                 std::max(idMapping[logEntry.dstId], idMapping[logEntry.srcId]);
             int col =
                 std::min(idMapping[logEntry.dstId], idMapping[logEntry.srcId]);
 
-            framesMat[row][col].thickness -= 0.001;
-            if (framesMat[row][col].thickness <= 0.001)
+            framesMat[row][col].thickness -= minThickness;
+            if (framesMat[row][col].thickness <= minThickness)
                 it = activeLogEntries.erase(it);
         }
         else {
@@ -120,12 +129,12 @@ void Frames::updateFrames()
                                    idMapping[logEntry.srcId]);
                 int col = std::min(idMapping[logEntry.dstId],
                                    idMapping[logEntry.srcId]);
-                framesMat[row][col].thickness += 0.001;
+                if(framesMat[row][col].thickness <= maxThickness)
+                    framesMat[row][col].thickness += minThickness;
                 activeLogEntries.emplace(logEntry.timestamp, logEntry);
             }
         }
     }
-
     update();
 }
 
@@ -170,12 +179,11 @@ void Frames::fillFramesMat()
 
 QString Frames::generateRandomColor()
 {
-    int alpha = 12;
     QString color = QString("#%1%2%3%4")
                         .arg(rand() % 256, 2, 16, QChar('0'))
                         .arg(rand() % 256, 2, 16, QChar('0'))
                         .arg(rand() % 256, 2, 16, QChar('0'))
-                        .arg(alpha, 2, 16, QChar('0'));
+                        .arg(alphaValue, 2, 16, QChar('0'));
     return color.toUpper();
 }
 

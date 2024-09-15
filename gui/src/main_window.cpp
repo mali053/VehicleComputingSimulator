@@ -32,6 +32,24 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
     timeLabel = new QLabel("Enter time in seconds:", this);
     logOutput = new QTextEdit(this);
     QPushButton *chooseButton = new QPushButton("Choose Image", this);
+    QPushButton *showSimulationButton =
+        new QPushButton("Show\nSimulation", this);
+    showSimulationButton->setStyleSheet(
+        "QPushButton {"
+        "border: 2px solid #8f8f91;"
+        "border-radius: 25px;"
+        "background-color: #d1d1d1;"
+        "min-width: 50px;"
+        "min-height: 50px;"
+        "font-size: 14px;"
+        "}"
+        "QPushButton:pressed {"
+        "background-color: #a8a8a8;"
+        "}");
+    QPushButton *loadSimulationButton =
+        new QPushButton("LOAD\nSIMULATION", toolbox);
+    loadSimulationButton->setFixedHeight(
+        loadSimulationButton->sizeHint().height() * 1.5);
 
     timeLabel->hide();
     timeInput->hide();
@@ -41,6 +59,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
 
     QPushButton *addProcessButton = new QPushButton("Add Process", toolbox);
     toolboxLayout->addWidget(addProcessButton);
+    toolboxLayout->insertWidget(1, showSimulationButton);
+    toolboxLayout->insertWidget(2, loadSimulationButton);
     toolboxLayout->addStretch();
 
     connect(addProcessButton, &QPushButton::clicked, this,
@@ -53,6 +73,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
             &MainWindow::showTimerInput);
     connect(chooseButton, &QPushButton::clicked, this,
             &MainWindow::openImageDialog);
+    connect(showSimulationButton, &QPushButton::clicked, this,
+            &MainWindow::showSimulation);
+    connect(loadSimulationButton, &QPushButton::clicked, this,
+            &MainWindow::loadSimulation);
 
     toolbox->setMaximumWidth(100);
     toolbox->setMinimumWidth(100);
@@ -89,19 +113,31 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
 
     Process *mainProcess =
         new Process(id, "Main", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(mainProcess, id, styleSheet);
+    addProcessSquare(
+        mainProcess,
+        QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
+        sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *hsmProcess =
         new Process(id, "HSM", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(hsmProcess, id, styleSheet);
+    addProcessSquare(
+        hsmProcess,
+        QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
+        sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *logsDbProcess =
         new Process(id, "LogsDb", "../src/dummy_program1", "QEMUPlatform");
-    addProcessSquare(logsDbProcess, id, styleSheet);
+    addProcessSquare(
+        logsDbProcess,
+        QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
+        sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *busManagerProcess =
         new Process(id, "Bus_Manager", "../src/dummy_program2", "QEMUPlatform");
-    addProcessSquare(busManagerProcess, id, styleSheet);
+    addProcessSquare(
+        busManagerProcess,
+        QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
+        sizeSquare, sizeSquare, styleSheet);
     addId(id++);
 }
 
@@ -172,24 +208,20 @@ void MainWindow::addProcessSquare(Process *&process)
     createProcessConfigFile(process->getId(), process->getCMakeProject());
 }
 
-void MainWindow::addProcessSquare(Process *&process, int index,
-                                  const QString &color)
+void MainWindow::addProcessSquare(Process *process, QPoint position, int width,
+                                  int height, const QString &color)
 {
     DraggableSquare *square =
-        new DraggableSquare(workspace, color, sizeSquare, sizeSquare);
+        new DraggableSquare(workspace, color, width, height);
 
     square->setProcess(process);
     square->setId(process->getId());
-    int x = (index % 2) * (square->width() + 10);
-    int y = (index / 2) * (square->height() + 10);
-    QPoint pos = squarePositions.value(process->getId(), QPoint(x, y));
+    QPoint pos = squarePositions.value(process->getId(), position);
     square->move(pos);
     square->show();
 
     squarePositions[process->getId()] = pos;
     squares.push_back(square);
-
-    createProcessConfigFile(process->getId(), process->getCMakeProject());
 }
 
 bool MainWindow::isUniqueId(int id)
@@ -263,16 +295,7 @@ void MainWindow::endProcesses()
                                       currentImagePath);
     MainWindow::guiLogger.logMessage(logger::LogLevel::INFO,
                                      "MainWindow::endProcesses  Simulation "
-                                     "data saved to simulation_data.bson");
-
-    QString filePath = "../log_file.log";
-    logHandler.readLogFile(filePath);
-    logHandler.analyzeLogEntries(this, "simulation_data.bson");
-
-    frames = new Frames(logHandler);  // Initialize Frames
-    QVBoxLayout *framesLayout = new QVBoxLayout(workspace);
-    framesLayout->addWidget(frames);
-    workspace->setLayout(framesLayout);
+                                     "data saved to simulation_state.bson");
 
     for (const QPair<QProcess *, int> &pair : runningProcesses) {
         QProcess *process = pair.first;
@@ -375,6 +398,41 @@ void MainWindow::openImageDialog()
         guiLogger.logMessage(
             logger::LogLevel::INFO,
             "openImageDialog() canceled: No image path selected.");
+    }
+}
+
+void MainWindow::showSimulation()
+{
+    QString filePath = "log_file.log";
+    logHandler.readLogFile(filePath);
+    logHandler.analyzeLogEntries(this, "simulation_state.bson");
+
+    Frames* frames = new Frames(logHandler);  // Initialize Frames
+    QVBoxLayout *framesLayout = new QVBoxLayout(workspace);
+    framesLayout->addWidget(frames);
+    workspace->setLayout(framesLayout);
+}
+
+void MainWindow::loadSimulation()
+{
+    SimulationStateManager *simManager;
+    simManager = new SimulationStateManager();
+    simManager->loadSimulationState("simulation_state.bson");
+    for (auto sq : squares) {
+        delete (sq);
+    }
+    squares.clear();
+    squarePositions.clear();
+    if (!simManager->data.squares.empty()) {
+        for (auto sqr : simManager->data.squares) {
+            Process *process = new Process(
+                sqr->getProcess()->getId(), sqr->getProcess()->getName(),
+                sqr->getProcess()->getCMakeProject(),
+                sqr->getProcess()->getQEMUPlatform());
+            addProcessSquare(process, sqr->pos(), sqr->width(), sqr->height(),
+                             sqr->styleSheet());
+            addId(sqr->getId());
+        }
     }
 }
 

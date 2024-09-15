@@ -5,6 +5,8 @@
 #include <vector>
 #include <chrono>
 #include <sstream>
+#include <iostream>
+#include <bitset>
 #include <filesystem>
 
 // Helper function to create a test buffer
@@ -75,6 +77,42 @@ std::vector<uint8_t> createTestBuffer()
     return buffer;
 }
 
+// Helper function to create a test buffer based on the provided schema
+std::vector<uint8_t> createTestCommunicationBuffer()
+{
+    std::vector<uint8_t> buffer;
+
+    // Create AlertDetails (8 bits total)
+    uint8_t messageType = 0x0;  // 1 bit (0b1)
+    uint8_t level = 0x3;        // 3 bits (0b011)
+    uint8_t objectType = 0x4;   // 4 bits (0b0100)
+
+    // Pack the bits into 8 bits
+    uint8_t bitField = (messageType & 0x01) |       // MessageType in bits 0-0
+                       ((level & 0x07) << 1) |      // Level in bits 1-3
+                       ((objectType & 0x0F) << 4);  // ObjectType in bits 4-7
+
+    buffer.push_back(bitField);
+
+    // ObjectDistance (32 bits, float, little-endian)
+    float objectDistance = 123.456f;
+    uint8_t objDistBytes[4];
+    std::memcpy(objDistBytes, &objectDistance, sizeof(objectDistance));
+    buffer.insert(buffer.end(), objDistBytes, objDistBytes + 4);
+
+    // CarSpeed (32 bits, unsigned int, little-endian)
+    uint32_t carSpeed = 60;
+    buffer.insert(buffer.end(), reinterpret_cast<uint8_t *>(&carSpeed),
+                  reinterpret_cast<uint8_t *>(&carSpeed) + 4);
+
+    // ObjectSpeed (32 bits, unsigned int, little-endian)
+    uint32_t objectSpeed = 80;
+    buffer.insert(buffer.end(), reinterpret_cast<uint8_t *>(&objectSpeed),
+                  reinterpret_cast<uint8_t *>(&objectSpeed) + 4);
+
+    return buffer;
+}
+
 // Helper function to generate a unique filename
 std::string generateUniqueJsonFileName()
 {
@@ -121,6 +159,57 @@ void createLittleEndianJson(const std::string &filename)
                 "name": "double_value",
                 "type": "double",
                 "size": 64
+            }
+        ]
+    }
+    )";
+    jsonFile.close();
+}
+
+// Helper function to create a JSON file based on the provided schema
+void createTestCommunicationJson(const std::string &filename)
+{
+    std::ofstream jsonFile(filename);
+    jsonFile << R"(
+    {
+        "endianness": "little",
+        "fields": [
+            {
+                "name": "AlertDetails",
+                "type": "bit_field",
+                "size": 8,
+                "fields": [
+                    {
+                        "name": "MessageType",
+                        "type": "unsigned_int",
+                        "size": 1
+                    },
+                    {
+                        "name": "Level",
+                        "type": "unsigned_int",
+                        "size": 3
+                    },
+                    {
+                        "name": "ObjectType",
+                        "type": "unsigned_int",
+                        "size": 4
+                    }
+                ]
+            },
+            {
+                "name": "ObjectDistance",
+                "type": "float_fixed",
+                "size": 32
+            },
+            {
+                "name": "CarSpeed",
+                "type": "unsigned_int",
+                "size": 32
+            },
+            {
+                "name": "ObjectSpeed",
+                "type": "unsigned_int",
+                "size": 32
             }
         ]
     }
@@ -319,6 +408,54 @@ std::vector<uint8_t> createBitFieldBuffer()
     return buffer;
 }
 
+// Helper function to create a test JSON file including a boolean field
+void createJsonWithBool(const std::string &filename)
+{
+    std::ofstream jsonFile(filename);
+    jsonFile << R"(
+    {
+        "endianness": "big",
+        "fields": [
+            {
+                "name": "bool_field",
+                "type": "boolean",
+                "size": 8
+            }
+        ]
+    }
+    )";
+    jsonFile.close();
+}
+
+// Create a buffer that includes a boolean field
+std::vector<uint8_t> createBufferWithBool()
+{
+    std::vector<uint8_t> buffer;
+
+    // Add boolean field (8 bits, true)
+    bool boolField = true;
+    buffer.push_back(static_cast<uint8_t>(boolField ? 1 : 0));
+
+    return buffer;
+}
+
+// Test with boolean field
+TEST(PacketParserTest, BooleanField)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> buffer = createBufferWithBool();
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createJsonWithBool(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    PacketParser parser(jsonFilePath, buffer.data());
+
+    EXPECT_EQ(*static_cast<bool *>(parser.getFieldValue("bool_field")), true);
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
+}
+
 // Test with little endian buffer
 TEST(PacketParserTest, LittleEndianBuffer)
 {
@@ -366,6 +503,92 @@ TEST(PacketParserTest, BitFieldBuffer)
     cleanupJsonFiles(jsonFiles);
 }
 
+// Test with empty buffer
+TEST(PacketParserTest, EmptyBuffer)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> emptyBuffer;  // Empty buffer
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createTestJson(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    // Expect the parser to handle empty buffer gracefully
+    EXPECT_THROW(
+        {
+            try {
+                PacketParser parser(jsonFilePath, emptyBuffer.data());
+            }
+            catch (const std::runtime_error &e) {
+                EXPECT_STREQ(e.what(), "Buffer is null");
+                throw;  // Re-throw to let the test framework handle the failure
+            }
+        },
+        std::runtime_error);
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
+}
+
+// Test with extra data in buffer
+TEST(PacketParserTest, ExtraDataInBuffer)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> buffer = createTestBuffer();
+    buffer.push_back(0xFF);
+
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createTestJson(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    PacketParser parser(jsonFilePath, buffer.data());
+
+    // Validate fields ignoring the extra data
+    EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("status")), 5);
+    EXPECT_EQ(*static_cast<std::string *>(parser.getFieldValue("message")),
+              "Hello!");
+    EXPECT_FLOAT_EQ(*static_cast<float *>(parser.getFieldValue("temperature")),
+                    36.5f);
+    EXPECT_FLOAT_EQ(*static_cast<float *>(parser.getFieldValue("pressure")),
+                    101.3f);
+    EXPECT_EQ(*static_cast<int32_t *>(parser.getFieldValue("flags")), -5);
+    EXPECT_DOUBLE_EQ(
+        *static_cast<double *>(parser.getFieldValue("double_value")),
+        12345.6789);
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
+}
+
+// Test with buffer containing padding
+TEST(PacketParserTest, BufferWithPadding)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> buffer = createTestBuffer();
+    buffer.insert(buffer.end(), 2, 0xAA);
+
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createTestJson(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    PacketParser parser(jsonFilePath, buffer.data());
+
+    // Validate fields ignoring the padding
+    EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("status")), 5);
+    EXPECT_EQ(*static_cast<std::string *>(parser.getFieldValue("message")),
+              "Hello!");
+    EXPECT_FLOAT_EQ(*static_cast<float *>(parser.getFieldValue("temperature")),
+                    36.5f);
+    EXPECT_FLOAT_EQ(*static_cast<float *>(parser.getFieldValue("pressure")),
+                    101.3f);
+    EXPECT_EQ(*static_cast<int32_t *>(parser.getFieldValue("flags")), -5);
+    EXPECT_DOUBLE_EQ(
+        *static_cast<double *>(parser.getFieldValue("double_value")),
+        12345.6789);
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
+}
+
 // Test that parses the buffer correctly
 TEST(PacketParserTest, ParseBuffer)
 {
@@ -400,8 +623,12 @@ TEST(PacketParserTest, FieldTypeDetection)
     std::string jsonFilePath = generateUniqueJsonFileName();
     createTestJson(jsonFilePath);
     jsonFiles.push_back(jsonFilePath);
-    PacketParser parser(jsonFilePath,
-                        nullptr);  // No buffer needed for this test
+
+    // Use a non-null buffer to avoid issues with the parser expecting one
+    std::vector<uint8_t> dummyBuffer(1, 0);  // Small dummy buffer
+    EXPECT_NO_THROW({ PacketParser parser(jsonFilePath, dummyBuffer.data()); });
+
+    PacketParser parser(jsonFilePath, dummyBuffer.data());
 
     EXPECT_EQ(parser.getFieldType("unsigned_int"), FieldType::UNSIGNED_INT);
     EXPECT_EQ(parser.getFieldType("char_array"), FieldType::CHAR_ARRAY);
@@ -472,6 +699,76 @@ TEST(PacketParserTest, ExtractBits)
 
     // ניקוי JSON שנוצר
     cleanupJsonFiles({jsonFilePath});
+}
+
+// Test parsing a buffer with correct data
+TEST(PacketParserTest, TestBufferCommunication)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> buffer = createTestCommunicationBuffer();
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createTestCommunicationJson(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    try {
+        PacketParser parser(jsonFilePath, buffer.data());
+
+        // Assert values from the parsed buffer
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("MessageType")),
+                  0);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("Level")), 4);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("ObjectType")),
+                  6);
+        EXPECT_FLOAT_EQ(
+            *static_cast<float *>(parser.getFieldValue("ObjectDistance")),
+            123.456f);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("CarSpeed")),
+                  60);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("ObjectSpeed")),
+                  80);
+    }
+    catch (const std::exception &e) {
+        FAIL() << "Exception occurred: " << e.what();
+    }
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
+}
+
+// Test parsing a buffer with padding
+TEST(PacketParserTest, TestBufferCommunicationWithPadding)
+{
+    std::vector<std::string> jsonFiles;
+    std::vector<uint8_t> buffer = createTestCommunicationBuffer();
+    buffer.insert(buffer.end(), 2, 0xAA);  // Add padding
+
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createTestCommunicationJson(jsonFilePath);
+    jsonFiles.push_back(jsonFilePath);
+
+    try {
+        PacketParser parser(jsonFilePath, buffer.data());
+
+        // Assert values from the parsed buffer ignoring the padding
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("MessageType")),
+                  0);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("Level")), 4);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("ObjectType")),
+                  6);
+        EXPECT_FLOAT_EQ(
+            *static_cast<float *>(parser.getFieldValue("ObjectDistance")),
+            123.456f);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("CarSpeed")),
+                  60);
+        EXPECT_EQ(*static_cast<uint32_t *>(parser.getFieldValue("ObjectSpeed")),
+                  80);
+    }
+    catch (const std::exception &e) {
+        FAIL() << "Exception occurred: " << e.what();
+    }
+
+    // Clean up
+    cleanupJsonFiles(jsonFiles);
 }
 
 int main(int argc, char **argv)

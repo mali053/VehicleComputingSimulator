@@ -7,8 +7,8 @@
 #include <variant>
 #include <vector>
 
-using FieldValue =
-    std::variant<unsigned int, std::string, float, unsigned long, double, int>;
+using FieldValue = std::variant<unsigned int, std::string, float, unsigned long,
+                                double, int, bool>;
 
 enum class FieldType {
     UNSIGNED_INT,
@@ -18,6 +18,7 @@ enum class FieldType {
     FLOAT_MANTISSA,
     BIT_FIELD,
     DOUBLE,
+    BOOLEAN,
     UNKNOWN
 };
 
@@ -54,12 +55,14 @@ class PacketParser {
     std::string endianness;
     const void *_buffer;
 
+    void validateFieldSize(const std::string &type, size_t bitLength) const;
     void loadJson(const std::string &jsonFilePath);
     uint32_t decodeUnsignedInt(const uint8_t *data, size_t bitLength) const;
     int32_t decodeSignedInt(const uint8_t *data, size_t bitLength) const;
     std::string decodeCharArray(const uint8_t *data, size_t byteLength) const;
     float decodeFloat(const uint8_t *data, size_t bitLength) const;
     double decodeDouble(const uint8_t *data, size_t bitLength) const;
+    bool decodeBoolean(const uint8_t *data, size_t bitLength) const;
     uint8_t *extractBits(const uint8_t *bitFieldData, size_t offset,
                          size_t size) const;
     friend class PacketParserTest_ExtractBits_Test;

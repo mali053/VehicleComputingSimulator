@@ -46,8 +46,8 @@ void DraggableSquareTest::testSetProcess()
 {
     QCOMPARE(draggableSquare->getProcess()->getId(), testProcess->getId());
     QCOMPARE(draggableSquare->getProcess()->getName(), testProcess->getName());
-    QCOMPARE(draggableSquare->getProcess()->getCMakeProject(),
-             testProcess->getCMakeProject());
+    QCOMPARE(draggableSquare->getProcess()->getExecutionFile(),
+             testProcess->getExecutionFile());
     QCOMPARE(draggableSquare->getProcess()->getQEMUPlatform(),
              testProcess->getQEMUPlatform());
 }

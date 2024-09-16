@@ -16,13 +16,14 @@ public:
 
     int getId() const;
     QString getName() const;
-    QString getCMakeProject() const;
+    QString getExecutionFile() const;
     QString getQEMUPlatform() const;
     bool isValid() const;
     void setId(int id);
     void setName(const QString &name);
-    void setCMakeProject(const QString &cmakeProject);
+    void setExecutionFile(const QString &executableFile);
     void setQEMUPlatform(const QString &qemuPlatform);
+    void selectExecutableFile();
 
 private slots:
     bool validateAndAccept();
@@ -31,7 +32,7 @@ private slots:
 private:
     QLineEdit *idEdit;
     QLineEdit *nameEdit;
-    QLineEdit *cmakeProjectEdit;
+    QLineEdit *executionFile;
     QComboBox *qemuPlatformCombo;
 };
 

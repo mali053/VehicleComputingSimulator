@@ -1,9 +1,9 @@
 #include "process.h"
 #include "main_window.h"
 
-Process::Process(int id, const QString &name, const QString &cmakeProject,
+Process::Process(int id, const QString &name, const QString &executionFile,
                  const QString &qemuPlatform)
-    : id(id), name(name), cmakeProject(cmakeProject), qemuPlatform(qemuPlatform)
+    : id(id), name(name), executionFile(executionFile), qemuPlatform(qemuPlatform)
 {
     MainWindow::guiLogger.logMessage(
         logger::LogLevel::INFO,
@@ -14,7 +14,7 @@ Process::Process(int id, const QString &name, const QString &cmakeProject,
 Process::Process(const Process &other)
     : id(other.id),
       name(other.name),
-      cmakeProject(other.cmakeProject),
+      executionFile(other.executionFile),
       qemuPlatform(other.qemuPlatform)
 {
     MainWindow::guiLogger.logMessage(
@@ -22,7 +22,7 @@ Process::Process(const Process &other)
         "Process copied with ID: " + std::to_string(other.id));
 }
 
-Process::Process() : id(-1), name(""), cmakeProject(""), qemuPlatform("") {}
+Process::Process() : id(-1), name(""), executionFile(""), qemuPlatform("") {}
 
 int Process::getId() const
 {
@@ -34,9 +34,9 @@ QString Process::getName() const
     return name;
 }
 
-QString Process::getCMakeProject() const
+QString Process::getExecutionFile() const
 {
-    return cmakeProject;
+    return executionFile;
 }
 
 QString Process::getQEMUPlatform() const

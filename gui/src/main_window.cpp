@@ -173,7 +173,7 @@ void MainWindow::createNewProcess()
             return;
         }
         Process *newProcess =
-            new Process(id, dialog.getName(), dialog.getCMakeProject(),
+            new Process(id, dialog.getName(), dialog.getExecutionFile(),
                         dialog.getQEMUPlatform());
         addProcessSquare(newProcess);
         addId(id);
@@ -205,7 +205,7 @@ void MainWindow::addProcessSquare(Process *&process)
     squarePositions[process->getId()] = pos;
     squares.push_back(square);
 
-    createProcessConfigFile(process->getId(), process->getCMakeProject());
+    createProcessConfigFile(process->getId(), process->getExecutionFile());
 }
 
 void MainWindow::addProcessSquare(Process *process, QPoint position, int width,
@@ -427,7 +427,7 @@ void MainWindow::loadSimulation()
         for (auto sqr : simManager->data.squares) {
             Process *process = new Process(
                 sqr->getProcess()->getId(), sqr->getProcess()->getName(),
-                sqr->getProcess()->getCMakeProject(),
+                sqr->getProcess()->getExecutionFile(),
                 sqr->getProcess()->getQEMUPlatform());
             addProcessSquare(process, sqr->pos(), sqr->width(), sqr->height(),
                              sqr->styleSheet());
@@ -510,7 +510,7 @@ void MainWindow::compileProjects()
     bool compileSuccessful = true;  // Track if all compilations succeed
 
     for (DraggableSquare *square : squares) {
-        QString cmakePath = square->getProcess()->getCMakeProject();
+        QString cmakePath = square->getProcess()->getExecutionFile();
 
         if (cmakePath.endsWith(".sh")) {
             // Shell script processing
@@ -684,7 +684,7 @@ void MainWindow::runProjects()
 {
     updateTimer();
     for (DraggableSquare *square : squares) {
-        QString cmakePath = square->getProcess()->getCMakeProject();
+        QString cmakePath = square->getProcess()->getExecutionFile();
 
         if (cmakePath.endsWith(".sh")) {
             // Run the shell script
@@ -754,14 +754,14 @@ void MainWindow::editSquare(int id)
             ProcessDialog dialog(this);
             dialog.setId(square->getProcess()->getId());
             dialog.setName(square->getProcess()->getName());
-            dialog.setCMakeProject(square->getProcess()->getCMakeProject());
+            dialog.setExecutionFile(square->getProcess()->getExecutionFile());
             dialog.setQEMUPlatform(square->getProcess()->getQEMUPlatform());
 
             if (dialog.exec() == QDialog::Accepted && dialog.isValid()) {
                 // Update the process details
                 // square->setProcess(Process(dialog.getId(), dialog.getName(), dialog.getCMakeProject(), dialog.getQEMUPlatform()));
                 Process *updatedProcess = new Process(
-                    dialog.getId(), dialog.getName(), dialog.getCMakeProject(),
+                    dialog.getId(), dialog.getName(), dialog.getExecutionFile(),
                     dialog.getQEMUPlatform());
                 square->setProcess(updatedProcess);
                 guiLogger.logMessage(logger::LogLevel::INFO,

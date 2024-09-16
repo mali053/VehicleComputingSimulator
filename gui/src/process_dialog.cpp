@@ -26,28 +26,33 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(nameLabel);
     layout->addWidget(nameEdit);
 
-    QLabel *cmakeProjectLabel = new QLabel("CMake Project:");
-    cmakeProjectEdit = new QLineEdit(this);
-    layout->addWidget(cmakeProjectLabel);
-    layout->addWidget(cmakeProjectEdit);
+    QLabel *executableFileLabel = new QLabel("Executable File:");
+    executionFile = new QLineEdit(this);
+    executionFile->setReadOnly(true);
+    layout->addWidget(executableFileLabel);
+    layout->addWidget(executionFile);
+
+    QPushButton *selectExecutableFileButton = new QPushButton("Select File", this);
+    layout->addWidget(selectExecutableFileButton);
 
     QLabel *qemuPlatformLabel = new QLabel("QEMU Platform:");
     qemuPlatformCombo = new QComboBox(this);
     qemuPlatformCombo->addItems({"x86_64", "arm", "aarch64"});
+    qemuPlatformCombo->setEnabled(false);
+
+    // Adding widgets to layout
     layout->addWidget(qemuPlatformLabel);
     layout->addWidget(qemuPlatformCombo);
+
+    // Currently, hardware selection is not needed, so the widgets are hidden.
+    // If you need to use this in the future, remove the following lines:
+    qemuPlatformCombo->setVisible(false);
+    qemuPlatformLabel->setVisible(false);
 
     QRegExp regex("[a-zA-Z0-9]*");  // Allows only English letters and numbers
     QRegExpValidator *validator = new QRegExpValidator(regex, this);
 
-    QRegExp cmakeProjectRegex(
-        "[\\x20-\\x7E]*");  // Allows any printable ASCII character
-    QRegExpValidator *cmakeProjectValidator =
-        new QRegExpValidator(cmakeProjectRegex, this);
-
     nameEdit->setValidator(validator);
-    cmakeProjectEdit->setValidator(cmakeProjectValidator);
-    // qemuPlatformEdit->setValidator(validator);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *okButton = new QPushButton("OK", this);
@@ -60,8 +65,20 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
             &ProcessDialog::validateAndAccept);
     connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
+    connect(selectExecutableFileButton, &QPushButton::clicked, this, &ProcessDialog::selectExecutableFile); // Changed the connection for file selection
+
     setLayout(layout);
 }
+
+void ProcessDialog::selectExecutableFile()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "Select Executable File", "", 
+                                                    "Executable Files (*.sh *.cmake);;Text Files (*.txt)");
+    if (!fileName.isEmpty()) {
+        executionFile->setText(fileName);  // Update the renamed QLineEdit
+    }
+}
+
 
 int ProcessDialog::getId() const
 {
@@ -73,9 +90,9 @@ QString ProcessDialog::getName() const
     return nameEdit->text();
 }
 
-QString ProcessDialog::getCMakeProject() const
+QString ProcessDialog::getExecutionFile() const
 {
-    return cmakeProjectEdit->text();
+    return executionFile->text();
 }
 
 QString ProcessDialog::getQEMUPlatform() const
@@ -85,8 +102,11 @@ QString ProcessDialog::getQEMUPlatform() const
 
 bool ProcessDialog::isValid() const
 {
+    if (!idEdit || !nameEdit || !executionFile || !qemuPlatformCombo) {
+        return false;
+    }
     return !idEdit->text().isEmpty() && !nameEdit->text().isEmpty() &&
-           !cmakeProjectEdit->text().isEmpty() &&
+           !executionFile->text().isEmpty() &&
            !qemuPlatformCombo->currentText().isEmpty();
 }
 
@@ -102,7 +122,7 @@ bool ProcessDialog::validateAndAccept()
             logger::LogLevel::DEBUG,
             "Entered values: ID = " + idEdit->text().toStdString() +
                 ", Name = " + nameEdit->text().toStdString() +
-                ", CMake Project = " + cmakeProjectEdit->text().toStdString() +
+                ", Executable File = " + executionFile->text().toStdString() +
                 ", QEMU Platform = " +
                 qemuPlatformCombo->currentText().toStdString());
         accept();
@@ -127,9 +147,9 @@ void ProcessDialog::setName(const QString &name)
     nameEdit->setText(name);
 }
 
-void ProcessDialog::setCMakeProject(const QString &cmakeProject)
+void ProcessDialog::setExecutionFile(const QString &executableFile)
 {
-    cmakeProjectEdit->setText(cmakeProject);
+    executionFile->setText(executableFile);
 }
 
 void ProcessDialog::setQEMUPlatform(const QString &qemuPlatform)

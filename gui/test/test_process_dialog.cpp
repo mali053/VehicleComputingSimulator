@@ -19,11 +19,11 @@ private slots:
         QCOMPARE(dialog.getName(), "Test Process");
     }
 
-    void testGetCMakeProject()
+    void testGetExecutionFile()
     {
         ProcessDialog dialog;
-        dialog.setCMakeProject("TestProject");
-        QCOMPARE(dialog.getCMakeProject(), "TestProject");
+        dialog.setExecutionFile("TestProject");
+        QCOMPARE(dialog.getExecutionFile(), "TestProject");
     }
 
     void testGetQEMUPlatform()
@@ -38,7 +38,7 @@ private slots:
         ProcessDialog dialog;
         dialog.setId(123);
         dialog.setName("Test Process");
-        dialog.setCMakeProject("TestProject");
+        dialog.setExecutionFile("TestProject");
         dialog.setQEMUPlatform("x86");
         QVERIFY(dialog.isValid());
     }
@@ -48,7 +48,7 @@ private slots:
         ProcessDialog dialog;
         dialog.setId(123);
         dialog.setName("Test Process");
-        dialog.setCMakeProject("TestProject");
+        dialog.setExecutionFile("TestProject");
         dialog.setQEMUPlatform("x86");
         // Assuming true indicates validation success
         QVERIFY(dialog.validateAndAccept() == true);

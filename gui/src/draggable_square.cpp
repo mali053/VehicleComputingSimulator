@@ -27,7 +27,7 @@ void DraggableSquare::setSquareColor(const QString &color)
 {
     setStyleSheet(color);
     stopButton->setStyleSheet(QString("background-color: %1; border: none;  "
-                                      "color: white; font-size: 12px;")
+                                      "color: black; font-size: 11px;")
                                   .arg(color));
 }
 // constructor
@@ -40,6 +40,15 @@ DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
     setFixedSize(width, height);
     setStyleSheet(color);
 
+    
+  label->setStyleSheet("QLabel {"
+             " color: black;"
+             " font-size: 10px;"
+             " font-family: 'Segoe UI', sans-serif;"
+             " font-weight: bold;"
+             " text-align: center;"
+             "}");
+             
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(label);
     layout->addWidget(stopButton);
@@ -89,11 +98,15 @@ void DraggableSquare::setProcess(Process *proc)
     process = proc;
     if (process) {
         this->id = process->getId();
-        label->setText(QString("ID: %1\nName: %2\nCMake: %3\nQEMU: %4")
+        QString executionFilePath = process->getExecutionFile();
+
+        label->setText(QString("ID: %1\nName: %2\nCMake: %3\n")
                            .arg(process->getId())
                            .arg(process->getName())
-                           .arg(process->getCMakeProject())
-                           .arg(process->getQEMUPlatform()));
+                           .arg(executionFilePath));
+
+        // Set the tooltip to show the full path of the executable file
+        label->setToolTip(executionFilePath);
     }
 }
 

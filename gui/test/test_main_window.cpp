@@ -49,7 +49,7 @@ void TestMainWindow::testCreateNewProcess()
     Process *retrievedProcess = window->getProcessById(newProcessId);
     QVERIFY(retrievedProcess != nullptr);
     QCOMPARE(retrievedProcess->getName(), processName);
-    QCOMPARE(retrievedProcess->getCMakeProject(), cmakeProject);
+    QCOMPARE(retrievedProcess->getExecutionFile(), cmakeProject);
     QCOMPARE(retrievedProcess->getQEMUPlatform(), qemuPlatform);
 
     // Cleanup for this specific test

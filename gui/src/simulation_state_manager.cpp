@@ -77,7 +77,7 @@ void SimulationStateManager::saveSimulationState(
                          square->getProcess()->getName().toStdString().c_str());
         BSON_APPEND_UTF8(
             &squareBson, "CMakeProject",
-            square->getProcess()->getCMakeProject().toStdString().c_str());
+            square->getProcess()->getExecutionFile().toStdString().c_str());
         BSON_APPEND_UTF8(
             &squareBson, "QEMUPlatform",
             square->getProcess()->getQEMUPlatform().toStdString().c_str());

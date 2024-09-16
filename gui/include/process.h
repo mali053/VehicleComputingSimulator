@@ -5,14 +5,14 @@
 
 class Process {
 public:
-    Process(int id, const QString &name, const QString &cmakeProject,
+    Process(int id, const QString &name, const QString &executionFile,
             const QString &qemuPlatform);
     Process();
     Process(const Process &other);  // Copy constructor
 
     int getId() const;
     QString getName() const;
-    QString getCMakeProject() const;
+    QString getExecutionFile() const;
     QString getQEMUPlatform() const;
     void setId(int newId)
     {
@@ -22,9 +22,9 @@ public:
     {
         name = newName;
     }
-    void setCMakeProject(const QString &newCMakeProject)
+    void setExecutionFile(const QString &newExecutionFile)
     {
-        cmakeProject = newCMakeProject;
+        executionFile = newExecutionFile;
     }
     void setQEMUPlatform(const QString &newQEMUPlatform)
     {
@@ -34,7 +34,7 @@ public:
 private:
     int id;
     QString name;
-    QString cmakeProject;
+    QString executionFile;
     QString qemuPlatform;
 };
 

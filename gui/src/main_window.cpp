@@ -272,6 +272,12 @@ void MainWindow::updateTimer()
         return;
     }
 
+    // Set the text to be centered and styled for better clarity
+    timeInput->setAlignment(Qt::AlignCenter);
+    QFont font = timeInput->font();
+    font.setPointSize(10);  // Increase font size for better visibility
+    timeInput->setFont(font);
+
     if (time > 0) {
         logOutput->append("Timer started for " + QString::number(time) +
                           " seconds.");
@@ -285,11 +291,20 @@ void MainWindow::updateTimer()
         }
 
         timer = new QTimer(this);
-        connect(timer, &QTimer::timeout, this, &MainWindow::timerTimeout);
+        connect(timer, &QTimer::timeout, this, [this, time]() mutable {
 
-        timer->start(time * 1000);
+            if (time > 0) {
+                time--;
+                timeInput->setText(QString::number(time));
+                timeInput->setAlignment(Qt::AlignCenter);  // Keep text centered
+            } else {
+                timerTimeout();
+            }
+        });
+
+        timer->start(1000);  
         timeLabel->hide();
-        timeInput->hide();
+        timeInput->setEnabled(false);  
     }
 }
 
@@ -355,9 +370,24 @@ void MainWindow::showTimerInput()
     timeLabel->show();
     timeInput->show();
 
+    // Center the text and set the style
+    timeInput->setAlignment(Qt::AlignCenter);
+    QFont font = timeInput->font();
+    font.setPointSize(10);  // Increase font size for better visibility
+    timeInput->setFont(font);
+
+    // Connect to textChanged signal to ensure text stays centered
+    connect(timeInput, &QLineEdit::textChanged, this, [this]() {
+        timeInput->setAlignment(Qt::AlignCenter);
+    });
+
+    // Set input validator to ensure only numbers are entered
+    QIntValidator* validator = new QIntValidator(0, 999999, this);
+    timeInput->setValidator(validator);
+
     guiLogger.logMessage(
         logger::LogLevel::DEBUG,
-        "showTimerInput() called: Timer input elements are shown.");
+        "showTimerInput() called: Timer input elements are shown and centered.");
 }
 
 void MainWindow::timerTimeout()

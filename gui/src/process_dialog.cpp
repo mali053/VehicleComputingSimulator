@@ -26,14 +26,19 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(nameLabel);
     layout->addWidget(nameEdit);
 
+    QLabel *cmakeProjectLabel = new QLabel("CMake Project:");
+    cmakeProjectEdit = new QLineEdit(this);
+    layout->addWidget(cmakeProjectLabel);
+    layout->addWidget(cmakeProjectEdit);
+
     QLabel *executableFileLabel = new QLabel("Executable File:");
     executionFile = new QLineEdit(this);
     executionFile->setReadOnly(true);
     layout->addWidget(executableFileLabel);
     layout->addWidget(executionFile);
 
-    QPushButton *selectExecutableFileButton = new QPushButton("Select File", this);
-    layout->addWidget(selectExecutableFileButton);
+    QPushButton *selectExecutableFileButton = new QPushButton("Select Executable File", this);
+    layout->addWidget(selectExecutableFileButton);  
 
     QLabel *qemuPlatformLabel = new QLabel("QEMU Platform:");
     qemuPlatformCombo = new QComboBox(this);
@@ -49,9 +54,30 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     qemuPlatformCombo->setVisible(false);
     qemuPlatformLabel->setVisible(false);
 
+    // Key Permissions section
+    QLabel *permissionsLabel = new QLabel(tr("Key Permissions:"), this);
+    layout->addWidget(permissionsLabel);
+
+    // Set up permission checkboxes
+    setupPermissionCheckboxes();
+    QGridLayout *permissionLayout = new QGridLayout();
+    int row = 0;
+    int col = 0;
+    for (auto permission : {VERIFY, SIGN, ENCRYPT, DECRYPT, EXPORTABLE}) {
+        if (col == 2) {
+            col = 0;
+            ++row;
+        }
+        permissionLayout->addWidget(permissionCheckboxes[permission], row, col);
+        ++col;
+    }
+    layout->addLayout(permissionLayout);
+
+    // Add spacer to push the select file button to the bottom
+    layout->addStretch();
+
     QRegExp regex("[a-zA-Z0-9]*");  // Allows only English letters and numbers
     QRegExpValidator *validator = new QRegExpValidator(regex, this);
-
     nameEdit->setValidator(validator);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
@@ -64,8 +90,7 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     connect(okButton, &QPushButton::clicked, this,
             &ProcessDialog::validateAndAccept);
     connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-
-    connect(selectExecutableFileButton, &QPushButton::clicked, this, &ProcessDialog::selectExecutableFile); // Changed the connection for file selection
+    connect(selectExecutableFileButton, &QPushButton::clicked, this, &ProcessDialog::selectExecutableFile);
 
     setLayout(layout);
 }
@@ -78,7 +103,6 @@ void ProcessDialog::selectExecutableFile()
         executionFile->setText(fileName);  // Update the renamed QLineEdit
     }
 }
-
 
 int ProcessDialog::getId() const
 {
@@ -157,5 +181,14 @@ void ProcessDialog::setQEMUPlatform(const QString &qemuPlatform)
     int index = qemuPlatformCombo->findText(qemuPlatform);
     if (index != -1) {
         qemuPlatformCombo->setCurrentIndex(index);
+    }
+}
+
+void ProcessDialog::setupPermissionCheckboxes() {
+    QStringList permissions = { "Verify", "Sign", "Encrypt", "Decrypt", "Exportable" };
+    
+    for (int i = 0; i < permissions.size(); ++i) {
+        KeyPermission perm = static_cast<KeyPermission>(i);  
+        permissionCheckboxes[perm] = new QCheckBox(permissions[i], this);  
     }
 }

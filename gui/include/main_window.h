@@ -15,6 +15,10 @@
 #include <QMainWindow>
 #include <QMap>
 #include <QPixmap>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
+#include <QGraphicsRotation>
+#include <QTransform>
 #include <QPushButton>
 #include <QTextEdit>
 #include <QTimer>
@@ -43,6 +47,11 @@ public:
     void timerTimeout();
     void openImageDialog();
     void createProcessConfigFile(int id, const QString &processPath);
+    void disableButtonsExceptEnd();  // Disable all buttons except the "End" button
+    void enableAllButtons();         // Re-enable all buttons
+    void showLoadingIndicator();     // Show loading animation (spinner)
+    void hideLoadingIndicator();     // Hide loading animation (spinner)
+  
     QLineEdit *getTimeInput() const
     {
         return timeInput;
@@ -88,7 +97,9 @@ private:
     void runProjects();
     QString getExecutableName(const QString &buildDirPath);
     Process *getProcessById(int id);
-
+    void rotateImage();     // Function to handle rotation
+    void openSecondProject();  // Function that handles launching the second project
+    QPushButton *openSecondProjectButton;  // Button to open the second project
     QVBoxLayout *toolboxLayout;
     QWidget *workspace;
     QVector<DraggableSquare *> squares;
@@ -104,6 +115,10 @@ private:
     QTimer *timer;
     QLabel *imageLabel;
     QVector<QPair<QProcess *, int>> runningProcesses;
+    QLabel *loadingLabel;
+    QPixmap loadingPixmap;  // Store the original pixmap
+    QTimer *rotationTimer;  // Timer for rotation
+    int rotationAngle;      // Store the current rotation angle
     QString currentImagePath;
     SimulationStateManager *stateManager;
     LogHandler logHandler;

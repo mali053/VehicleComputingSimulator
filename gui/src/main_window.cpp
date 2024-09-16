@@ -13,6 +13,7 @@
 #include "log_handler.h"
 
 int sizeSquare = 120;
+int rotationTimerIntervals = 100;
 logger MainWindow::guiLogger("gui");
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
@@ -77,9 +78,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
             &MainWindow::showSimulation);
     connect(loadSimulationButton, &QPushButton::clicked, this,
             &MainWindow::loadSimulation);
+    // Create and set up the loading spinner (static PNG)
+    loadingLabel = new QLabel(this);
+    // Set up the loading spinner (rotating static image)
+    loadingLabel->setFixedSize(80, 80);  // Set smaller fixed size (adjust as needed)
+    loadingLabel->setScaledContents(true);  // Make sure the image scales with the label
+    loadingPixmap = QPixmap("../loading.png");  // Path to the PNG image
+    loadingLabel->setPixmap(loadingPixmap);
+    loadingLabel->setAlignment(Qt::AlignCenter);
+    loadingLabel->hide();  // Initially hidden
+
+    // Initialize rotation-related variables
+    rotationTimer = new QTimer(this);
+    rotationAngle = 0;
+
+    // Connect the timer to the rotation function
+    connect(rotationTimer, &QTimer::timeout, this, &MainWindow::rotateImage);
 
     toolbox->setMaximumWidth(100);
     toolbox->setMinimumWidth(100);
+    toolboxLayout->addWidget(loadingLabel); // Add the loading label to the toolbox layout (under the buttons)
     toolboxLayout->addWidget(compileButton);
     toolboxLayout->addWidget(runButton);
     runButton->setEnabled(false);
@@ -277,6 +295,8 @@ void MainWindow::updateTimer()
 
 void MainWindow::endProcesses()
 {
+    enableAllButtons();
+    hideLoadingIndicator();
     logOutput->append("Ending processes...");
     MainWindow::guiLogger.logMessage(
         logger::LogLevel::INFO,
@@ -683,6 +703,8 @@ void MainWindow::compileProjects()
 
 void MainWindow::runProjects()
 {
+    disableButtonsExceptEnd();
+    showLoadingIndicator();
     updateTimer();
     for (DraggableSquare *square : squares) {
         QString executionFilePath = square->getProcess()->getExecutionFile();
@@ -848,10 +870,11 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     QProcess *finishedProcess = qobject_cast<QProcess *>(sender());
     if (finishedProcess) {
+        int finishedProcessId =-1;
         // Find the ID of the process that finished
         for (const QPair<QProcess *, int> &pair : runningProcesses) {
             if (pair.first == finishedProcess) {
-                int finishedProcessId = pair.second;
+                finishedProcessId = pair.second;
                 // Find the corresponding DraggableSquare
                 for (DraggableSquare *square : squares) {
                     if (square->getProcess()->getId() == finishedProcessId) {
@@ -862,7 +885,60 @@ void MainWindow::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
                 break;
             }
         }
+        // Remove the finished process based on ID from runningProcesses
+        for (int i = 0; i < runningProcesses.size(); ++i) {
+            if (runningProcesses[i].second == finishedProcessId) {
+                runningProcesses.removeAt(i);  // Remove the process with the matching ID
+                break;
+            }
+        }
+        // Check if all processes have finished
+        if (runningProcesses.isEmpty()) {
+            hideLoadingIndicator();  // Stop spinner
+            enableAllButtons();      // Re-enable buttons
+        }
     }
+}
+
+// Disable all buttons except the "End" button
+void MainWindow::disableButtonsExceptEnd() 
+{
+    compileButton->setEnabled(false);
+    runButton->setEnabled(false);
+    timerButton->setEnabled(false);
+}
+
+// Enable all buttons
+void MainWindow::enableAllButtons() 
+{
+    compileButton->setEnabled(true);
+    runButton->setEnabled(true);
+    timerButton->setEnabled(true);
+}
+
+void MainWindow::rotateImage() {
+    // Rotate the pixmap by the current angle
+    QTransform transform;
+    transform.rotate(rotationAngle);
+    QPixmap rotatedPixmap = loadingPixmap.transformed(transform);
+
+    // Update the label with the rotated pixmap
+    loadingLabel->setPixmap(rotatedPixmap);
+
+    // Increment the rotation angle for the next frame
+    rotationAngle = (rotationAngle + 10) % 360;  // Rotate by 10 degrees each time
+}
+
+// Show the loading spinner with rotation
+void MainWindow::showLoadingIndicator() {
+    loadingLabel->show();
+    rotationTimer->start(rotationTimerIntervals);  // Start the timer with ms intervals
+}
+
+// Hide the loading spinner and stop the rotation
+void MainWindow::hideLoadingIndicator() {
+    rotationTimer->stop();
+    loadingLabel->hide();
 }
 
 #include "moc_main_window.cpp"

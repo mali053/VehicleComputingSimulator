@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
-project(DraggableSquaresTests VERSION 1.0)
+project(VehicleComputingSimulatorTests VERSION 1.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
@@ -31,7 +31,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 # Helper to support both direct and ctest execution
 function(add_test_with_working_dir target_name source_file)
     add_executable(${target_name} ${source_file})
-    target_link_libraries(${target_name} PRIVATE DraggableSquaresLib Qt5::Test Qt5::Gui Qt5::Widgets)
+    target_link_libraries(${target_name} PRIVATE VehicleComputingSimulatorLib Qt5::Test Qt5::Gui Qt5::Widgets)
     set_target_properties(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
     add_test(NAME ${target_name} COMMAND ${target_name})
     set_tests_properties(${target_name} PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})

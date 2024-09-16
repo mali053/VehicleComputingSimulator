@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set the project name and version
-project(DraggableSquares VERSION 1.0)
+project(VehicleComputingSimulator VERSION 1.0)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 11)
@@ -29,7 +29,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(BSON REQUIRED libbson-1.0)
 
 # Create a library for the common code
-add_library(DraggableSquaresLib
+add_library(VehicleComputingSimulatorLib
     src/draggable_square.cpp
     src/process.cpp
     src/process_dialog.cpp
@@ -41,7 +41,7 @@ add_library(DraggableSquaresLib
 )
 
 # Add headers to the library target
-target_sources(DraggableSquaresLib PRIVATE
+target_sources(VehicleComputingSimulatorLib PRIVATE
     include/main_window.h
     include/draggable_square.h
     include/process_dialog.h
@@ -52,23 +52,23 @@ target_sources(DraggableSquaresLib PRIVATE
 )
 
 # Include BSON directories and project include directory
-target_include_directories(DraggableSquaresLib PRIVATE
+target_include_directories(VehicleComputingSimulatorLib PRIVATE
     ${BSON_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/../logger
 )
 
 # Link the BSON library and Qt5 components to the library
-target_link_libraries(DraggableSquaresLib PRIVATE ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(VehicleComputingSimulatorLib PRIVATE ${BSON_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets)
 
 # Create the main executable
-add_executable(DraggableSquares src/main.cpp)
+add_executable(VehicleComputingSimulator src/main.cpp)
 
 # Link the main executable with the library and Qt5 modules
-target_link_libraries(DraggableSquares PRIVATE DraggableSquaresLib Qt5::Core Qt5::Gui Qt5::Widgets)
+target_link_libraries(VehicleComputingSimulator PRIVATE VehicleComputingSimulatorLib Qt5::Core Qt5::Gui Qt5::Widgets)
 
 # Make sure the main executable has access to the include directory
-target_include_directories(DraggableSquares PRIVATE ${CMAKE_SOURCE_DIR}/include ${BSON_INCLUDE_DIRS})
+target_include_directories(VehicleComputingSimulator PRIVATE ${CMAKE_SOURCE_DIR}/include ${BSON_INCLUDE_DIRS})
 
 # Enable testing
 enable_testing()

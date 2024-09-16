@@ -18,7 +18,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Set the -fPIC flag to enable Position Independent Code for all targets
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Set the output directory for executables
+# Set the output directory for executables to the build directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Find the Qt5 library
@@ -37,7 +37,7 @@ add_library(DraggableSquaresLib
     src/simulation_state_manager.cpp
     src/log_handler.cpp
     src/frames.cpp
-    ../logger/logger.cpp   # Updated logger source file path
+    ../logger/logger.cpp
 )
 
 # Add headers to the library target
@@ -48,14 +48,14 @@ target_sources(DraggableSquaresLib PRIVATE
     include/simulation_state_manager.h
     include/log_handler.h
     include/frames.h
-    ../logger/logger.h     
+    ../logger/logger.h
 )
 
 # Include BSON directories and project include directory
 target_include_directories(DraggableSquaresLib PRIVATE
     ${BSON_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/../logger   
+    ${CMAKE_SOURCE_DIR}/../logger
 )
 
 # Link the BSON library and Qt5 components to the library

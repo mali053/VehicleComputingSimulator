@@ -52,8 +52,3 @@ TEST(SHA256Test, SpecialCharsHash) {
     std::string expectedHash = "95ce789c5c9d18490972709838ca3a9719094bca3ac16332cfec0652b0236141";
     ASSERT_EQ(bytesToHexString(hash), expectedHash);
 }
-
-int main(int argc, char **argv) {
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

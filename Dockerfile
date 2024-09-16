@@ -25,7 +25,7 @@ RUN cd /usr/src/gtest && cmake CMakeLists.txt && make && \
     find /usr/src/gtest -name "*.a" -exec cp {} /usr/lib \;
 
 # Build the project using CMake and Make
-RUN cmake .. -DUSE_SYCL=OFF
+RUN cmake .. -DUSE_SYCL=OFF -DUSE_DEBUG=OFF
 RUN make
 
 # Command to run tests (optional)

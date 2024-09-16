@@ -17,10 +17,3 @@ TEST(ECCTest, EncryptDecrypt)
     // Check if the decrypted message matches the original message
     EXPECT_EQ(messageBytes, decryptedMessage);
 }
-
-// The main function for running all the tests
-int main(int argc, char **argv)
-{
-    ::testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
-}

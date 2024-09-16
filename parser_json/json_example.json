@@ -22,7 +22,8 @@
             "double",
             "signed_int",
             "unsigned_int",
-            "bit_field"
+            "bit_field",
+            "boolean"
           ],
           "example": "float_fixed"
         },
@@ -46,7 +47,8 @@
                 "double",
                 "signed_int",
                 "unsigned_int",
-                "bit_field"
+                "bit_field",
+                "boolean"
               ],
               "example": "float_fixed"
             },
@@ -101,6 +103,11 @@
           "size": 32
         },
         {
+          "name": "BoolField",
+          "type": "boolean",
+          "size": 8
+        },
+        {
           "name": "BitFieldExample1",
           "type": "bit_field",
           "size": 64,
@@ -120,5 +127,5 @@
       ]
     }
   },
-  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types. Additionally, it is recommended to avoid using 'float' and 'double' types within a 'bit_field', as these types are not properly decoded within bit fields and should be parsed separately."
+  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int', 'boolean'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types. Additionally, it is recommended to avoid using 'float' and 'double' types within a 'bit_field', as these types are not properly decoded within bit fields and should be parsed separately."
 }

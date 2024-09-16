@@ -1,4 +1,3 @@
-#include "packet_parser.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
@@ -8,43 +7,53 @@
 #include <nlohmann/json.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <variant>
+#include <bitset>
+#include "packet_parser.h"
 
 using json = nlohmann::json;
 
-PacketParser::~PacketParser()
-{
-    // Clean up buffer if necessary
-}
-
 FieldType PacketParser::getFieldType(const std::string &typeStr) const
 {
-    if (typeStr == "unsigned_int")
-        return FieldType::UNSIGNED_INT;
-    if (typeStr == "char_array")
-        return FieldType::CHAR_ARRAY;
-    if (typeStr == "float_fixed")
-        return FieldType::FLOAT_FIXED;
-    if (typeStr == "float_mantissa")
-        return FieldType::FLOAT_MANTISSA;
-    if (typeStr == "bit_field")
-        return FieldType::BIT_FIELD;
-    if (typeStr == "double")
-        return FieldType::DOUBLE;
-    if (typeStr == "signed_int")
-        return FieldType::SIGNED_INT;
-    if (typeStr == "boolean")
-        return FieldType::BOOLEAN;
+    static const std::unordered_map<std::string, FieldType> fieldTypeMap = {
+        {"unsigned_int", FieldType::UNSIGNED_INT},
+        {"char_array", FieldType::CHAR_ARRAY},
+        {"float_fixed", FieldType::FLOAT_FIXED},
+        {"float_mantissa", FieldType::FLOAT_MANTISSA},
+        {"bit_field", FieldType::BIT_FIELD},
+        {"double", FieldType::DOUBLE},
+        {"signed_int", FieldType::SIGNED_INT},
+        {"boolean", FieldType::BOOLEAN}
+    };
+
+    auto it = fieldTypeMap.find(typeStr);
+    if (it != fieldTypeMap.end()) {
+        return it->second;
+    }
 
     return FieldType::UNKNOWN;
 }
 
-PacketParser::PacketParser(const std::string &jsonFilePath, const void *buffer)
-    : _buffer(buffer)
+PacketParser::PacketParser(const std::string &jsonFilePath)
+                        : result(nullptr), numBytes(0)
 {
     loadJson(jsonFilePath);
-    if (buffer == nullptr) {
-        throw std::runtime_error("Buffer is null");
-    }
+    setBuffer(nullptr);
+}
+
+PacketParser::~PacketParser()
+{
+        std::free(result);
+}
+
+const std::vector<Field>& PacketParser::getFields() const
+{
+    return fields;
+}
+
+const void* PacketParser::getBuffer() const 
+{
+    return _buffer;
 }
 
 void PacketParser::validateFieldSize(const std::string &type,
@@ -52,10 +61,10 @@ void PacketParser::validateFieldSize(const std::string &type,
 {
     if ((type == "float_fixed" || type == "float_mantissa") &&
         bitLength != 32) {
-        throw std::runtime_error("Float types must be 32 bits.");
+        throw std::runtime_error(type + " types must be 32 bits.");
     }
-    if (type == "signed_int" && bitLength != 32) {
-        throw std::runtime_error("Signed integers must be 32 bits.");
+    if ((type == "signed_int" || type == "unsigned_int") && bitLength != 32) {
+        throw std::runtime_error(type + " must be 32 bits.");
     }
     if (type == "boolean" && bitLength != 8) {
         throw std::runtime_error("Boolean types must be 8 bits.");
@@ -63,14 +72,13 @@ void PacketParser::validateFieldSize(const std::string &type,
     if (type == "double" && bitLength != 64) {
         throw std::runtime_error("Double types must be 64 bits.");
     }
-    // Add more validations if needed
 }
 
 void PacketParser::loadJson(const std::string &jsonFilePath)
 {
     std::ifstream jsonFile(jsonFilePath);
     if (!jsonFile.is_open()) {
-        throw std::runtime_error("Unable to open JSON file");
+        throw std::runtime_error("Unable to open JSON file: " + jsonFilePath + " - " + std::strerror(errno));
     }
 
     json jsonData;
@@ -86,7 +94,7 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
 
         validateFieldSize(fieldType, fieldSize);
 
-        size_t byteLength = (fieldSize + 7) / 8;  // Convert bits to bytes
+        size_t byteLength = BITS_TO_BYTES(fieldSize);
         Field field;
         field.name = fieldJson["name"];
         field.type = fieldType;
@@ -107,8 +115,6 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
                 std::string subFieldType = subFieldJson["type"];
                 size_t subFieldSize = subFieldJson["size"];
 
-                validateFieldSize(subFieldType, subFieldSize);
-
                 Field subField;
                 subField.name = subFieldJson["name"];
                 subField.type = subFieldType;
@@ -124,12 +130,13 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
 
         currentOffset += byteLength;
     }
+
 }
 
 uint32_t PacketParser::decodeUnsignedInt(const uint8_t *data,
                                          size_t bitLength) const
 {
-    size_t byteLength = (bitLength + 7) / 8;  // Convert bits to bytes
+    size_t byteLength = BITS_TO_BYTES(bitLength);
     uint32_t value = 0;
 
     for (size_t i = 0; i < byteLength; i++) {
@@ -148,7 +155,7 @@ uint32_t PacketParser::decodeUnsignedInt(const uint8_t *data,
 int32_t PacketParser::decodeSignedInt(const uint8_t *data,
                                       size_t bitLength) const
 {
-    size_t byteLength = (bitLength + 7) / 8;  // Convert bits to bytes
+    size_t byteLength = BITS_TO_BYTES(bitLength );
     int32_t value = 0;
 
     // Read the value from the data array
@@ -176,7 +183,7 @@ template <typename T>
 T decodeValue(const uint8_t *data, size_t bitLength,
               const std::string &endianness)
 {
-    size_t byteLength = (bitLength + 7) / 8;  // Convert bits to bytes
+    size_t byteLength = BITS_TO_BYTES(bitLength);
     uint64_t tempValue = 0;
 
     // Read bytes into tempValue
@@ -237,8 +244,11 @@ bool PacketParser::decodeBoolean(const uint8_t *data, size_t bitLength) const
     return bitValue;
 }
 
-void *PacketParser::getFieldValue(const std::string &fieldName) const
+FieldValue PacketParser::getFieldValue(const std::string &fieldName)
 {
+    if (_buffer == nullptr) {
+        throw std::runtime_error("Buffer is null");
+    }
     auto it = std::find_if(
         fields.begin(), fields.end(),
         [&fieldName](const Field &field) { return field.name == fieldName; });
@@ -247,34 +257,21 @@ void *PacketParser::getFieldValue(const std::string &fieldName) const
         const Field &field = *it;
         const uint8_t *data =
             static_cast<const uint8_t *>(_buffer) + field.offset;
+            
         switch (getFieldType(field.type)) {
-            case FieldType::UNSIGNED_INT: {
-                uint32_t *value =
-                    new uint32_t(decodeUnsignedInt(data, field.size));
-                return value;
-            }
-            case FieldType::SIGNED_INT: {
-                int32_t *value = new int32_t(decodeSignedInt(data, field.size));
-                return value;
-            }
-            case FieldType::CHAR_ARRAY: {
-                std::string *value = new std::string(
-                    decodeCharArray(data, (field.size + 7) / 8));
-                return value;
-            }
+            case FieldType::UNSIGNED_INT:
+                return decodeUnsignedInt(data, field.size);
+            case FieldType::SIGNED_INT:
+                return decodeSignedInt(data, field.size);
+            case FieldType::CHAR_ARRAY:
+                return decodeCharArray(data, BITS_TO_BYTES(field.size));
             case FieldType::FLOAT_FIXED:
-            case FieldType::FLOAT_MANTISSA: {
-                float *value = new float(decodeFloat(data, field.size));
-                return value;
-            }
-            case FieldType::DOUBLE: {
-                double *value = new double(decodeDouble(data, field.size));
-                return value;
-            }
-            case FieldType::BOOLEAN: {
-                bool *value = new bool(decodeBoolean(data, field.size));
-                return value;
-            }
+            case FieldType::FLOAT_MANTISSA:
+                return decodeFloat(data, field.size);
+            case FieldType::DOUBLE:
+                return decodeDouble(data, field.size);
+            case FieldType::BOOLEAN:
+                return decodeBoolean(data, field.size);
             case FieldType::UNKNOWN:
             default:
                 throw std::runtime_error("Unknown field type");
@@ -293,39 +290,28 @@ void *PacketParser::getFieldValue(const std::string &fieldName) const
 
             if (subFieldIt != bitField.fields.end()) {
                 const Field &subField = *subFieldIt;
+
                 uint8_t *extractedBits =
                     extractBits(bitFieldData, subField.offset, subField.size);
+
+                if (!extractedBits) {
+                    throw std::runtime_error("Failed to extract bits");
+                }
+                
                 switch (getFieldType(subField.type)) {
-                    case FieldType::UNSIGNED_INT: {
-                        uint32_t value =
-                            decodeUnsignedInt(extractedBits, subField.size);
-                        return new uint32_t(value);
-                    }
-                    case FieldType::SIGNED_INT: {
-                        uint32_t value =
-                            decodeSignedInt(extractedBits, subField.size);
-                        return new uint32_t(value);
-                    }
-                    case FieldType::CHAR_ARRAY: {
-                        std::string value = decodeCharArray(
-                            extractedBits, (subField.size + 7) / 8);
-                        return new std::string(value);
-                    }
+                    case FieldType::UNSIGNED_INT:
+                        return decodeUnsignedInt(extractedBits, subField.size);
+                    case FieldType::SIGNED_INT:
+                        return decodeSignedInt(extractedBits, subField.size);
+                    case FieldType::CHAR_ARRAY:
+                        return decodeCharArray(extractedBits, BITS_TO_BYTES(subField.size));
                     case FieldType::FLOAT_FIXED:
-                    case FieldType::FLOAT_MANTISSA: {
-                        float value = decodeFloat(extractedBits, subField.size);
-                        return new float(value);
-                    }
-                    case FieldType::DOUBLE: {
-                        double value =
-                            decodeDouble(extractedBits, subField.size);
-                        return new double(value);
-                    }
-                    case FieldType::BOOLEAN: {
-                        bool value =
-                            decodeBoolean(extractedBits, subField.size);
-                        return new bool(value);
-                    }
+                    case FieldType::FLOAT_MANTISSA:
+                        return decodeFloat(extractedBits, subField.size);
+                    case FieldType::DOUBLE:
+                        return decodeDouble(extractedBits, subField.size);
+                    case FieldType::BOOLEAN:
+                        return decodeBoolean(extractedBits, subField.size);
                     case FieldType::UNKNOWN:
                     default:
                         throw std::runtime_error(
@@ -334,189 +320,85 @@ void *PacketParser::getFieldValue(const std::string &fieldName) const
             }
         }
 
-        throw std::runtime_error("Field not found in any bit field");
     }
-    return NULL;
+    throw std::runtime_error("Field not found in any bit field");
 }
 
-std::map<std::string, FieldValue> PacketParser::getAllFieldValues() const
+std::map<std::string, FieldValue> PacketParser::getAllFieldValues()
 {
-    std::map<std::string, FieldValue> allValues;
+    std::map<std::string, FieldValue> allFieldValues;
 
+    // Retrieve regular fields
     for (const auto &field : fields) {
-        try {
-            FieldType type = getFieldType(field.type);
-            switch (type) {
-                case FieldType::SIGNED_INT: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] = *static_cast<int32_t *>(valuePtr);
-                    delete static_cast<int32_t *>(valuePtr);
-                    break;
-                }
-                case FieldType::UNSIGNED_INT: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] = *static_cast<uint32_t *>(valuePtr);
-                    delete static_cast<uint32_t *>(valuePtr);
-                    break;
-                }
-                case FieldType::CHAR_ARRAY: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] =
-                        *static_cast<std::string *>(valuePtr);
-                    delete static_cast<std::string *>(valuePtr);
-                    break;
-                }
-                case FieldType::FLOAT_FIXED:
-                case FieldType::FLOAT_MANTISSA: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] = *static_cast<float *>(valuePtr);
-                    delete static_cast<float *>(valuePtr);
-                    break;
-                }
-                case FieldType::DOUBLE: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] = *static_cast<double *>(valuePtr);
-                    delete static_cast<double *>(valuePtr);
-                    break;
-                }
-                case FieldType::BOOLEAN: {
-                    void *valuePtr = getFieldValue(field.name);
-                    allValues[field.name] = *static_cast<bool *>(valuePtr);
-                    delete static_cast<bool *>(valuePtr);
-                    break;
-                }
-                case FieldType::BIT_FIELD: {
-                    std::map<std::string, FieldValue> bitFieldValues;
+        if(field.type=="bit_field") 
+            continue;
+        const uint8_t *data = static_cast<const uint8_t *>(_buffer) + field.offset;
+        allFieldValues[field.name] = getFieldValue(field.name);
+    }
 
-                    auto bitFieldIt =
-                        std::find_if(bitFields.begin(), bitFields.end(),
-                                     [&field](const BitField &bitField) {
-                                         return bitField.name == field.name;
-                                     });
+    // Retrieve bit field values
+    for (const auto &bitField : bitFields) {
+        const uint8_t *bitFieldData = static_cast<const uint8_t *>(_buffer) + bitField.offset;
 
-                    if (bitFieldIt == bitFields.end()) {
-                        throw std::runtime_error("Field not found");
-                    }
-
-                    const BitField &bitField = *bitFieldIt;
-
-                    for (const auto &subField : bitField.fields) {
-                        void *subFieldValuePtr = getFieldValue(subField.name);
-
-                        switch (getFieldType(subField.type)) {
-                            case FieldType::SIGNED_INT: {
-                                allValues[subField.name] =
-                                    *static_cast<int32_t *>(subFieldValuePtr);
-                                break;
-                            }
-                            case FieldType::UNSIGNED_INT: {
-                                allValues[subField.name] =
-                                    *static_cast<uint32_t *>(subFieldValuePtr);
-                                break;
-                            }
-                            case FieldType::CHAR_ARRAY: {
-                                allValues[subField.name] =
-                                    *static_cast<std::string *>(
-                                        subFieldValuePtr);
-                                break;
-                            }
-                            case FieldType::FLOAT_FIXED:
-                            case FieldType::FLOAT_MANTISSA: {
-                                allValues[subField.name] =
-                                    *static_cast<float *>(subFieldValuePtr);
-                                break;
-                            }
-                            case FieldType::DOUBLE: {
-                                allValues[subField.name] =
-                                    *static_cast<double *>(subFieldValuePtr);
-                                break;
-                            }
-                            case FieldType::BOOLEAN: {
-                                allValues[subField.name] =
-                                    *static_cast<bool *>(subFieldValuePtr);
-                                break;
-                            }
-                            default:
-                                throw std::runtime_error(
-                                    "Unknown field type in bit field");
-                        }
-                    }
-
-                    break;
-                }
-                default:
-                    throw std::runtime_error("Unknown field type");
-            }
-        }
-        catch (const std::exception &e) {
-            allValues[field.name] = std::string("Error: ") + e.what();
+        for (const auto &subField : bitField.fields) {
+            auto extractedBits = extractBits(bitFieldData, subField.offset, subField.size);
+            allFieldValues[subField.name] = getFieldValue(subField.name);
         }
     }
 
-    return allValues;
+    return allFieldValues;
 }
 
-uint8_t *PacketParser::extractBits(const uint8_t *bitFieldData, size_t offset,
-                                   size_t size) const
+uint8_t *PacketParser::extractBits(const uint8_t *bitFieldData, 
+                                    size_t offset, size_t size)
 {
-    // Calculate the number of bytes required to store the result
-    size_t numBytes = (size + 7) / 8;
-
-    // Allocate memory for the result
-    uint8_t *result = (uint8_t *)std::malloc(numBytes);
+    size_t numBytes = BITS_TO_BYTES(size);
+    uint8_t *result = (uint8_t *)std::calloc(numBytes, sizeof(uint8_t));
+    
     if (!result) {
-        return nullptr;  // Allocation failed
+        return nullptr;
     }
-    std::memset(result, 0, numBytes);  // Initialize with zeros
 
     size_t byteIndex = offset / 8;
     size_t bitOffset = offset % 8;
-
     size_t bitsRemaining = size;
     size_t bytePosition = 0;
 
     while (bitsRemaining > 0) {
-        // Read the byte from the data
         uint8_t byte = bitFieldData[byteIndex];
-
-        // Calculate how many bits we can take from this byte
         size_t bitsToTake = std::min(bitsRemaining, 8 - bitOffset);
+        uint8_t bits = (byte >> (8 - bitOffset - bitsToTake)) & 
+                       ((1 << bitsToTake) - 1);
 
-        // Extract the bits
-        uint8_t bits =
-            (byte >> (8 - bitOffset - bitsToTake)) & ((1 << bitsToTake) - 1);
-
-        // Calculate the position to place the bits in the result buffer
         size_t resultBitOffset = (8 * bytePosition) + (8 - bitsToTake);
+        result[bytePosition] |= (bits << (8 - bitsToTake - 
+                                            (resultBitOffset % 8)));
 
-        // Place the bits in the result buffer
-        result[bytePosition] |=
-            (bits << (8 - bitsToTake - (resultBitOffset % 8)));
-
-        // Update the number of bits remaining
         bitsRemaining -= bitsToTake;
-        bitOffset = 0;  // Reset bitOffset for the next byte
-        byteIndex++;    // Move to the next byte
+        bitOffset = 0;
+        byteIndex++;
 
-        // Move to the next byte in the result buffer if necessary
         if (bitsRemaining > 0) {
             bytePosition++;
             if (bytePosition >= numBytes) {
-                // If we've run out of space in the result buffer, we need more memory
-                uint8_t *newResult =
-                    (uint8_t *)std::realloc(result, bytePosition + 1);
+                uint8_t *newResult = (uint8_t *)std::realloc(result, 
+                    bytePosition + 1);
                 if (!newResult) {
                     std::free(result);
-                    return nullptr;  // Allocation failed
+                    return nullptr;
                 }
-                std::memset(newResult + bytePosition, 0,
-                            1);  // Initialize new byte
+                std::memset(newResult + bytePosition, 0, 1);
                 result = newResult;
             }
         }
     }
 
     return result;
+}
+
+void PacketParser::setBuffer(const void *buffer) 
+{
+    _buffer = buffer;
 }
 
 void PacketParser::printFieldValues(

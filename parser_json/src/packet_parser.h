@@ -1,5 +1,5 @@
-#ifndef PACKET_PARSER_H
-#define PACKET_PARSER_H
+#ifndef __PACKET_PARSER_H__
+#define __PACKET_PARSER_H__
 
 #include <map>
 #include <nlohmann/json.hpp>
@@ -7,8 +7,10 @@
 #include <variant>
 #include <vector>
 
-using FieldValue = std::variant<unsigned int, std::string, float, unsigned long,
-                                double, int, bool>;
+#define BITS_TO_BYTES(bits) (((bits) + 7) / 8)
+
+using FieldValue = std::variant<unsigned int, std::string, float,
+                                 double, int, bool>;
 
 enum class FieldType {
     UNSIGNED_INT,
@@ -37,23 +39,28 @@ struct BitField {
 };
 
 class PacketParser {
-   public:
-    PacketParser(const std::string &jsonFilePath, const void *buffer);
-    ~PacketParser();
-    void *getFieldValue(const std::string &fieldName) const;
-    std::map<std::string, FieldValue> getAllFieldValues() const;
-    const std::vector<Field> &getFields() const
-    {
-        return fields;
-    }
+public:
+    PacketParser(const std::string &jsonFilePath);
+    FieldValue getFieldValue(const std::string &fieldName);
+    std::map<std::string, FieldValue> getAllFieldValues();
+    const std::vector<Field> &getFields() const;
+    const void* getBuffer() const;
     FieldType getFieldType(const std::string &typeName) const;
     void printFieldValues(const std::map<std::string, FieldValue> &fieldValues);
+    void setBuffer(const void *buffer);
+    ~PacketParser();
 
-   private:
+protected:
+    uint8_t *extractBits(const uint8_t *bitFieldData, size_t offset,
+                         size_t size);
+
+private:
     std::vector<Field> fields;
     std::vector<BitField> bitFields;
     std::string endianness;
     const void *_buffer;
+    uint8_t *result;
+    size_t numBytes;
 
     void validateFieldSize(const std::string &type, size_t bitLength) const;
     void loadJson(const std::string &jsonFilePath);
@@ -63,9 +70,6 @@ class PacketParser {
     float decodeFloat(const uint8_t *data, size_t bitLength) const;
     double decodeDouble(const uint8_t *data, size_t bitLength) const;
     bool decodeBoolean(const uint8_t *data, size_t bitLength) const;
-    uint8_t *extractBits(const uint8_t *bitFieldData, size_t offset,
-                         size_t size) const;
-    friend class PacketParserTest_ExtractBits_Test;
 };
 
 #endif  // PACKET_PARSER_H

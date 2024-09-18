@@ -1,7 +1,6 @@
 #include "../include/aes_stream.h"
 #include <thread>
 #include <vector>
-#include <mutex>
 #include <cstring>
 
 /**
@@ -116,14 +115,12 @@ void decryptCTRMultithreaded(const unsigned char* ciphertext, unsigned char* pla
     unsigned int numBlocks = length / BLOCK_BYTES_LEN;
     std::vector<std::thread> threads;  
 
-    for (unsigned int i = 0; i < numBlocks; ++i) {
+    for (unsigned int i = 0; i < numBlocks; ++i) 
         threads.push_back(std::thread(decryptBlockThreadedCTR, &ciphertext[i * BLOCK_BYTES_LEN], 
                                       &plaintext[i * BLOCK_BYTES_LEN], roundKeys, keyLength, lastData, i));
-    }
 
-    for (auto& th : threads) {
+    for (auto& th : threads) 
         th.join();
-    }
 }
 
 void AESCtr::encryptStart(unsigned char block[], unsigned int inLen, unsigned char*& out, unsigned int& outLen,unsigned char* key, AESKeyLength keyLength)
@@ -132,35 +129,35 @@ void AESCtr::encryptStart(unsigned char block[], unsigned int inLen, unsigned ch
     generateRandomIV(iv);
     memcpy(lastData, iv, BLOCK_BYTES_LEN);
     encrypt(block, inLen, key, out, outLen, iv, lastData, keyLength);
-    unsigned char *newOut = new unsigned char[outLen + 16];
+    unsigned char *newOut = new unsigned char[outLen + BLOCK_BYTES_LEN];
     memcpy(newOut, out, outLen);
-    memcpy(newOut + outLen, iv, 16);
+    memcpy(newOut + outLen, iv, BLOCK_BYTES_LEN);
     out = newOut;
     this -> lastBlock  = out;
     this -> key = key;
     this -> keyLength = keyLength;
     this-> lastData = lastData;
-    outLen += 16;
+    outLen += BLOCK_BYTES_LEN;
 }
 
 void AESCtr::encryptContinue(unsigned char block[], unsigned int inLen, unsigned char*& out, unsigned int &outLen)
 {
-    encrypt(block, inLen, key,out, outLen, lastBlock, lastData, keyLength);
+    encrypt(block, inLen, key,out, outLen, lastData, lastData, keyLength);
 }
 
 void AESCtr::decryptStart(unsigned char block[], unsigned int inLen, unsigned char*& out, unsigned int &outLen,unsigned char* key, AESKeyLength keyLength)
 {
-  unsigned char* lastData = new unsigned char[BLOCK_BYTES_LEN];
-  memcpy(lastData, iv, BLOCK_BYTES_LEN);
-  this-> iv = block + inLen - 16;
-  decrypt(block,  inLen - 16, key, out, outLen, block + inLen - 16, lastData, keyLength);
-  this-> lastBlock = out;
-  this->lastData = lastData;
+   unsigned char* lastData = new unsigned char[BLOCK_BYTES_LEN];
+   memcpy(lastData, iv, BLOCK_BYTES_LEN);
+   this-> iv = block + inLen - BLOCK_BYTES_LEN;
+   decrypt(block,  inLen - BLOCK_BYTES_LEN, key, out, outLen, block + inLen - BLOCK_BYTES_LEN, lastData, keyLength);
+   this-> lastBlock = out;
+   this->lastData = lastData;
 }
 
 void AESCtr::decryptContinue(unsigned char block[], unsigned int inLen, unsigned char*& out, unsigned int& outLen)
 {
-  decrypt(block,  inLen  , key, out, outLen, lastBlock, lastData, keyLength);
+  decrypt(block,  inLen  , key, out, outLen, lastData, lastData, keyLength);
 }
 
 void AESCtr::encrypt(unsigned char in[], unsigned int inLen, unsigned char *key,

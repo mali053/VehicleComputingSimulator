@@ -2,8 +2,6 @@
 #include <cstddef>
 #include <stdexcept>
 #include <random>
-#include <iostream>
-
 #ifdef USE_SYCL
 #include <cstring>
 #include <stdexcept>
@@ -16,11 +14,11 @@ using namespace cl::sycl;
 
 /**
  @brief Generates a random Initialization Vector (IV) for cryptographic purposes.
- This function generates a 16-byte random IV, which is commonly used in cryptographic algorithms
+ This function generates a BLOCK_BYTES_LEN-byte random IV, which is commonly used in cryptographic algorithms
  such as AES (Advanced Encryption Standard) in CBC (Cipher Block Chaining) mode.
  The IV ensures that the same plaintext block will result in a different ciphertext block
  when encrypted with the same key. 
- @param iv Pointer to an array of 16 unsigned char (bytes) where the generated IV will be stored.
+ @param iv Pointer to an array of BLOCK_BYTES_LEN unsigned char (bytes) where the generated IV will be stored.
  @note The function uses the C++ standard library's random number generator to produce
        a uniformly distributed sequence of bytes.
  */
@@ -29,7 +27,7 @@ void generateRandomIV(unsigned char* iv)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 255);
-    for (unsigned int i = 0; i < 16; i++) 
+    for (unsigned int i = 0; i < BLOCK_BYTES_LEN; i++) 
         iv[i] = static_cast<unsigned char>(dis(gen));
 }
 
@@ -78,10 +76,9 @@ void unpadMessage(unsigned char *message, unsigned int &length)
  @param keyLength The length of the key (128, 192, or 256 bits).
  @return A pointer to the generated key.
  */
-unsigned char *generateKey(AESKeyLength keyLength)
+void generateKey(unsigned char* key, AESKeyLength keyLength)
 {
     // Allocate memory for the key
-    unsigned char *key = new unsigned char[aesKeyLengthData[keyLength].keySize];
 
     // Initialize a random device and a random number generator
     std::random_device rd;
@@ -91,8 +88,6 @@ unsigned char *generateKey(AESKeyLength keyLength)
     // Fill the key with random bytes
     for (int i = 0; i < aesKeyLengthData[keyLength].keySize; i++)
         key[i] = dis(gen);
-
-    return key;
 }
 
 /**
@@ -257,7 +252,7 @@ void subBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
     queue queue;
     buffer<unsigned char, 2> stateBuffer(state[0],
                                                range<2>(AES_STATE_ROWS, NUM_BLOCKS));
-    buffer<unsigned char, 2> sBoxBuffer(sBox[0], range<2>(16, 16));
+    buffer<unsigned char, 2> sBoxBuffer(sBox[0], range<2>(BLOCK_BYTES_LEN, BLOCK_BYTES_LEN));
     queue.submit([&](handler &handler) {
          auto stateAcc =
              stateBuffer.get_access<access::mode::read_write>(handler);
@@ -266,7 +261,7 @@ void subBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
              range<2>(AES_STATE_ROWS, NUM_BLOCKS), [=](id<2> id) {
                  size_t i = id[0];
                  size_t j = id[1];
-                 stateAcc[i][j] = sBoxAcc[state[i][j] / 16][state[i][j] % 16];
+                 stateAcc[i][j] = sBoxAcc[state[i][j] / BLOCK_BYTES_LEN][state[i][j] % BLOCK_BYTES_LEN];
              });
      }).wait();
 }
@@ -354,7 +349,7 @@ void subWord(unsigned char a[AES_STATE_ROWS])
 {
     queue queue;
     buffer<unsigned char, 1> aBuffer(a, range<1>(AES_STATE_ROWS));
-    buffer<unsigned char, 2> sBoxBuffer(sBox[0], range<2>(16, 16));
+    buffer<unsigned char, 2> sBoxBuffer(sBox[0], range<2>(BLOCK_BYTES_LEN, BLOCK_BYTES_LEN));
 
     queue.submit([&](handler &handler) {
          auto aAcc = aBuffer.get_access<access::mode::read_write>(handler);
@@ -363,7 +358,7 @@ void subWord(unsigned char a[AES_STATE_ROWS])
          handler.parallel_for<class SubWord>(
              range<1>(AES_STATE_ROWS), [=](id<1> id) {
                  size_t i = id[0];
-                 aAcc[i] = sBoxAcc[aAcc[i] / 16][aAcc[i] % 16];
+                 aAcc[i] = sBoxAcc[aAcc[i] / BLOCK_BYTES_LEN][aAcc[i] % BLOCK_BYTES_LEN];
              });
      }).wait();
 }
@@ -486,7 +481,7 @@ void invSubBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
     buffer<unsigned char, 2> stateBuffer(state[0],
                                                range<2>(AES_STATE_ROWS, NUM_BLOCKS));
     buffer<unsigned char, 2> invSBoxBuffer(invSBox[0],
-                                                 range<2>(16, 16));
+                                                 range<2>(BLOCK_BYTES_LEN, BLOCK_BYTES_LEN));
 
     queue.submit([&](handler &handler) {
          auto stateAcc =
@@ -499,7 +494,7 @@ void invSubBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
                  size_t i = id[0];
                  size_t j = id[1];
                  stateAcc[i][j] =
-                     invSBoxAcc[state[i][j] / 16][state[i][j] % 16];
+                     invSBoxAcc[state[i][j] / BLOCK_BYTES_LEN][state[i][j] % BLOCK_BYTES_LEN];
              });
      }).wait();
 }
@@ -621,8 +616,7 @@ void decryptBlock(const unsigned char in[], unsigned char out[],
 {
     unsigned char state[AES_STATE_ROWS][NUM_BLOCKS];
     unsigned int i, j, round;
-    for(int i =0; i< 4 * NUM_BLOCKS; i++)
-        std::cout<<in[i];
+
     // Initialize state array with input block
     for (i = 0; i < AES_STATE_ROWS; i++)
         for (j = 0; j < NUM_BLOCKS; j++)
@@ -679,7 +673,7 @@ void subBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
 {
     for (size_t i = 0; i < AES_STATE_ROWS; i++)
         for (size_t j = 0; j < NUM_BLOCKS; j++)
-            state[i][j] = sBox[state[i][j] / 16][state[i][j] % 16];
+            state[i][j] = sBox[state[i][j] / BLOCK_BYTES_LEN][state[i][j] % BLOCK_BYTES_LEN];
 }
 
 /*ShiftRows transformation*/
@@ -723,7 +717,7 @@ void addRoundKey(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS], unsigned char 
 void subWord(unsigned char a[AES_STATE_ROWS])
 {
     for (size_t i = 0; i < AES_STATE_ROWS; i++)
-        a[i] = sBox[a[i] / 16][a[i] % 16];
+        a[i] = sBox[a[i] / BLOCK_BYTES_LEN][a[i] % BLOCK_BYTES_LEN];
 }
 
 /*Rotates a word (4 bytes)*/
@@ -790,7 +784,7 @@ void invSubBytes(unsigned char state[AES_STATE_ROWS][NUM_BLOCKS])
     for (i = 0; i < AES_STATE_ROWS; i++)
         for (j = 0; j < NUM_BLOCKS; j++) {
             t = state[i][j];
-            state[i][j] = invSBox[t / 16][t % 16];
+            state[i][j] = invSBox[t / BLOCK_BYTES_LEN][t % BLOCK_BYTES_LEN];
         }
 }
 
@@ -833,6 +827,22 @@ void xorBlocks(const unsigned char *a, const unsigned char *b, unsigned char *c,
     for (unsigned int i = 0; i < len; i++) {
         c[i] = a[i] ^ b[i];
     }
+}
+
+size_t calculatEncryptedLenAES(size_t inLen, bool isFirst)
+{
+    if(isFirst || inLen % BLOCK_BYTES_LEN == 0)
+        inLen += BLOCK_BYTES_LEN;
+
+    return (inLen + 15) & ~15; 
+}
+
+size_t calculatDecryptedLenAES(size_t inLen, bool isFirst)
+{
+    // if(isFirst)
+    //     inLen -= BLOCK_BYTES_LEN;
+    
+    return (inLen + 15) & ~15; 
 }
 
 #endif

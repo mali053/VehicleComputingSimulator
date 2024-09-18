@@ -58,7 +58,10 @@ static std::map<AESKeyLength,AESData> aesKeyLengthData = {
     unsigned char multiply(unsigned char x, unsigned char y);
     void xorBlocks(const unsigned char *a, const unsigned char *b,
                     unsigned char *c, unsigned int len);
-   void generateRandomIV(unsigned char* iv); 
+    void generateRandomIV(unsigned char* iv); 
+    size_t calculatEncryptedLenAES(size_t inLen, bool isFirst);
+    size_t calculatDecryptedLenAES(size_t inLen, bool isFirst);
+    void generateKey(unsigned char*, AESKeyLength keyLength);
 
 /*Inverse S-Box*/
 const unsigned char invSBox[16][16] = {
@@ -129,7 +132,5 @@ const unsigned char sBox[16][16] = {
      0xce, 0x55, 0x28, 0xdf},
     {0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f,
      0xb0, 0x54, 0xbb, 0x16}};
-
-unsigned char *generateKey(AESKeyLength keyLength);
 
 #endif

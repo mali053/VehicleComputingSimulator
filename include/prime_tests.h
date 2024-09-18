@@ -1,6 +1,6 @@
 #ifndef __PRIME_TESTS_H__
 #define __PRIME_TESTS_H__
-#include "big_int64.h"
+#include "sycl-version/big_int64.h"
 #include "logger.h"
 
 bool millerRabinPrimalityTest(const BigInt64 &number, size_t k);

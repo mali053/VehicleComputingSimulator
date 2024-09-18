@@ -1,4 +1,5 @@
 #include "aes.h"
+#include <cstdlib>
 #include <functional>
 #include <map>
 #include <string>
@@ -13,21 +14,22 @@ class StreamAES
     unsigned char* key;
     unsigned char* lastData;
  
-    StreamAES():iv(new unsigned char[16]){};
+    StreamAES() : iv(new unsigned char[16]), lastBlock(new unsigned char[16]){};
+    
     /** 
- @brief Encrypts the initial block of data using AES in CBC mode.
+     @brief Encrypts the initial block of data using AES in CBC mode.
  
- This function generates a random initialization vector (IV) and then 
- encrypts the given block of data. The encrypted data and the IV are 
- concatenated and stored in the output buffer.
+     This function generates a random initialization vector (IV) and then 
+     encrypts the given block of data. The encrypted data and the IV are 
+     concatenated and stored in the output buffer.
  
- @param block Input data block to encrypt.
- @param inLen Length of the input data block.
- @param[out] out Pointer to the output buffer where encrypted data will be stored.
- @param[out] outLen Length of the encrypted output data.
- @param key Encryption key.
- @param keyLength Length of the AES key (128, 192, or 256 bits).
-*/
+     @param block Input data block to encrypt.
+     @param inLen Length of the input data block.
+     @param[out] out Pointer to the output buffer where encrypted data will be stored.
+     @param[out] outLen Length of the encrypted output data.
+     @param key Encryption key.
+     @param keyLength Length of the AES key (128, 192, or 256 bits).
+    */
 virtual void encryptStart(unsigned char block[], unsigned int inLen, unsigned char*& out, unsigned int& outLen,unsigned char* key, AESKeyLength keyLength) = 0;
 
 /**

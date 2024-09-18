@@ -1,8 +1,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
-#include "big_int10.h"
-#include "big_int_utils.h"
+#include "../include/big_int10.h"
+#include "../include/big_int_utils.h"
 using namespace std;
 
 BigInt10::BigInt10(const std::string &str)

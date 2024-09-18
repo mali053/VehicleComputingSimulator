@@ -3,23 +3,25 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <fstream>
-#include <iostream>
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QFile>
+
 #include <bson/bson.h>
 
+#include <fstream>
+#include <iostream>
 #include <string>
 #include <map>
 
+#include "input.h"
 
 // Singleton class which handles the export to BSON
 class Output {
 private:
     // Private constructor
-    Output(std::string pathToFileSave, std::map<int, std::string> sensors);
+    Output(std::string pathToFileSave);
     // Single instance of the class
     static std::unique_ptr<Output> instance;
 

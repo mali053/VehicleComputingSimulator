@@ -2,18 +2,18 @@
     "endianness": "little",
     "fields": [
         {
-            "size": 7,
-            "type": "UInt",
+            "size": 32,
+            "type": "signed_int",
             "name": "Status"
         },
         {
             "size": 64,
-            "type": "Char array",
+            "type": "char_array",
             "name": "Msg"
         },
         {
             "size": 32,
-            "type": "FloatFixed",
+            "type": "float_fixed",
             "name": "Speed"
         }
     ]

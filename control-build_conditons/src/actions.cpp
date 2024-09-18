@@ -3,9 +3,8 @@
 #define FONT_FAMILY "Arial"
 using namespace std;
 
-Actions::Actions(MainWindow *mainWindow, QString showCondition)
+Actions::Actions(MainWindow *mainWindow, QString showCondition) : mainWindow(mainWindow)
 {
-    this->mainWindow = mainWindow;
     setupLogicalMembers();
     setupUi(showCondition);
     connectSignals();
@@ -32,10 +31,9 @@ Actions::~Actions()
 void Actions::setupLogicalMembers()
 {
     action = "send "; // Default action string
-    sensorList = {{"Speed", 1},
-                  {"Tire Pressure", 2},
-                  {"Communication", 3},
-                  {"Camera", 4}}; // Available sensors
+    Input &input = Input::getInstance();
+    for (auto &[sensorId, sensorData] : input.sensors.items()) 
+        sensorList[QString::fromStdString(sensorData["name"])] = stoi(sensorId);
     currentSensor = -1; // No sensor selected
     currentMessage = ""; // No message yet
 }
@@ -185,7 +183,7 @@ void Actions::sensorSelectionHandler(int index)
                 "to sensor: " + QString::number(selectedSensor) + " message: ";
         }
         label->setText(action);
-        // sensors->setEnabled(false);
+        sensors->setEnabled(false);
     }
 }
 

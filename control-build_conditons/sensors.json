@@ -1,0 +1,18 @@
+{
+    "1" : {
+        "name" : "speed",
+        "pathToJson" : "./src/sensors_data/speed.json"
+    },
+    "2" : {
+        "name" : "tirePressure",
+        "pathToJson" : "./src/sensors_data/tirePressure.json"
+    },
+    "3" : {
+        "name" : "communication",
+        "pathToJson" : "./src/sensors_data/communication"
+    },
+    "4" : {
+        "name" : "camera",
+        "pathToJson" : "./src/sensors_data/camera"
+    }
+}

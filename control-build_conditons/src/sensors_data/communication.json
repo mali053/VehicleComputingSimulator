@@ -2,18 +2,18 @@
     "endianness": "little",
     "fields": [
         {
-            "size": 7,
-            "type": "UInt",
+            "size": 32,
+            "type": "signed_int",
             "name": "Status"
         },
         {
-            "size": 7,
-            "type": "UInt",
+            "size": 32,
+            "type": "signed_int",
             "name": "Code"
         },
         {
-            "size": 8,
-            "type": "BitField",
+            "size": 32,
+            "type": "signed_int",
             "name": "Flags"
         }
     ]

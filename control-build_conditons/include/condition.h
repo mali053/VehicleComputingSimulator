@@ -16,6 +16,8 @@
 #include <QTextEdit>
 #include <QTextCursor>
 #include <QTextCharFormat>
+#include <QDoubleSpinBox>
+#include <QSpinBox>
 
 #include <map>
 #include <stack>
@@ -24,6 +26,7 @@
 #include <algorithm>
 #include <math.h>
 #include "main_window.h"
+#include "input.h"
 
 #include "json.hpp"
 
@@ -41,7 +44,6 @@ private:
     // Father window pointer
     MainWindow *mainWindow;
     // Variables contains the sensors and operators
-    map<int, vector<QString>> sensorsFieldsList;
     map<QString, int> sensorList;
     map<QString, QString> operatorsMap;
     vector<QString> operatorList;
@@ -77,6 +79,8 @@ private:
     QPushButton *reset;
     // Objects for the sensors and basic conditions
     QLineEdit *textBox;
+    QSpinBox *spinBox;
+    QDoubleSpinBox *doubleSpinBox;
     QPushButton *submit;
     QComboBox *operators;
     QComboBox *sensors;
@@ -104,16 +108,14 @@ private:
     void resetButtonState();
     void sensorSelectionHandler(int index);
     void updateSensorComboBoxState();
+    void fieldSelectionHandler(int index);
     void operatorSelectionHandler(int index);
     void submitHandler();
     void updateSkipButtonState();
     void updateButtonVisible();
     void updateColors();
+    void coverInputBoxes();
 
-    // Functions for initialize the sensors fields
-    void fillSensorsFields(map<int, string> pathesToJsonFiles);
-    // NOTE: This function should be written in another ststic class (like "input" in the main control)
-    vector<QString> getFieldsOfSensor(string psthToSensorJson);
 
     friend class basicCondition_buildCondition_Test ;
     friend class oneOperatorDifferentSensors_buildCondition_Test ;

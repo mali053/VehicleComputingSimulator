@@ -42,7 +42,7 @@ void Condition::setupLogicalMembers()
     condition = "";
     ind = 5;
     indCondition = 0;
-    isCursorVisible = true;
+    isCursorVisible = false;
 
     // Initialize current operation type and stack
     typeCurrent = {"if", -1};
@@ -50,18 +50,11 @@ void Condition::setupLogicalMembers()
     layersStack.push(typeCurrent);
 
     // Initialize sensor and operator lists
-    sensorList = {{"Speed", 1},
-                  {"Tire Pressure", 2},
-                  {"Communication", 3},
-                  {"Camera", 4}};
+    Input &input = Input::getInstance();
+    for (auto &[sensorId, sensorData] : input.sensors.items()) 
+        sensorList[QString::fromStdString(sensorData["name"])] = stoi(sensorId);
     operatorsMap = {{"AND", "&"}, {"OR", "|"}};
     operatorList = {"=", "!=", ">", "<", "<=", ">="};
-
-    // Map sensor IDs to JSON files
-    fillSensorsFields({{1, "sensors_data/speed_sensor.json"},
-                       {2, "sensors_data/tire_pressure_sensor.json"},
-                       {3, "sensors_data/communication_sensor.json"},
-                       {4, "sensors_data/camera_sensor.json"}});
 }
 
 // Function that set up the UI components and layout for managing conditions and actions in the Condition class
@@ -96,6 +89,8 @@ void Condition::setupUi()
     skip = new QPushButton("->");
     reset = new QPushButton("reset");
     textBox = new QLineEdit();
+    spinBox = new QSpinBox();
+    doubleSpinBox = new QDoubleSpinBox();
     submit = new QPushButton("add to condition");
 
     sensors = new QComboBox();
@@ -135,6 +130,8 @@ void Condition::setupUi()
     textLayout->addWidget(sensorsFields);
     textLayout->addWidget(operators);
     textLayout->addWidget(textBox);
+    textLayout->addWidget(spinBox);
+    textLayout->addWidget(doubleSpinBox);
     basicConditionLayout->addLayout(textLayout);
     basicConditionLayout->addWidget(submit);
     basicConditionBox->setLayout(basicConditionLayout);
@@ -145,6 +142,7 @@ void Condition::setupUi()
     // Add action button
     selectActions = new QPushButton("Pass to selection of actions");
     selectActions->setFixedSize(200, 50);
+    selectActions->setVisible(false);
 
     // Add the screen and keyboard sections to the main layout
     this->addWidget(screenBox);
@@ -161,6 +159,7 @@ void Condition::setupUi()
     skip->setStyleSheet(
         "background-color: rgb(13, 206, 13); color: white; font-size: 18px;");
     skip->setFixedSize(BUTTON_SIZE);
+    skip->setVisible(false);
     reset->setStyleSheet(
         "background-color: rgb(13, 206, 13); color: white; font-size: 18px;");
     reset->setFixedSize(BUTTON_SIZE);
@@ -168,6 +167,16 @@ void Condition::setupUi()
     submit->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
     operators->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
     sensorsFields->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
+    spinBox->setRange(-200, 2000);
+    spinBox->setValue(0);
+    spinBox->setFixedHeight(30);
+    doubleSpinBox->setRange(-200, 2000);
+    doubleSpinBox->setValue(0);
+    doubleSpinBox->setFixedHeight(30);
+
+    textBox->setVisible(false);
+    spinBox->setVisible(false);
+    doubleSpinBox->setVisible(false);
 
     // Populate combo boxes with sensor and operator lists
     for (const auto &sensor : sensorList) {
@@ -192,6 +201,8 @@ void Condition::connectSignals()
     // Connect combo boxes to selection handlers
     connect(sensors, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
             &Condition::sensorSelectionHandler);
+    connect(sensorsFields, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &Condition::fieldSelectionHandler);
     connect(operators, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &Condition::operatorSelectionHandler);
 
@@ -339,6 +350,10 @@ void Condition::resetButtonState()
     updateSensorComboBoxState();        // Update sensor combo box state
     updateSkipButtonState();            // Update skip button state
     updateDisplay();                    // Refresh the display
+    coverInputBoxes();
+
+    skip->setVisible(false);
+    selectActions->setVisible(false);
 }
 
 // Handle sensor selection, updating the condition display and related UI elements based on the selected sensor
@@ -368,8 +383,10 @@ void Condition::sensorSelectionHandler(int index)
                                    Qt::UserRole - 1);  // Disable placeholder
 
         sensorsFields->setCurrentIndex(0);  // Reset fields to default
-        for (const auto &sf : sensorsFieldsList[typeCurrent.second]) {
-            sensorsFields->addItem(sf);  // Add sensor fields to combo box
+        Input &input = Input::getInstance();
+        for (auto& [key, value] : input.sensors[to_string(typeCurrent.second)]["fields"].items()) {
+            std::cout << "Field Name: " << key << ", Value: " << value.begin().key() << std::endl;
+            sensorsFields->addItem(QString::fromStdString(value.begin().key()));  // Add sensor fields to combo box
         }
 
         operators->setCurrentIndex(0);  // Reset operators to placeholder
@@ -392,10 +409,28 @@ void Condition::operatorSelectionHandler(int index)
 // Processe and submit the current condition based on selected field, operator, and entered text, then resets UI inputs
 void Condition::submitHandler()
 {
+    coverInputBoxes();
+
     // Get the current field, operator, and entered text
     QString currentField = sensorsFields->currentText();
     QString currentOperator = operators->currentText();
-    QString enteredText = textBox->text();
+
+    QString enteredText;
+    Input &input = Input::getInstance();
+    auto fields = input.sensors[to_string(typeCurrent.second)]["fields"];
+
+    string type;
+    for (auto& [key, value] : fields.items())
+        if (value.begin().key() == sensorsFields->currentText().toStdString())
+            type = value.begin().value();
+
+    if (!textBox->text().isEmpty())
+        enteredText = textBox->text();
+    else if (type == "unsigned_int" || type == "signed_int")
+        enteredText = QString::number(spinBox->value());
+    else
+        enteredText = QString::number(doubleSpinBox->value());
+    // else if (type == "boolean")
 
     // Form the final condition string and update the display condition
     QString finalCondition =
@@ -428,10 +463,13 @@ void Condition::updateSensorComboBoxState()
          typeCurrent.first != "OR") &&
         !(layersStack.size() <= 1 && typeCurrent.first == "Basic");
 
+    
+    bool valueFull = (!textBox->text().isEmpty() || spinBox->value() != 0 || doubleSpinBox->value() != 0);
+
     // Enable the submit button if all conditions for submission are met
     bool enableSUbmit =
         typeCurrent.second != -1 && sensorsFields->currentIndex() != 0 &&
-        operators->currentIndex() != 0 && !textBox->text().isEmpty();
+        operators->currentIndex() != 0 && valueFull;
 
     sensors->setEnabled(typeCurrent.second ==
                         -1);  // Enable sensors if applicable
@@ -446,6 +484,39 @@ void Condition::updateSensorComboBoxState()
     if (sensors->isEnabled()) {
         sensors->setCurrentIndex(0);  // Set to placeholder item
     }
+}
+
+void Condition::fieldSelectionHandler(int index)
+{
+    if (index <= 0)
+        return;
+
+    coverInputBoxes();
+    textBox->clear();
+    spinBox->setValue(0);
+    doubleSpinBox->setValue(0);
+
+    Input &input = Input::getInstance();
+    auto fields = input.sensors[to_string(typeCurrent.second)]["fields"];
+
+    string type;
+    for (auto& [key, value] : fields.items())
+        if (value.begin().key() == sensorsFields->currentText().toStdString())
+            type = value.begin().value();
+        
+    if (type == "unsigned_int") {
+        spinBox->setRange(0, 2000);
+        spinBox->setVisible(true);
+    }
+    else if (type == "signed_int") {
+        spinBox->setRange(-2000, 2000);
+        spinBox->setVisible(true);
+    }
+    else if (type == "float_fixed" || type == "double" || type == "float_mantissa")
+        doubleSpinBox->setVisible(true);
+    else if (type == "char_array")
+        textBox->setVisible(true);
+    // else if (type == "boolean")
 }
 
 // Update the visibility of the skip button depending on the cursor position and current condition
@@ -525,41 +596,9 @@ void Condition::updateColors()
     }
 }
 
-// Populate sensor fields list based on JSON file paths
-void Condition::fillSensorsFields(map<int, string> pathesToJsonFiles)
+void Condition::coverInputBoxes()
 {
-    for (auto sensor : pathesToJsonFiles)
-        sensorsFieldsList[sensor.first] = getFieldsOfSensor(sensor.second);
-}
-
-// Read fields from a sensor's JSON file
-vector<QString> Condition::getFieldsOfSensor(string psthToSensorJson)
-{
-    // Read the json file
-    ifstream f(psthToSensorJson);
-
-    // Check if the input is correct
-    if (!f.is_open())
-        cerr << "Failed to open " << psthToSensorJson << endl;
-
-    json *data = NULL;
-
-    // Try parse to json type
-    try {
-        data = new json(json::parse(f));
-    }
-    catch (exception e) {
-        cout << e.what() << endl;
-    }
-    catch (...) {
-        cout << "My Unknown Exception" << endl;
-    }
-
-    // Read the fields and return them
-    vector<QString> fields;
-
-    for (auto field : (*data)["fields"])
-        fields.push_back(QString::fromStdString(field["name"]));
-
-    return fields;
+    textBox->setVisible(false);
+    spinBox->setVisible(false);
+    doubleSpinBox->setVisible(false);
 }

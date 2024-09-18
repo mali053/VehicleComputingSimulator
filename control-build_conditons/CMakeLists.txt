@@ -64,5 +64,8 @@ add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
 file(COPY ${CMAKE_SOURCE_DIR}/src/icons DESTINATION ${CMAKE_BINARY_DIR})
 # Copy .json to the build directory
 file(COPY ${CMAKE_SOURCE_DIR}/src/sensors_data DESTINATION ${CMAKE_BINARY_DIR})
+configure_file(${CMAKE_SOURCE_DIR}/sensors.json ${CMAKE_BINARY_DIR}/sensors.json COPYONLY)
+
+
 
 

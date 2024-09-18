@@ -3,12 +3,12 @@
     "fields": [
         {
             "size": 32,
-            "type": "FloatFixed",
+            "type": "float_fixed",
             "name": "Temperature"
         },
         {
             "size": 32,
-            "type": "FloatMantissa",
+            "type": "float_fixed",
             "name": "Pressure"
         }
     ]

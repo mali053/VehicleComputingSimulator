@@ -3,8 +3,7 @@
 using namespace std;
 
 // C-tor: Initialize the BSON document
-Output::Output(string pathToFileSave, map<int, string> sensorsMap)
-    : fileName(pathToFileSave)
+Output::Output(string pathToFileSave) : fileName(pathToFileSave)
 {
     counter = 0;
     document = bson_new();
@@ -13,14 +12,15 @@ Output::Output(string pathToFileSave, map<int, string> sensorsMap)
     bson_t sensors;
     BSON_APPEND_ARRAY_BEGIN(document, "Sensors", &sensors);
 
-    for (auto sensor : sensorsMap) {
+    Input &input = Input::getInstance();
+    for (auto& [sensorId, sensorData] : input.sensors.items()) {
         bson_t bsonSensor;
         char key[16];
-        snprintf(key, sizeof(key), "%d", sensor.first);
+        snprintf(key, sizeof(key), "%d", stoi(sensorId));
         BSON_APPEND_DOCUMENT_BEGIN(&sensors, key, &bsonSensor);
 
-        BSON_APPEND_INT32(&bsonSensor, "id", sensor.first);
-        BSON_APPEND_UTF8(&bsonSensor, "name", sensor.second.c_str());
+        BSON_APPEND_INT32(&bsonSensor, "id", stoi(sensorId));
+        BSON_APPEND_UTF8(&bsonSensor, "name", string(sensorData["name"]).c_str());
 
         bson_append_document_end(&sensors, &bsonSensor);
     }
@@ -37,7 +37,7 @@ Output &Output::getInstance()
     // Creates the instance if it does not exist
     if (!instance) {
         instance = unique_ptr<Output>(
-            new Output("../my_bson.bson", {{1, "speed"}, {2, "tire pressure"}}));
+            new Output("../conditions.bson"));
     }
     // return Reference to the singleton `Output` instance
     return *instance;

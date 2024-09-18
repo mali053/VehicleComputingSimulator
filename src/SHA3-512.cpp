@@ -1,7 +1,9 @@
 #include "../include/SHA3-512.h"
 #include "../logger/logger.h"
+#include <cstddef>
 #include <cstring>
 #include <iomanip>
+#include <vector>
 
 #define BLOCK_SIZE 72
 // Macro for circular left shift (rotation) of x by y bits
@@ -257,7 +259,7 @@ void SHA3_512::endianSwap(uint64_t &x)
  *       to ensure each 64-bit integer is represented as a 16-character wide hexadecimal 
  *       string.
  */
-std::string SHA3_512::hashPartToHexString(uint64_t S[5][5]) {
+std::vector<uint8_t> SHA3_512::hashPartToHexVector(uint64_t S[5][5]) {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     // Append values in the specified order
@@ -269,7 +271,12 @@ std::string SHA3_512::hashPartToHexString(uint64_t S[5][5]) {
         << std::setw(16) << S[0][1]
         << std::setw(16) << S[1][1]
         << std::setw(16) << S[2][1];
-    return oss.str();
+    std::string res = oss.str();
+    std::vector<uint8_t> vec;
+    vec.reserve(res.size());  // Optional: reserve space for performance
+    for (char c : res)
+        vec.push_back(static_cast<uint8_t>(c));
+    return vec;
 }
 
 /**
@@ -289,10 +296,15 @@ std::string SHA3_512::hashPartToHexString(uint64_t S[5][5]) {
  *       exceeds its size, an error will be logged, and the function will return 
  *       `CKR_FUNCTION_FAILED`.
  */
-CK_RV SHA3_512::update(const uint8_t* input, std::size_t length)
+CK_RV SHA3_512::update(const std::vector<uint8_t>& data)
 {
     logger sha3_512logger("HSM");
-    sha3_512logger.logMessage(logger::LogLevel::INFO, "Starting update with length: " + std::to_string(length)); 
+    sha3_512logger.logMessage(logger::LogLevel::INFO, "Starting update with length: " + std::to_string(data.size())); 
+
+    // Define the input size and starting pointer
+    std::size_t length = data.size();
+    std::size_t data_index = 0;
+
     // Absorb input into the buffer and process in 72-byte chunks (576 bits)
     while (length > 0) {
         if(buffer_length > sizeof(buffer)){
@@ -303,11 +315,11 @@ CK_RV SHA3_512::update(const uint8_t* input, std::size_t length)
         std::size_t to_copy = std::min(length, sizeof(buffer) - buffer_length);
 
         // Copy input data into the buffer
-        std::memcpy(buffer + buffer_length, input, to_copy);
+        std::memcpy(buffer + buffer_length, data.data(), to_copy);
 
         // Update buffer length and input pointers
         buffer_length += to_copy;
-        input += to_copy;
+        data_index += to_copy;
         length -= to_copy;
 
         sha3_512logger.logMessage(logger::LogLevel::INFO, "Copied " + std::to_string(to_copy)
@@ -351,7 +363,8 @@ CK_RV SHA3_512::update(const uint8_t* input, std::size_t length)
  *       on the state matrix elements before converting the hash value to a hexadecimal
  *       string.
  */
-CK_RV SHA3_512::finalize(std::string & output)
+
+CK_RV SHA3_512::finalize(std::vector<uint8_t>& output)
 {
     logger sha3_512logger("HSM");
     sha3_512logger.logMessage(logger::LogLevel::INFO, "finalizing");
@@ -389,32 +402,8 @@ CK_RV SHA3_512::finalize(std::string & output)
             endianSwap(S[i][j]);
 
     // Convert the state to a hex string
-    output=hashPartToHexString(S);
-    sha3_512logger.logMessage(logger::LogLevel::INFO, "hashed data: " + output);
+    output = hashPartToHexVector(S);
+    // sha3_512logger.logMessage(logger::LogLevel::INFO, "hashed data: " + output);
     
     return CKR_OK;
-}
-
-/**
- * @brief Compute the SHA3-512 hash of the input data in a single step.
- *
- * This function performs the entire SHA3-512 hashing process for the provided input data.
- * It first updates the hash state with the input data and then finalizes the hash computation
- * to produce the final hash value.
- *
- * @param[in] input A `std::vector<uint8_t>` containing the input data to be hashed.
- * @param[out] output A reference to a `std::string` that will be set to the resulting
- *                    hexadecimal representation of the hash value.
- * 
- * @return CK_RV Returns `CKR_OK` on success or `CKR_FUNCTION_FAILED` if an error occurs
- *               during the update or finalization process.
- * 
- * @note This function is a convenient wrapper for `update` and `finalize`, combining them
- *       into a single operation. It assumes that the input data fits in memory and handles
- *       the entire data in one go.
- */
-CK_RV SHA3_512::compute(const std::vector<uint8_t>& input, std::string & output)
-{
-    update(input.data(), input.size());
-    return finalize(output);
 }

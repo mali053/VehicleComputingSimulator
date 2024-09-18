@@ -4,6 +4,7 @@
 
 #include <string>
 #include <gmpxx.h>
+#include <vector>
 
 // Structure for representing a point
 struct Point {

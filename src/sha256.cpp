@@ -1,13 +1,12 @@
 #include "../include/sha256.h"
-#include <cstddef>
-#include <cstdint>
 #include <cstring>
+
 #ifdef USE_SYCL
 #include <CL/sycl.hpp>
 using namespace sycl;
 #endif //USE_SYCL
-
 using namespace std;
+logger logger("hsm");
 
 // Constants used in SHA-256 processing
 #define CHOOSE(x, y, z) (((x) & (y)) ^ (~(x) & (z)))
@@ -17,91 +16,110 @@ using namespace std;
 #define SIGMA1(x) (ROTRIGHT(x, 6) ^ ROTRIGHT(x, 11) ^ ROTRIGHT(x, 25))
 #define GAMMA0(x) (ROTRIGHT(x, 7) ^ ROTRIGHT(x, 18) ^ ((x) >> 3))
 #define GAMMA1(x) (ROTRIGHT(x, 17) ^ ROTRIGHT(x, 19) ^ ((x) >> 10))
-
-// SHA-256 constants used in the compression function
-const uint32_t bytes[64] = {
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
-    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
-    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
-    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
-    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-};
-
+/**
+ * SHA256 constructor initializes the hash values with SHA-256 specific constants.
+ * Sets the initial message size and bit length to 0.
+ */
+SHA256::SHA256(){
+    result[0] = 0x6a09e667;
+    result[1] = 0xbb67ae85;
+    result[2] = 0x3c6ef372;
+    result[3] = 0xa54ff53a;
+    result[4] = 0x510e527f;
+    result[5] = 0x9b05688c;
+    result[6] = 0x1f83d9ab;
+    result[7] = 0x5be0cd19;
+    messageSize = 0;
+    bitLength = 0;
+}
 /**
  * Updates the SHA-256 hash with the provided data.
  * Processes data in 64-byte chunks, calling `transform` for each chunk.
- * 
+ *
  * @param data A vector of bytes to be added to the hash.
  */
-void sha256_update(SHA256State& state, const std::vector<uint8_t>& data)
+CK_RV SHA256::update(const std::vector<uint8_t>& data)
 {
+    logger.logMessage(logger::LogLevel::DEBUG, "Updating SHA-256 with data.");
+
+    // Get the size of the input data
     size_t length = data.size();
+
+    // Process the input data byte by byte
     for (size_t i = 0; i < length; i++) {
-        state.message[state.messageSize++] = static_cast<uint8_t>(data[i]);
-        if (state.messageSize == 64) {
-            transform(state); // Process the current 64-byte block
-            state.messageSize = 0;
-            state.bitLength += 512;
+        message[messageSize++] = static_cast<uint8_t>(data[i]);
+
+        // If the message buffer is full (64 bytes), apply the SHA-256 transform
+        if (messageSize == 64) {
+            CK_RV transform_status = transform();
+            if (transform_status != CKR_OK) {
+                logger.logMessage(logger::LogLevel::ERROR, "Transform failed during SHA-256 update.");
+                return transform_status;  // Return the error code from the transform function
+            }
+
+            // Reset the message size and increment the bit length
+            messageSize = 0;
+            bitLength += 512;
         }
     }
+    return CKR_OK;  // Return success if everything goes well
 }
 
 /**
  * Adds padding to the message and appends the length of the original message.
  * The message is padded so its length is congruent to 56 modulo 64.
  */
-void padding(SHA256State& state)
+void SHA256::padding()
 {
-    uint64_t currentLength = state.messageSize;
+    logger.logMessage(logger::LogLevel::DEBUG, "Padding the message and appending its length to make it congruent to 56 mod 64.");
+
+    uint64_t currentLength = messageSize;
     uint8_t paddingEnd = currentLength < 56 ? 56 : 64;
 
     // Append the 0x80 byte (0b10000000)
-    state.message[currentLength++] = 0x80;
+    message[currentLength++] = 0x80;
 
     // Pad with 0x00 bytes until the length of the message is 56 bytes mod 64
-    memset(state.message + currentLength, 0, paddingEnd - currentLength);
+    memset(message + currentLength, 0, paddingEnd - currentLength);
     currentLength = paddingEnd;
 
     // If message length is >= 56, process the current block and reset for new padding
-    if (state.messageSize >= 56) {
-        transform(state); // Process the current block
-        memset(state.message, 0, 56);
+    if (messageSize >= 56) {
+        transform();
+        memset(message, 0, 56);
         currentLength = 56;
     }
 
     // Append the length of the original message in bits (64-bit big-endian)
-    state.bitLength += state.messageSize * 8;
+    bitLength += messageSize * 8;
     for (int i = 0; i < 8; i++) {
-        state.message[63 - i] = state.bitLength >> (i * 8);
+        message[63 - i] = bitLength >> (i * 8);
     }
-
-    transform(state); // Final block processing
+    transform();
 }
-
 #ifdef USE_SYCL
 /**
- * Processes a 64-byte block of the message and updates the hash state.
- * Applies the SHA-256 compression function to the current block.
+ * Transforms the message block by applying SHA-256 compression.
+ * This function runs in parallel using SYCL if the USE_SYCL flag is enabled.
+ *
+ * The function computes the message schedule array (`temp`) and then
+ * updates the hash state by processing the message in 64 rounds.
  */
-void transform(SHA256State& state)
+CK_RV SHA256::transform()
 {
+    logger.logMessage(logger::LogLevel::DEBUG, "Transforming message block and updating hash state using 64 rounds of SHA-256 compression.");
     uint32_t temp[64];
     queue q;
 
+    // Check if message size is correct
+    if (messageSize != 64) {
+        logger.logMessage(logger::LogLevel::ERROR, "Message size is not 64 bytes.");
+        return CKR_FUNCTION_FAILED;  // Return an error code if the message size is incorrect
+    }
+
     // Initialize the first 16 elements of temp with the message schedule
     for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
-        temp[i] = (state.message[j] << 24) | (state.message[j + 1] << 16) | (state.message[j + 2] << 8) | (state.message[j + 3]);
+        temp[i] = (message[j] << 24) | (message[j + 1] << 16) | (message[j + 2] << 8) | (message[j + 3]);
 
     for (uint8_t k = 16; k < 64; k++)
         temp[k] = GAMMA1(temp[k - 2]) + temp[k - 7] + GAMMA0(temp[k - 15]) + temp[k - 16];
@@ -109,7 +127,7 @@ void transform(SHA256State& state)
     // Save the current state
     uint32_t s[8];
     for (uint8_t i = 0; i < 8; i++)
-        s[i] = state.result[i];
+        s[i] = result[i];
 
     for (size_t i = 0; i < 64; i++) {
         uint32_t choose, sum, majority, newA, newE;
@@ -129,11 +147,10 @@ void transform(SHA256State& state)
         s[1] = s[0];
         s[0] = newA;
     }
-
     // Process the message in 64-byte chunks, parallelizing where feasible
     {
         buffer<uint32_t, 1> state_buf(s, range<1>(8));
-        buffer<uint32_t, 1> result_buf(state.result, range<1>(8));
+        buffer<uint32_t, 1> result_buf(result, range<1>(8));
 
         // Update the result with the state
         q.submit([&](handler &h) {
@@ -145,132 +162,158 @@ void transform(SHA256State& state)
             });
         }).wait();
     }
+    return CKR_OK;
 }
 
 /**
  * Finalizes the SHA-256 hash computation.
  * Applies padding and appends the length of the original message.
  * Returns the final hash as a vector of bytes.
- * 
+ *
  * @param state The SHA256State object to finalize.
  * @return A vector containing the SHA-256 hash value.
  */
-vector<uint8_t> sha256_finalize(SHA256State& state)
+CK_RV SHA256::finalize(std::vector<uint8_t>& output)
 {
-    padding(state);
-    vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
-    
-    // Define SYCL buffers
-    buffer<uint32_t, 1> result_buf(state.result, range<1>(8));
-    buffer<uint8_t, 1> hash_buf(hash.data(), range<1>(32));
+    logger.logMessage(logger::LogLevel::DEBUG, "Finalizing SHA-256 hash computation and returning the hash value.");
 
-    // Copy the result to the hash output
-    queue q;
-    q.submit([&](handler &h) {
-        auto result_acc = result_buf.get_access<access::mode::read>(h);
-        auto hash_acc = hash_buf.get_access<access::mode::write>(h);
+    try {
+        // Perform padding
+        padding();
 
-        h.parallel_for(range<1>(8), [=](id<1> idx) {
-            size_t i = idx[0];
-            hash_acc[i * 4 + 0] = (result_acc[i] >> 24) & 0xff;
-            hash_acc[i * 4 + 1] = (result_acc[i] >> 16) & 0xff;
-            hash_acc[i * 4 + 2] = (result_acc[i] >> 8) & 0xff;
-            hash_acc[i * 4 + 3] = (result_acc[i] >> 0) & 0xff;
-        });
-    }).wait();
+        // SHA-256 hash size is 32 bytes (256 bits)
+        std::vector<uint8_t> hash(32);
 
-    return hash;
+        // Define SYCL buffers
+        sycl::buffer<uint32_t, 1> result_buf(result, sycl::range<1>(8));
+        sycl::buffer<uint8_t, 1> hash_buf(hash.data(), sycl::range<1>(32));
+
+        // Submit SYCL command group
+        sycl::queue q;
+        q.submit([&](sycl::handler& h) {
+            auto result_acc = result_buf.get_access<sycl::access::mode::read>(h);
+            auto hash_acc = hash_buf.get_access<sycl::access::mode::write>(h);
+            h.parallel_for(sycl::range<1>(8), [=](sycl::id<1> idx) {
+                size_t i = idx[0];
+                hash_acc[i * 4 + 0] = (result_acc[i] >> 24) & 0xff;
+                hash_acc[i * 4 + 1] = (result_acc[i] >> 16) & 0xff;
+                hash_acc[i * 4 + 2] = (result_acc[i] >> 8) & 0xff;
+                hash_acc[i * 4 + 3] = (result_acc[i] >> 0) & 0xff;
+            });
+        }).wait();
+
+        // Copy the hash to the output vector
+        output = hash;
+
+        return CKR_OK;  // Return success
+    }
+    catch (const sycl::exception& e) {
+        // Handle SYCL exceptions
+        logger.logMessage(logger::LogLevel::ERROR, "SYCL error: " + std::string(e.what()));
+        return CKR_FUNCTION_FAILED;
+    }
+    catch (const std::exception& e) {
+        // Handle other exceptions
+        logger.logMessage(logger::LogLevel::ERROR, "Standard error: " + std::string(e.what()));
+        return CKR_FUNCTION_FAILED;
+    }
 }
+
 #else
 /**
  * Processes a 64-byte block of the message and updates the hash state.
  * Applies the SHA-256 compression function to the current block.
  */
-void transform(SHA256State& SHAState)
+CK_RV SHA256::transform()
 {
-    uint32_t temp[64];
-    for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
-        temp[i] = (SHAState.message[j] << 24) | (SHAState.message[j + 1] << 16) | (SHAState.message[j + 2] << 8) | (SHAState.message[j + 3]);
+    logger.logMessage(logger::LogLevel::DEBUG, "Transforming message block and updating hash state using 64 rounds of SHA-256 compression.");
 
+    uint32_t temp[64];
+
+    // Initialize temp array with message data
+    for (uint8_t i = 0, j = 0; i < 16; i++, j += 4)
+        temp[i] = (message[j] << 24) | (message[j + 1] << 16) | (message[j + 2] << 8) | (message[j + 3]);
+
+    // Compute remaining values for temp array
     for (uint8_t k = 16; k < 64; k++)
         temp[k] = GAMMA1(temp[k - 2]) + temp[k - 7] + GAMMA0(temp[k - 15]) + temp[k - 16];
 
-    // Save the current state
-    uint32_t state[8];
-    for (uint8_t i = 0; i < 8; i++)
-        state[i] = SHAState.result[i];
+    // Initialize working variables
+    uint32_t a, b, c, d, e, f, g, h;
+    a = result[0];
+    b = result[1];
+    c = result[2];
+    d = result[3];
+    e = result[4];
+    f = result[5];
+    g = result[6];
+    h = result[7];
 
-    // Process the message in 64-byte chunks
+    // Perform the 64 rounds of SHA-256 compression
     for (size_t i = 0; i < 64; i++) {
-        uint32_t choose, sum, majority, newA, newE;
-
-        choose = CHOOSE(state[4], state[5], state[6]);
-        majority = MAJORITY(state[0], state[1], state[2]);
-        sum = temp[i] + bytes[i] + state[7] + choose + SIGMA1(state[4]);
-        newA = SIGMA0(state[0]) + majority + sum;
-        newE = state[3] + sum;
-
-        state[7] = state[6];
-        state[6] = state[5];
-        state[5] = state[4];
-        state[4] = newE;
-        state[3] = state[2];
-        state[2] = state[1];
-        state[1] = state[0];
-        state[0] = newA;
+        uint32_t temp1 = h + SIGMA1(e) + CHOOSE(e, f, g) + bytes[i] + temp[i];
+        uint32_t temp2 = SIGMA0(a) + MAJORITY(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + temp1;
+        d = c;
+        c = b;
+        b = a;
+        a = temp1 + temp2;
     }
-    // Add the current chunk's hash to the result
-    for (uint8_t i = 0; i < 8; i++) {
-        SHAState.result[i] += state[i];
-    }
+
+    // Update result with compressed values
+    result[0] += a;
+    result[1] += b;
+    result[2] += c;
+    result[3] += d;
+    result[4] += e;
+    result[5] += f;
+    result[6] += g;
+    result[7] += h;
+
+    return CKR_OK;  // Return success if no errors occurred
 }
 
 /**
  * Finalizes the SHA-256 hash computation.
  * Applies padding and appends the length of the original message.
  * Returns the final hash as a vector of bytes.
- * 
+ *
  * @return A vector containing the SHA-256 hash value.
  */
-vector<uint8_t> sha256_finalize(SHA256State& SHAState)
+CK_RV SHA256::finalize(std::vector<uint8_t>& output)
 {
-    padding(SHAState);
-    vector<uint8_t> hash(32); // SHA-256 hash size is 32 bytes (256 bits)
-    for (int i = 0; i < 8; i++) {
-        hash[i * 4] = (SHAState.result[i] >> 24) & 0xFF;
-        hash[i * 4 + 1] = (SHAState.result[i] >> 16) & 0xFF;
-        hash[i * 4 + 2] = (SHAState.result[i] >> 8) & 0xFF;
-        hash[i * 4 + 3] = SHAState.result[i] & 0xFF;
+    logger.logMessage(logger::LogLevel::DEBUG, "Finalizing SHA-256 hash computation.");
+
+    // Check if the internal state is valid
+    if (result == nullptr) {
+        logger.logMessage(logger::LogLevel::ERROR, "SHA-256 computation has not been initialized or has failed.");
+        return CKR_FUNCTION_FAILED;
     }
-    return hash;
+
+    try {
+        // Apply padding to the data
+        padding();
+    } catch (const std::exception& e) {
+        logger.logMessage(logger::LogLevel::ERROR, std::string("Padding failed: ") + e.what());
+        return CKR_FUNCTION_FAILED;
+    }
+
+    // Ensure the output vector has the correct size
+    if (output.size() != 32) {
+        output.resize(32);
+    }
+
+    for (size_t i = 0; i < 8; i++) {
+        output[i * 4 + 0] = (result[i] >> 24) & 0xFF;
+        output[i * 4 + 1] = (result[i] >> 16) & 0xFF;
+        output[i * 4 + 2] = (result[i] >> 8) & 0xFF;
+        output[i * 4 + 3] = (result[i]) & 0xFF;
+    }
+    
+    return CKR_OK;
 }
 
 #endif //USE_SYCL
-
-
-/**
- * Computes the SHA-256 hash for the given input.
- * Resets the internal state, updates with the input data, and returns the final hash.
- * 
- * @param input A vector of bytes to be hashed.
- * @return A vector containing the SHA-256 hash value.
- */
-vector<uint8_t> sha256_compute(const std::vector<uint8_t>& input)
-{
-    SHA256State state;
-    // Initialize state
-    state.result[0] = 0x6a09e667;
-    state.result[1] = 0xbb67ae85;
-    state.result[2] = 0x3c6ef372;
-    state.result[3] = 0xa54ff53a;
-    state.result[4] = 0x510e527f;
-    state.result[5] = 0x9b05688c;
-    state.result[6] = 0x1f83d9ab;
-    state.result[7] = 0x5be0cd19;
-    state.messageSize = 0;
-    state.bitLength = 0;
-
-    // Process the input data
-    sha256_update(state, input);
-    return sha256_finalize(state);
-}

@@ -5,6 +5,7 @@
 #include <iostream>
 #include "alerter.h"
 #include "alert.h"
+#include "manager.h"
 
 using json = nlohmann::json;
 using namespace std;
@@ -89,6 +90,8 @@ void Alerter::makeFileJSON()
         output_file.close();
     }
     else {
-        std::cerr << "Error: Could not open file for writing" << std::endl;
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Error: Could not open file for writing");
     }
 }

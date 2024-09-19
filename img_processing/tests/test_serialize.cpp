@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "alert.h"
 #include "object_type_enum.h"
+#include "manager.h"
 #include "alerter.h"
 
 using namespace std;

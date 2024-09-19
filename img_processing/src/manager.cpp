@@ -6,11 +6,15 @@
 using namespace std;
 using namespace cv;
 
+logger Manager::imgLogger("img_processing");
+
 void Manager::init()
 {
     Mat calibrationImage = imread("../tests/images/black_line.JPG");
     if (calibrationImage.empty()) {
-        cerr << "image not found";
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "image not found");
         return;
     }
     Distance &distance = Distance::getInstance(calibrationImage);
@@ -25,13 +29,17 @@ void Manager::mainDemo()
     VideoCapture capture("../tests/images/close_cars.mov");
     Mat frame = Mat::zeros(480, 640, CV_8UC3);
     if (!capture.isOpened()) {
-        cerr << "Error while opening video media\n";
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "Error while opening video media");
         return;
     }
     while (1) {
         capture >> frame;
         if (frame.empty()) {
-            cout << "media finish" << endl;
+            Manager::imgLogger.logMessage(
+                logger::LogLevel::INFO,
+                "media finish");
             break;
         }
         int result = processing(frame, true);

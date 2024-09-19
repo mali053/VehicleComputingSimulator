@@ -1,4 +1,5 @@
 #include "detector.h"
+#include "manager.h"
 
 using namespace std;
 using namespace cv;
@@ -112,7 +113,10 @@ void Detector::detectObjects(const shared_ptr<Mat> &frame,
 void Detector::detectChanges()
 {
     const vector<Rect> changedAreas = findDifference();
-    cout << "changedAreas:" << changedAreas.size() << endl;
+    Manager::imgLogger.logMessage(
+        logger::LogLevel::INFO,
+        "changedAreas" + changedAreas.size());
+        
     for (Rect oneChange : changedAreas) {
         int x = oneChange.x;
         int y = oneChange.y;
@@ -146,9 +150,13 @@ vector<Rect> Detector::findDifference()
         Rect boundingBox = boundingRect(contour);
         differencesRects.push_back(boundingBox);
     }
-    cout << "num of difference:" << differencesRects.size() << endl;
+    Manager::imgLogger.logMessage(
+        logger::LogLevel::INFO,
+        "num of difference: " + differencesRects.size());
     vector<Rect> unionRects = unionOverlappingRectangels(differencesRects);
-    cout << "after union:" << unionRects.size() << endl;
+    Manager::imgLogger.logMessage(
+        logger::LogLevel::INFO,
+        "after union: " + unionRects.size());
     return unionRects;
 }
 
@@ -218,16 +226,22 @@ void Detector::loadNet(bool isCuda)
 {
     auto result = readNet("../yolov5s.onnx");
     if (result.empty()) {
-        cerr << "failed to load yolov5 model";
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::ERROR,
+            "failed to load yolov5 model");
     }
 
     if (isCuda) {
-        cout << "Using CUDA\n";
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::INFO,
+            "Using CUDA");
         result.setPreferableBackend(DNN_BACKEND_CUDA);
         result.setPreferableTarget(DNN_TARGET_CUDA_FP16);
     }
     else {
-        cout << "CPU Mode\n";
+        Manager::imgLogger.logMessage(
+            logger::LogLevel::INFO,
+            "CPU Mode");
         result.setPreferableBackend(DNN_BACKEND_OPENCV);
         result.setPreferableTarget(DNN_TARGET_CPU);
     }

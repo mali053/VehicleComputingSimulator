@@ -6,9 +6,11 @@
 #include "detector.h"
 #include "dynamic_tracker.h"
 #include "distance.h"
+#include "logger.h"
 
 class Manager {
    public:
+    static logger imgLogger;
     Manager() {}
     // Gets the currentFrame and sends it for detection and then tracking,
     // finally if necessary sends a alert

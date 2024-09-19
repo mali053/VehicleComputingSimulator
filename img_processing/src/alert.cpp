@@ -1,4 +1,5 @@
 #include "alert.h"
+#include "manager.h"
 
 using namespace std;
 

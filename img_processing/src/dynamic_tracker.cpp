@@ -1,6 +1,7 @@
 #include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/opencv.hpp>
+#include "manager.h"
 #include "dynamic_tracker.h"
 
 using namespace std;

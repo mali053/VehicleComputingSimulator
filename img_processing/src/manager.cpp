@@ -6,15 +6,12 @@
 using namespace std;
 using namespace cv;
 
-logger Manager::imgLogger("img_processing");
-
 void Manager::init()
 {
     // calibration
     Mat calibrationImage = imread("../tests/images/black_line.JPG");
     if (calibrationImage.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "image not found");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, "image not found");
         return;
     }
     Distance &distance = Distance::getInstance(calibrationImage);
@@ -30,8 +27,7 @@ void Manager::mainDemo()
     // open the file
     ifstream file(filePath);
     if (!file.is_open()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Error opening file.");
+        LogManager::logErrorMessage(ErrorType::FILE_ERROR);
         return;
     }
     string line;
@@ -49,8 +45,7 @@ void Manager::mainDemo()
             videoPath.erase(videoPath.find_last_not_of(" \t\n\r\f\v") + 1);
         }
         else {
-            Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                          "Error parsing line");
+            LogManager::logErrorMessage(ErrorType::VIDEO_ERROR);
             return;
         }
         // intialize focal length
@@ -75,15 +70,14 @@ void Manager::runOnVideo(string videoPath)
     VideoCapture capture(videoPath);
     Mat frame = Mat::zeros(480, 640, CV_8UC3);
     if (!capture.isOpened()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Error while opening video media");
+        LogManager::logErrorMessage(ErrorType::VIDEO_ERROR, "video not found");
+        throw runtime_error("video not found");
         return;
     }
     while (1) {
         capture >> frame;
         if (frame.empty()) {
-            Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                          "media finish");
+            LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
             break;
         }
         int result = processing(frame, true);

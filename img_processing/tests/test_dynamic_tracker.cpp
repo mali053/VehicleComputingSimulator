@@ -2,10 +2,12 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <gtest/gtest.h>
+#include <string>
 #include "dynamic_tracker.h"
 #include "manager.h"
 #include "detector.h"
 #include "utils.h"
+#include "log_manager.h"
 
 using namespace std;
 using namespace cv;
@@ -45,8 +47,9 @@ TEST(Track, twoCars)
     Mat img1 = imread("../tests/images/track_2_cars_first_frame.jpg");
     Mat img2 = imread("../tests/images/track_2_cars_second_frame.jpg");
     if (img1.empty() || img2.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Error: Could not load images!");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load images");
+        return;
     }
     shared_ptr<Mat> prevFrame = make_shared<Mat>(img1);
     shared_ptr<Mat> currentFrame = make_shared<Mat>(img2);
@@ -64,21 +67,20 @@ TEST(Track, twoCars)
     // check time - end
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    Manager::imgLogger.logMessage(
-        logger::LogLevel::INFO,
-        "Execution time: " + to_string(elapsed.count()) + " ms");
+    LogManager::logInfoMessage(InfoType::EXECUTION_TIME,
+                               to_string(elapsed.count()) + " ms");
     int i = 0;
     float result;
 
     for (const auto &tracktion : tracker.getOutput()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::INFO,
+        LogManager::logInfoMessage(
+            InfoType::TRACKING,
             "ID: " + to_string(tracktion.id) +
                 " Type: " + to_string(tracktion.type) +
                 " Position: " + rectToString(tracktion.position));
         result = calculateIoU(tracktion.position, (*currentOutput)[i].position);
-        Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                      "calculateIoU: " + to_string(result));
+        LogManager::logInfoMessage(InfoType::IOU,
+                                   "calculate- " + to_string(result));
         i++;
     }
 }
@@ -119,8 +121,10 @@ TEST(Track, track_video)
         // cv::waitKey(0);
         for (int i = 0; i < 10; i++) {
             capture.read(frame);
-            if (frame.empty())
+            if (frame.empty()){
+                LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
+            }
             // auto start = std::chrono::high_resolution_clock::now();
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
             tracker.tracking(frame1);
@@ -156,8 +160,10 @@ TEST(Track, calculate_execution_time)
 
         for (int i = 0; i < 10; i++) {
             capture.read(frame);
-            if (frame.empty())
+            if (frame.empty()){
+                LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
+            }
             // auto start = std::chrono::high_resolution_clock::now();
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
             tracker.tracking(frame1);
@@ -168,9 +174,9 @@ TEST(Track, calculate_execution_time)
     // check time - end
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
-    Manager::imgLogger.logMessage(
-        logger::LogLevel::INFO,
-        "Execution tracking time: " + to_string(elapsed.count()) + " ms");
+    LogManager::logInfoMessage(
+        InfoType::EXECUTION_TIME,
+        "tracking- " + to_string(elapsed.count()) + " ms");
     VideoCapture capture1("../tests/images/one_car.mp4");
     frame;
     capture1.read(frame);
@@ -185,9 +191,9 @@ TEST(Track, calculate_execution_time)
     // check time - end
     end = std::chrono::high_resolution_clock::now();
     elapsed = end - start;
-    Manager::imgLogger.logMessage(
-        logger::LogLevel::INFO,
-        "Execution tracking time: " + to_string(elapsed.count()) + " ms");
+    LogManager::logInfoMessage(
+        InfoType::EXECUTION_TIME,
+        "tracking- " + to_string(elapsed.count()) + " ms");
 }
 
 TEST(Track, calculate_iou)
@@ -199,8 +205,7 @@ TEST(Track, calculate_iou)
     VideoCapture capture("../tests/images/close_cars.mov");
     Mat frame;
     capture.read(frame);
-    cout << "iou" << endl;
-
+    
     for (int z = 0; z < 5; z++) {
         shared_ptr<Mat> f1 = make_shared<Mat>(frame);
         auto detectionOutput = make_shared<vector<ObjectInformation>>();
@@ -211,13 +216,17 @@ TEST(Track, calculate_iou)
 
         for (int i = 0; i < 50; i++) {
             capture.read(frame);
-            if (frame.empty())
+            if (frame.empty()){
+                LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
+            }
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
             tracker.tracking(frame1);
             *trackingOutput = tracker.getOutput();
             detector.detect(f1, true);
             *detectionOutput = detector.getOutput();
+            rectangle(*frame1, (*trackingOutput)[0].position, Scalar(256, 0, 0),
+                      3);
             rectangle(*frame1, (*trackingOutput)[0].position, Scalar(256, 0, 0),
                       3);
             rectangle(*frame1, (*detectionOutput)[0].position,
@@ -226,8 +235,8 @@ TEST(Track, calculate_iou)
             waitKey(0);
             float iou = calculateIoU((*detectionOutput)[0].position,
                                      (*trackingOutput)[0].position);
-            Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                          "iou: " + to_string(iou));
+            LogManager::logDebugMessage(DebugType::PRINT,
+                                        "iou " + to_string(iou));
         }
         capture.read(frame);
     }
@@ -267,8 +276,8 @@ TEST(Track, track_with_few_detection)
                       Scalar(0, 0, 256), 2);
         }
         imshow("frame1", *frame1);
-        Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                      "cnt++: " + cnt++);
+        LogManager::logDebugMessage(DebugType::PRINT,
+                                    "cnt++ " + to_string(cnt));
         waitKey(1);
     }
 }
@@ -295,8 +304,10 @@ TEST(Track, calculate_detection_per_frames)
         for (int i = 0; i < 20; i++) {
             capture.read(frame);
             cnt++;
-            if (frame.empty())
+            if (frame.empty()){
+                LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
+            }
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
             tracker.tracking(frame1);
             *trackingOutput = tracker.getOutput();
@@ -313,8 +324,8 @@ TEST(Track, calculate_detection_per_frames)
             }
             imshow("frame", *frame1);
             waitKey(1);
-            Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                          "cnt: " + cnt);
+            LogManager::logDebugMessage(DebugType::PRINT,
+                                        "cnt++ " + to_string(cnt));
         }
         capture.read(frame);
         cnt++;

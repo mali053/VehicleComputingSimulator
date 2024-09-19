@@ -90,7 +90,6 @@ void Alerter::makeFileJSON()
         output_file.close();
     }
     else {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Error: Could not open file for writing");
+        LogManager::logErrorMessage(ErrorType::FILE_ERROR, "open file for writing");
     }
 }

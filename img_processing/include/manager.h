@@ -6,7 +6,7 @@
 #include "detector.h"
 #include "distance.h"
 #include "dynamic_tracker.h"
-#include "logger.h"
+#include "log_manager.h" 
 
 class Manager {
    public:

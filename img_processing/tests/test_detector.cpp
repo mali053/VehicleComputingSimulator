@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <opencv2/opencv.hpp>
+#include <string>
 #include "detector.h"
 #include "manager.h"
 #include "utils.h"
+#include "log_manager.h"
 
 using namespace std;
 using namespace cv;
@@ -15,8 +17,8 @@ Mat loadImage(const string &filename)
 {
     Mat img = imread(filename);
     if (img.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         throw runtime_error("Could not open or find the image");
     }
     return img;
@@ -32,6 +34,7 @@ TEST(DetectorTest, DetectTwoCars)
         testImage = loadImage(imagePath);
     }
     catch (const runtime_error &e) {
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, string(e.what()));
         FAIL() << e.what();
     }
 
@@ -56,9 +59,9 @@ TEST(DetectorTest, DetectTwoCars)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::INFO,
-            "Detection ID: " + to_string(detection.id) +
+        LogManager::logInfoMessage(
+            InfoType::DETECTION,
+            "ID: " + to_string(detection.id) +
                 " Type: " + to_string(detection.type) +
                 " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
@@ -84,6 +87,7 @@ TEST(DetectorTest, DetectThreeCars)
         testImage = loadImage(imagePath);
     }
     catch (const runtime_error &e) {
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, string(e.what()));
         FAIL() << e.what();
     }
 
@@ -107,9 +111,9 @@ TEST(DetectorTest, DetectThreeCars)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::INFO,
-            "Detection ID: " + to_string(detection.id) +
+        LogManager::logInfoMessage(
+            InfoType::DETECTION,
+            "ID: " + to_string(detection.id) +
                 " Type: " + to_string(detection.type) +
                 " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
@@ -135,6 +139,7 @@ TEST(DetectorTest, DetectTwoPeoples)
         testImage = loadImage(imagePath);
     }
     catch (const runtime_error &e) {
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, string(e.what()));
         FAIL() << e.what();
     }
 
@@ -158,9 +163,9 @@ TEST(DetectorTest, DetectTwoPeoples)
     // Print results for manual inspection
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::INFO,
-            "Detection ID: " + to_string(detection.id) +
+        LogManager::logInfoMessage(
+            InfoType::DETECTION,
+            "ID: " + to_string(detection.id) +
                 " Type: " + to_string(detection.type) +
                 " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
@@ -182,15 +187,15 @@ TEST(DetectorTest, DetectChangesTest)
     string imagePath1 = "../tests/images/track_2_cars_first_frame.jpg";
     first = loadImage(imagePath1);
     if (first.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         throw runtime_error("Could not open or find the image");
     }
     string imagePath2 = "../tests/images/track_2_cars_second_frame.jpg";
     second = loadImage(imagePath2);
     if (second.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         throw runtime_error("Could not open or find the image");
     }
 

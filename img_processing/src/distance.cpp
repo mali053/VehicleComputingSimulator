@@ -20,9 +20,10 @@ Distance::Distance(const cv::Mat &image)
 Distance &Distance::getInstance(const cv::Mat &image)
 {
     if (!instance) {
-        if (image.empty())
-            Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                          "No image was provided");
+        if (image.empty()) {
+            LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, "Could not load image");
+            throw std::runtime_error("Could not load image. Distance instance creation failed.");
+        }
         else
             instance = new Distance(image);
     }
@@ -69,10 +70,9 @@ void Distance::findFocalLength(const cv::Mat &image)
 {
     // Check if the input image is empty
     if (image.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
-        return;
-        // throw std::runtime_error("Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, "Could not load image");
+        //throw std::runtime_error("Could not open or find the image");
+        return;    
     }
 
     // Convert the input image to grayscale

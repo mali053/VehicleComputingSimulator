@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 #include <opencv2/opencv.hpp>
 #include "detector.h"
+#include "manager.h"
 #include "distance.h"
 #include "manager.h"
+#include "log_manager.h"
 
 using namespace std;
 using namespace cv;
@@ -14,8 +16,8 @@ TEST(DistanceTest, DistanceWithCalibration)
     Mat calibrationImage;
     calibrationImage = imread(imagePath);
     if (calibrationImage.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         throw runtime_error("Could not open or find the image");
     }
 
@@ -26,8 +28,8 @@ TEST(DistanceTest, DistanceWithCalibration)
     Mat carImage;
     carImage = imread(imagePath2);
     if (carImage.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "Could not open or find the image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         throw runtime_error("Could not open or find the image");
     }
 
@@ -54,9 +56,8 @@ TEST(DistanceTest, DistanceWithCalibration)
     bool isFind = false;
     // Going through all the detected objects and sending them for a distance test
     for (auto detectionObject : output) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::INFO,
-            "distance: " + to_string(detectionObject.distance));
+        LogManager::logInfoMessage(InfoType::DISTANCE,
+                                   to_string(detectionObject.distance));
         if (detectionObject.distance > 3 && detectionObject.distance < 4)
             isFind = true;
     }

@@ -4,6 +4,7 @@
 #define CAR_WIDTH 2000
 
 #include "object_information_struct.h"
+#include "log_manager.h"
 
 class Distance {
    public:

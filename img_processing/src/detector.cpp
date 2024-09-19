@@ -1,5 +1,6 @@
 #include "detector.h"
 #include "manager.h"
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -71,7 +72,7 @@ void Detector::detectObjects(const shared_ptr<Mat> &frame,
             Point classId;
             double maxClassScore;
             minMaxLoc(scores, 0, &maxClassScore, 0, &classId);
-            // Save detections that meet the score threshold 
+            // Save detections that meet the score threshold
             // types and are valid object
             if (maxClassScore > SCORE_THRESHOLD &&
                 isValidObjectType(classId.x)) {
@@ -115,9 +116,8 @@ void Detector::detectObjects(const shared_ptr<Mat> &frame,
 void Detector::detectChanges()
 {
     const vector<Rect> changedAreas = findDifference();
-    Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                  "changedAreas" + changedAreas.size());
-
+    LogManager::logDebugMessage(DebugType::PRINT,
+                                "Areas- " + changedAreas.size());
     for (Rect oneChange : changedAreas) {
         int x = oneChange.x;
         int y = oneChange.y;
@@ -151,12 +151,10 @@ vector<Rect> Detector::findDifference()
         Rect boundingBox = boundingRect(contour);
         differencesRects.push_back(boundingBox);
     }
-    Manager::imgLogger.logMessage(
-        logger::LogLevel::INFO,
-        "num of difference: " + differencesRects.size());
+    LogManager::logDebugMessage(DebugType::PRINT,
+                                to_string(differencesRects.size()));
     vector<Rect> unionRects = unionOverlappingRectangels(differencesRects);
-    Manager::imgLogger.logMessage(logger::LogLevel::INFO,
-                                  "after union: " + unionRects.size());
+    LogManager::logDebugMessage(DebugType::PRINT, to_string(unionRects.size()));
     return unionRects;
 }
 
@@ -165,13 +163,13 @@ vector<Rect> Detector::findDifference()
 vector<Rect> Detector::unionOverlappingRectangels(vector<Rect> allChanges)
 {
     bool isUnion;
-    int sizeVec=0;
+    int sizeVec = 0;
     vector<Rect> unionRect;
     Rect temp;
-    for(int i=0; i< allChanges.size(); i++) {
-        isUnion=false;
+    for (int i = 0; i < allChanges.size(); i++) {
+        isUnion = false;
         sizeVec = unionRect.size();
-        for(int j=0; j<sizeVec; j++) {
+        for (int j = 0; j < sizeVec; j++) {
             temp = unionRect[0];
             unionRect.erase(unionRect.begin());
             if ((allChanges[i] & temp).area() > 0) {
@@ -181,17 +179,17 @@ vector<Rect> Detector::unionOverlappingRectangels(vector<Rect> allChanges)
                 unionRect.push_back(temp);
             }
         }
-        for(int j=i+1; j<allChanges.size(); j++) {
+        for (int j = i + 1; j < allChanges.size(); j++) {
             if ((allChanges[i] & allChanges[j]).area() > 0) {
                 allChanges[j] |= allChanges[i];
-                isUnion=true;
+                isUnion = true;
                 break;
             }
         }
-        if(!isUnion){
-        unionRect.push_back(allChanges[i]);
+        if (!isUnion) {
+            unionRect.push_back(allChanges[i]);
         }
-    }  
+    }
     for (Rect r : unionRect) {
         rectangle(*currentFrame, r, Scalar(0, 0, 255), 2);
     }
@@ -226,17 +224,18 @@ void Detector::loadNet(bool isCuda)
 {
     auto result = readNet("../yolov5s.onnx");
     if (result.empty()) {
-        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
-                                      "failed to load yolov5 model");
+        LogManager::logErrorMessage(ErrorType::MODEL_ERROR,
+                                    "failed to load yolov5");
+        throw runtime_error("Could not open or find yolov5 model");
     }
 
     if (isCuda) {
-        Manager::imgLogger.logMessage(logger::LogLevel::INFO, "Using CUDA");
+        LogManager::logInfoMessage(InfoType::MODE, "using CUDA");
         result.setPreferableBackend(DNN_BACKEND_CUDA);
         result.setPreferableTarget(DNN_TARGET_CUDA_FP16);
     }
     else {
-        Manager::imgLogger.logMessage(logger::LogLevel::INFO, "CPU Mode");
+        LogManager::logInfoMessage(InfoType::MODE, "CPU");
         result.setPreferableBackend(DNN_BACKEND_OPENCV);
         result.setPreferableTarget(DNN_TARGET_CPU);
     }

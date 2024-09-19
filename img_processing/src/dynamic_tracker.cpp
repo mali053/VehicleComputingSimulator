@@ -11,20 +11,21 @@ void DynamicTracker::init() {}
 
 void DynamicTracker::startTracking(
     const shared_ptr<Mat> &frame,
-    const vector<DetectionObject> &detectionOutput)
+    const vector<ObjectInformation> &detectionOutput)
 {
-    id_counter=0;
+    id_counter = 0;
     output.clear();
     trackers.clear();
     failedCount.clear();
     this->frame = frame;
     // Create trackers for each detected object
-    for (const auto &detectionObj : detectionOutput) {
+    for (const auto &objectInformation : detectionOutput) {
         Ptr<Tracker> tracker = TrackerCSRT::create();
-        tracker->init(*frame, detectionObj.position);
+        tracker->init(*frame, objectInformation.position);
         trackers.push_back(tracker);
-        TrackerObject to = {id_counter++, detectionObj.type,
-                            detectionObj.position, detectionObj.position};
+        ObjectInformation to = {id_counter++, objectInformation.type,
+                                objectInformation.position,
+                                objectInformation.position};
         output.push_back(to);
         failedCount.push_back(0);
     }
@@ -38,8 +39,8 @@ void DynamicTracker::tracking(const shared_ptr<Mat> &frame)
     for (size_t i = 0; i < trackers.size(); ++i) {
         bool ok = trackers[i]->update(*frame, bbox);
         if (ok) {
-            output[i].prevPosition = output[i].currentPosition;
-            output[i].currentPosition = bbox;
+            output[i].prevPosition = output[i].position;
+            output[i].position = bbox;
             failedCount[i] = 0;  // Reset failure count on successful tracking
         }
         else {
@@ -54,7 +55,7 @@ void DynamicTracker::tracking(const shared_ptr<Mat> &frame)
     }
 }
 
-vector<TrackerObject> DynamicTracker::getOutput() const
+vector<ObjectInformation> DynamicTracker::getOutput() const
 {
     return output;
 }

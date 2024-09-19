@@ -2,20 +2,20 @@
 #define __DETECTOR_H__
 
 #include <opencv2/opencv.hpp>
-#include "detection_object_struct.h"
+#include "object_information_struct.h"
 #include "object_type_enum.h"
 
 class Detector {
    public:
     void init(bool isCuda);
-    std::vector<DetectionObject> getOutput() const;
+    std::vector<ObjectInformation> getOutput() const;
     void detect(const std::shared_ptr<cv::Mat> &frame, bool isTravel);
 
    private:
     int helperForDetect;
     std::shared_ptr<cv::Mat> prevFrame;
     std::shared_ptr<cv::Mat> currentFrame;
-    std::vector<DetectionObject> output;
+    std::vector<ObjectInformation> output;
     cv::dnn::Net net;
     const float INPUT_WIDTH = 640.0;
     const float INPUT_HEIGHT = 640.0;

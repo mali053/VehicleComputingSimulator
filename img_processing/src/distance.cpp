@@ -28,30 +28,32 @@ Distance &Distance::getInstance(const cv::Mat &image)
 }
 
 // function that finds the distance of the objects and update them in detectionObjects
-void Distance::findDistance(std::vector<DetectionObject> &detectionObjects)
+void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
 {
     int knownSize, imageSize;
     // Move over all objects
-    for (DetectionObject &detectionObject : detectionObjects) {
+    for (ObjectInformation &objectInformation : objectInformations) {
         // is person
-        if (detectionObject.type == 0) {
+        if (objectInformation.type == 0) {
             // distance test based on the position of the legs in the image
-            if (detectionObject.position.y + detectionObject.position.height >
+            if (objectInformation.position.y +
+                    objectInformation.position.height >
                 MIN_LEGAL_HEIGHT) {
-                detectionObject.distance = 0;
+                objectInformation.distance = 0;
                 return;
             }
             // Find the size of the object in reality and in the picture
             knownSize = PERSON_HEIGHT;
-            imageSize = detectionObject.position.height;
+            imageSize = objectInformation.position.height;
         }
         else {
             // Find the size of the object in reality and in the picture
             knownSize = CAR_WIDTH;
-            imageSize = detectionObject.position.width;
+            imageSize = objectInformation.position.width;
         }
         // Calculate the distance in meters
-        detectionObject.distance = (focalLength * knownSize / imageSize) / 1000;
+        objectInformation.distance =
+            (focalLength * knownSize / imageSize) / 1000;
     }
 }
 

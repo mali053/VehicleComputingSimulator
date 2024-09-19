@@ -3,11 +3,11 @@
 #define PERSON_HEIGHT 1700
 #define CAR_WIDTH 2000
 
-#include "detection_object_struct.h"
+#include "object_information_struct.h"
 
 class Distance {
    public:
-    void findDistance(std::vector<DetectionObject> &detectionObjects);
+    void findDistance(std::vector<ObjectInformation> &objectInformation);
     static Distance &getInstance(const cv::Mat &image = cv::Mat());
 
    private:

@@ -26,14 +26,14 @@ void Alerter::destroyAlertBuffer(char *buffer)
 
 // create alerts buffer to send
 vector<unique_ptr<char>> Alerter::sendAlerts(
-    const vector<DetectionObject> &output)
+    const vector<ObjectInformation> &output)
 {
     vector<unique_ptr<char>> alerts;
-    for (const DetectionObject &detectionObject : output) {
-        if (isSendAlert(detectionObject)) {
+    for (const ObjectInformation &objectInformation : output) {
+        if (isSendAlert(objectInformation)) {
             char *alertBuffer =
-                makeAlertBuffer(static_cast<int>(detectionObject.type),
-                                detectionObject.distance);
+                makeAlertBuffer(static_cast<int>(objectInformation.type),
+                                objectInformation.distance);
             alerts.push_back(unique_ptr<char>(alertBuffer));
         }
     }
@@ -41,9 +41,9 @@ vector<unique_ptr<char>> Alerter::sendAlerts(
 }
 
 // Check whether to send alert
-bool Alerter::isSendAlert(const DetectionObject &detectionObject)
+bool Alerter::isSendAlert(const ObjectInformation &objectInformation)
 {
-    return detectionObject.distance < MIN_LEGAL_DISTANCE;
+    return objectInformation.distance < MIN_LEGAL_DISTANCE;
 }
 
 // create json file form the alert buffer

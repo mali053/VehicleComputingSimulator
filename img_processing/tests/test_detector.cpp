@@ -53,7 +53,6 @@ TEST(DetectorTest, DetectTwoCars)
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
         cout << "Detection ID: " << detection.id << ", Type: " << detection.type
-             << ", Confidence: " << detection.confidence
              << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
@@ -102,7 +101,6 @@ TEST(DetectorTest, DetectThreeCars)
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
         cout << "Detection ID: " << detection.id << ", Type: " << detection.type
-             << ", Confidence: " << detection.confidence
              << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
@@ -151,7 +149,6 @@ TEST(DetectorTest, DetectTwoPeoples)
     int peopleCount = 0, carCount = 0;
     for (const auto &detection : output) {
         cout << "Detection ID: " << detection.id << ", Type: " << detection.type
-             << ", Confidence: " << detection.confidence
              << ", Position: " << detection.position << endl;
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {

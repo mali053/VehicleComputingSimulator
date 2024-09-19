@@ -1,4 +1,4 @@
-#include "../include/detector.h"
+#include "detector.h"
 
 using namespace std;
 using namespace cv;
@@ -98,13 +98,12 @@ void Detector::detectObjects(const shared_ptr<Mat> &frame,
     // Loop through the results of NMS to create the final list of detections
     for (int i = 0; i < nmsResult.size(); i++) {
         int idx = nmsResult[i];
-        // Create a DetectionObject for each valid detection
-        DetectionObject result;
+        // Create a objectInformation for each valid detection
+        ObjectInformation result;
         // The conversion may fail because the model is trained to identify different objects
         // A model may be identified with a number greater than 2
         // While ObjectType Only keeps 3 organs
         result.type = static_cast<ObjectType>(classIds[idx]);
-        result.confidence = confidences[idx];
         result.position = boxes[idx];
         output.push_back(result);
     }
@@ -193,7 +192,7 @@ vector<Rect> Detector::unionOverlappingRectangels(vector<Rect> allChanges)
     return unionRect;
 }
 
-vector<DetectionObject> Detector::getOutput() const
+vector<ObjectInformation> Detector::getOutput() const
 {
     return output;
 }

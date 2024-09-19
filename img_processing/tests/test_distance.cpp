@@ -39,7 +39,7 @@ TEST(DistanceTest, DistanceWithCalibration)
     detector.detect(frame, false);
 
     // Get output
-    vector<DetectionObject> output = detector.getOutput();
+    vector<ObjectInformation> output = detector.getOutput();
 
     // Check if output is not empty
     ASSERT_FALSE(output.empty());

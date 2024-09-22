@@ -1,8 +1,8 @@
-#include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
+#include <opencv2/opencv.hpp>
 #include "detector.h"
-#include "manager.h"
 #include "distance.h"
+#include "manager.h"
 
 using namespace std;
 using namespace cv;
@@ -14,9 +14,8 @@ TEST(DistanceTest, DistanceWithCalibration)
     Mat calibrationImage;
     calibrationImage = imread(imagePath);
     if (calibrationImage.empty()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Could not open or find the image");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Could not open or find the image");
         throw runtime_error("Could not open or find the image");
     }
 
@@ -27,9 +26,8 @@ TEST(DistanceTest, DistanceWithCalibration)
     Mat carImage;
     carImage = imread(imagePath2);
     if (carImage.empty()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Could not open or find the image");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Could not open or find the image");
         throw runtime_error("Could not open or find the image");
     }
 

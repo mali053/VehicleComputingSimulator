@@ -4,7 +4,6 @@
 #include <cstring>
 #include <string>
 #include <vector>
-#include "object_type_enum.h"
 
 struct AlertDetails {
     // 1 bit to type of the message:

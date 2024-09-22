@@ -10,15 +10,15 @@ logger Manager::imgLogger("img_processing");
 
 void Manager::init()
 {
+    // calibration
     Mat calibrationImage = imread("../tests/images/black_line.JPG");
     if (calibrationImage.empty()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "image not found");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "image not found");
         return;
     }
     Distance &distance = Distance::getInstance(calibrationImage);
-    iterationCnt = 0;
+    iterationCnt = 1;
     bool isCuda = false;
     detector.init(isCuda);
     dynamicTracker.init();
@@ -26,20 +26,64 @@ void Manager::init()
 
 void Manager::mainDemo()
 {
-    VideoCapture capture("../tests/images/close_cars.mov");
+    string filePath = "../data.txt";
+    // open the file
+    ifstream file(filePath);
+    if (!file.is_open()) {
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Error opening file.");
+        return;
+    }
+    string line;
+    // run over the file and read the lines
+    while (getline(file, line)) {
+        // intialize the iteration cnt
+        iterationCnt = 1;
+        istringstream iss(line);
+        string videoPath;
+        double focalLength;
+        // read the parameters
+        if (getline(iss, videoPath, '|') && iss >> focalLength) {
+            // Trim leading and trailing whitespaces from videoPath
+            videoPath.erase(0, videoPath.find_first_not_of(" \t\n\r\f\v"));
+            videoPath.erase(videoPath.find_last_not_of(" \t\n\r\f\v") + 1);
+        }
+        else {
+            Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                          "Error parsing line");
+            return;
+        }
+        // intialize focal length
+        Distance &distance = Distance::getInstance();
+        distance.setFocalLength(focalLength);
+        runOnVideo(videoPath);
+    }
+    cout << "finish reading data";
+}
+
+void Manager::runOnVideo(string videoPath)
+{
+    // Convert Windows file path to WSL file path format
+    if (videoPath.length() >= 3 && videoPath[1] == ':') {
+        // Convert to lowercase
+        char driveLetter = tolower(static_cast<unsigned char>(videoPath[0]));
+        videoPath = "/mnt/" + string(1, driveLetter) + videoPath.substr(2);
+        // Replace backslashes with forward slashes
+        replace(videoPath.begin(), videoPath.end(), '\\', '/');
+    }
+    // open the video
+    VideoCapture capture(videoPath);
     Mat frame = Mat::zeros(480, 640, CV_8UC3);
     if (!capture.isOpened()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Error while opening video media");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Error while opening video media");
         return;
     }
     while (1) {
         capture >> frame;
         if (frame.empty()) {
-            Manager::imgLogger.logMessage(
-                logger::LogLevel::INFO,
-                "media finish");
+            Manager::imgLogger.logMessage(logger::LogLevel::INFO,
+                                          "media finish");
             break;
         }
         int result = processing(frame, true);
@@ -50,21 +94,21 @@ void Manager::mainDemo()
 
 bool Manager::isDetect(bool isTravel)
 {
-    if (!isTravel || iterationCnt == 0)
+    if (!isTravel || iterationCnt == 1)
         return true;
     return false;
 }
 
 bool Manager::isResetTracker(bool isTravel)
 {
-    if (isTravel && iterationCnt == 0)
+    if (isTravel && iterationCnt == 1)
         return true;
     return false;
 }
 
 bool Manager::isTrack(bool isTravel)
 {
-    if (isTravel && iterationCnt > 0)
+    if (isTravel && iterationCnt > 1)
         return true;
     return false;
 }
@@ -74,35 +118,35 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
     Distance &distance = Distance::getInstance();
     currentFrame = make_shared<Mat>(newFrame);
     if (isDetect(isTravel)) {
-        //send the frame to detect
+        // send the frame to detect
         detector.detect(this->currentFrame, isTravel);
         this->currentOutput = detector.getOutput();
     }
 
     if (isResetTracker(isTravel)) {
-        //prepare the tracker
+        // prepare the tracker
         dynamicTracker.startTracking(this->currentFrame, this->currentOutput);
     }
 
     if (isTrack(isTravel)) {
-        //send the frame to track
+        // send the frame to track
         dynamicTracker.tracking(this->currentFrame);
         this->currentOutput = dynamicTracker.getOutput();
     }
 
-    //add distance to detection objects
+    // add distance to detection objects
     distance.findDistance(this->currentOutput);
 
-    //send allerts to main control
+    // send allerts to main control
     vector<unique_ptr<char>> alerts = alerter.sendAlerts(this->currentOutput);
     sendAlerts(alerts);
 
     // update of the iterationCnt
     if (isTravel) {
-        iterationCnt = iterationCnt == NUM_OF_TRACKING ? 0 : iterationCnt + 1;
+        iterationCnt = iterationCnt % NUM_OF_TRACKING + 1;
     }
 
-    //visual
+    // visual
     drawOutput();
     imshow("aaa", *currentFrame);
     int key = cv::waitKey(1);
@@ -145,7 +189,7 @@ void Manager::drawOutput()
 void Manager::sendAlerts(vector<unique_ptr<char>> &alerts)
 {
     for (const std::unique_ptr<char> &alertBuffer : alerts) {
-        //use send communication function
+        // use send communication function
     }
 }
 

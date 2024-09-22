@@ -1,9 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <string>
 #include <opencv2/core.hpp>
+#include <string>
 
-std::string rectToString(const cv::Rect& rect);
+std::string rectToString(const cv::Rect &rect);
 
-#endif // UTILS_H
+#endif  // UTILS_H

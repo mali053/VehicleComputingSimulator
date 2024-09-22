@@ -1,7 +1,7 @@
-#include <opencv2/opencv.hpp>
 #include <gtest/gtest.h>
-#include "manager.h"
+#include <opencv2/opencv.hpp>
 #include "detector.h"
+#include "manager.h"
 #include "utils.h"
 
 using namespace std;
@@ -15,10 +15,9 @@ Mat loadImage(const string &filename)
 {
     Mat img = imread(filename);
     if (img.empty()) {
-        Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Could not open or find the image");
-            throw runtime_error("Could not open or find the image");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Could not open or find the image");
+        throw runtime_error("Could not open or find the image");
     }
     return img;
 }
@@ -60,8 +59,8 @@ TEST(DetectorTest, DetectTwoCars)
         Manager::imgLogger.logMessage(
             logger::LogLevel::INFO,
             "Detection ID: " + to_string(detection.id) +
-            " Type: " + to_string(detection.type) +
-            " Position: " + rectToString(detection.position));
+                " Type: " + to_string(detection.type) +
+                " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             carCount++;
@@ -111,8 +110,8 @@ TEST(DetectorTest, DetectThreeCars)
         Manager::imgLogger.logMessage(
             logger::LogLevel::INFO,
             "Detection ID: " + to_string(detection.id) +
-            " Type: " + to_string(detection.type) +
-            " Position: " + rectToString(detection.position));
+                " Type: " + to_string(detection.type) +
+                " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             carCount++;
@@ -162,8 +161,8 @@ TEST(DetectorTest, DetectTwoPeoples)
         Manager::imgLogger.logMessage(
             logger::LogLevel::INFO,
             "Detection ID: " + to_string(detection.id) +
-            " Type: " + to_string(detection.type) +
-            " Position: " + rectToString(detection.position));
+                " Type: " + to_string(detection.type) +
+                " Position: " + rectToString(detection.position));
         // Assuming ObjectType::CAR corresponds to the type of car in the enum
         if (detection.type == ObjectType::CAR) {
             peopleCount++;
@@ -183,25 +182,23 @@ TEST(DetectorTest, DetectChangesTest)
     string imagePath1 = "../tests/images/track_2_cars_first_frame.jpg";
     first = loadImage(imagePath1);
     if (first.empty()) {
-         Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Could not open or find the image");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Could not open or find the image");
         throw runtime_error("Could not open or find the image");
     }
     string imagePath2 = "../tests/images/track_2_cars_second_frame.jpg";
     second = loadImage(imagePath2);
     if (second.empty()) {
-         Manager::imgLogger.logMessage(
-            logger::LogLevel::ERROR,
-            "Could not open or find the image");
+        Manager::imgLogger.logMessage(logger::LogLevel::ERROR,
+                                      "Could not open or find the image");
         throw runtime_error("Could not open or find the image");
     }
 
     // Wrap it in a shared_ptr
     shared_ptr<Mat> firstFrame = make_shared<Mat>(first);
     shared_ptr<Mat> secondFrame = make_shared<Mat>(second);
-    //preper detectAll and detectChanges
-    // Create Detector instance
+    // preper detectAll and detectChanges
+    //  Create Detector instance
     Detector detectAll;
     Detector detectChanges;
     bool is_cuda = false;  // or true
@@ -217,6 +214,6 @@ TEST(DetectorTest, DetectChangesTest)
     // Check if output is not empty
     ASSERT_FALSE(detectAllOutput.empty());
     ASSERT_FALSE(detectChangesOutput.empty());
-    //check if two ouptputs have the same length
+    // check if two ouptputs have the same length
     ASSERT_EQ(detectAllOutput.size(), detectChangesOutput.size());
 }

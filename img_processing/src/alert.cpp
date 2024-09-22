@@ -42,15 +42,16 @@ int Alert::getObjectSpeed() const
     return objectSpeed;
 };
 
-vector<char> Alert::serialize() {
-  vector<char> buffer;
-  // determine the size of the buffer
-  buffer.reserve(sizeof(AlertDetails) + sizeof(double) + sizeof(int) * 2);
+vector<char> Alert::serialize()
+{
+    vector<char> buffer;
+    // determine the size of the buffer
+    buffer.reserve(sizeof(AlertDetails) + sizeof(double) + sizeof(int) * 2);
 
-  // serialize alertDetails
-  char *alertDetailsPtr = reinterpret_cast<char *>(&alertDetails);
-  buffer.insert(buffer.end(), alertDetailsPtr,
-                alertDetailsPtr + sizeof(AlertDetails));
+    // serialize alertDetails
+    char *alertDetailsPtr = reinterpret_cast<char *>(&alertDetails);
+    buffer.insert(buffer.end(), alertDetailsPtr,
+                  alertDetailsPtr + sizeof(AlertDetails));
 
     // serialize distance
     char *distancePtr = reinterpret_cast<char *>(&objectDistance);
@@ -63,24 +64,25 @@ vector<char> Alert::serialize() {
     // serialize objectSpeed
     char *objectSpeedPtr = reinterpret_cast<char *>(&objectSpeed);
     buffer.insert(buffer.end(), objectSpeedPtr, objectSpeedPtr + sizeof(int));
-  
+
     return buffer;
 };
 
-void Alert::deserialize(const char *buffer) {
-  int place = 0;
-  // Deserialize alertDetails
-  memcpy(&alertDetails, buffer, sizeof(AlertDetails));
-  place += sizeof(AlertDetails);
+void Alert::deserialize(const char *buffer)
+{
+    int place = 0;
+    // Deserialize alertDetails
+    memcpy(&alertDetails, buffer, sizeof(AlertDetails));
+    place += sizeof(AlertDetails);
 
-  // Deserialize distance
-  memcpy(&objectDistance, buffer + place, sizeof(double));
-  place += sizeof(double);
+    // Deserialize distance
+    memcpy(&objectDistance, buffer + place, sizeof(double));
+    place += sizeof(double);
 
-  // Deserialize carSpeed
-  memcpy(&carSpeed, buffer + place, sizeof(int));
-  place += sizeof(int);
-  
-  // Deserialize objectSpeed
-  memcpy(&objectSpeed, buffer + place, sizeof(int));
+    // Deserialize carSpeed
+    memcpy(&carSpeed, buffer + place, sizeof(int));
+    place += sizeof(int);
+
+    // Deserialize objectSpeed
+    memcpy(&objectSpeed, buffer + place, sizeof(int));
 };

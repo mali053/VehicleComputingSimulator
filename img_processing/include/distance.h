@@ -9,11 +9,12 @@ class Distance {
    public:
     void findDistance(std::vector<ObjectInformation> &objectInformation);
     static Distance &getInstance(const cv::Mat &image = cv::Mat());
+    void setFocalLength(double focalLength);
 
    private:
     static Distance *instance;
     double focalLength;
-    
+
     Distance(const cv::Mat &image);
     Distance(const Distance &) = delete;
     Distance &operator=(const Distance &) = delete;

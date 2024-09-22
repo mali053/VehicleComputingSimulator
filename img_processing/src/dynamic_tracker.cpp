@@ -1,8 +1,8 @@
-#include <opencv2/tracking.hpp>
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/opencv.hpp>
-#include "manager.h"
+#include <opencv2/tracking.hpp>
 #include "dynamic_tracker.h"
+#include "manager.h"
 
 using namespace std;
 using namespace cv;

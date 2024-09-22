@@ -4,8 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include "alerter.h"
 #include "detector.h"
-#include "dynamic_tracker.h"
 #include "distance.h"
+#include "dynamic_tracker.h"
 #include "logger.h"
 
 class Manager {
@@ -16,7 +16,7 @@ class Manager {
     // finally if necessary sends a alert
     int processing(const cv::Mat &newFrame, bool mode);
     void mainDemo();
-    //init all variabels and creat the firs instance of distance
+    // init all variabels and creat the firs instance of distance
     void init();
 
    private:
@@ -28,8 +28,8 @@ class Manager {
     DynamicTracker dynamicTracker;
     Alerter alerter;
     int iterationCnt;
-    
-    // Moves the current image to the prevFrame 
+
+    // Moves the current image to the prevFrame
     // and clears the memory of the currentFrame;
     void prepareForTheNext();
     void drawOutput();
@@ -37,6 +37,6 @@ class Manager {
     bool isResetTracker(bool isTravel);
     bool isTrack(bool isTravel);
     void sendAlerts(std::vector<std::unique_ptr<char>> &alerts);
-
+    void runOnVideo(std::string videoPath);
 };
 #endif  //__MANAGER_H__

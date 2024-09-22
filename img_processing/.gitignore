@@ -30,6 +30,7 @@ CTestTestfile.cmake
 .vscode/
 build/
 googletest/
+/.vscode/
 .idea/
 *.iml
 .clang-format

@@ -11,6 +11,7 @@
 #include "process_dialog.h"
 #include "frames.h"
 #include "log_handler.h"
+#include "compiler.h"
 
 int sizeSquare = 120;
 int rotationTimerIntervals = 100;
@@ -558,167 +559,32 @@ void MainWindow::compileProjects()
     runningProcesses.clear();
     bool compileSuccessful = true;  // Track if all compilations succeed
 
+    QList<QThread *> threads;
+
+    QSet<QString> uniquePaths;  // Set to hold unique paths
     for (DraggableSquare *square : squares) {
         QString executionFilePath = square->getProcess()->getExecutionFile();
-        QFileInfo fileInfo(executionFilePath);
-        QString directoryPath = fileInfo.absolutePath();
-
-        if (executionFilePath.endsWith(".sh")) {
-            // Shell script processing
-            QFile scriptFile(executionFilePath);
-            if (!scriptFile.exists()) {
-                guiLogger.logMessage(logger::LogLevel::ERROR,
-                                     "Shell script file does not exist: " +
-                                         executionFilePath.toStdString());
-
-                logOutput->append("Shell script file does not exist: " +
-                                  executionFilePath);
-                compileSuccessful = false;
-                continue;
-            }
-
-            if ((scriptFile.permissions() & QFileDevice::ExeUser) == 0) {
-                // Make the script executable
-                QProcess makeExecutableProcess;
-                makeExecutableProcess.start("chmod", QStringList()
-                                                         << "+x" << executionFilePath);
-                if (!makeExecutableProcess.waitForFinished()) {
-                    logOutput->append("Failed to make the script executable: " +
-                                      executionFilePath);
-                    compileSuccessful = false;
-                    continue;
-                }
-                guiLogger.logMessage(
-                    logger::LogLevel::INFO,
-                    "Script is now executable: " + executionFilePath.toStdString());
-                logOutput->append("Script is now executable: " + executionFilePath);
-            }
-
-            // Run the shell script
-            QProcess *scriptProcess = new QProcess(this);
-            scriptProcess->start("bash", QStringList() << executionFilePath);
-            connect(
-                scriptProcess,
-                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                this, &MainWindow::processFinished);
-            connect(
-                scriptProcess, &QProcess::readyReadStandardOutput,
-                [this, scriptProcess]() {
-                    logOutput->append(scriptProcess->readAllStandardOutput());
-                });
-            connect(
-                scriptProcess, &QProcess::readyReadStandardError,
-                [this, scriptProcess]() {
-                    logOutput->append(scriptProcess->readAllStandardError());
-                });
-        }
-        else {
-            guiLogger.logMessage(logger::LogLevel::INFO,
-                                 "Compiling " + executionFilePath.toStdString());
-
-            // CMake project processing
-            logOutput->append("Compiling " + executionFilePath);
-            QString buildDirPath = QDir(directoryPath).absoluteFilePath("build");
-            QDir buildDir(buildDirPath);
-
-            if (buildDir.exists()) {
-                QFileInfoList fileList = buildDir.entryInfoList(
-                    QDir::NoDotAndDotDot | QDir::AllEntries);
-                foreach (const QFileInfo &fileInfo, fileList) {
-                    if (fileInfo.isDir()) {
-                        QDir dir(fileInfo.absoluteFilePath());
-                        if (!dir.removeRecursively()) {
-                            guiLogger.logMessage(
-                                logger::LogLevel::ERROR,
-                                "Failed to remove directory: " +
-                                    fileInfo.absoluteFilePath().toStdString());
-
-                            logOutput->append("Failed to remove directory: " +
-                                              fileInfo.absoluteFilePath());
-                            compileSuccessful = false;
-                            continue;
-                        }
-                    }
-                    else {
-                        if (!QFile::remove(fileInfo.absoluteFilePath())) {
-                            guiLogger.logMessage(
-                                logger::LogLevel::ERROR,
-                                "Failed to remove file: " +
-                                    fileInfo.absoluteFilePath().toStdString());
-                            logOutput->append("Failed to remove file: " +
-                                              fileInfo.absoluteFilePath());
-                            compileSuccessful = false;
-                            continue;
-                        }
-                    }
-                }
-            }
-            else {
-                // Create the build directory
-                if (!buildDir.mkpath(".")) {
-                    guiLogger.logMessage(logger::LogLevel::ERROR,
-                                         "Failed to create build directory " +
-                                             buildDirPath.toStdString());
-                    logOutput->append("Failed to create build directory " +
-                                      buildDirPath);
-                    compileSuccessful = false;
-                    continue;
-                }
-            }
-
-            // Run CMake
-            QProcess *cmakeProcess = new QProcess(this);
-            cmakeProcess->setWorkingDirectory(buildDirPath);
-            cmakeProcess->start("cmake", QStringList() << "..");
-            connect(
-                cmakeProcess,
-                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                this, &MainWindow::processFinished);
-
-            if (!cmakeProcess->waitForFinished()) {
-                guiLogger.logMessage(
-                    logger::LogLevel::ERROR,
-                    "Failed to run cmake in " + buildDirPath.toStdString());
-                logOutput->append("Failed to run cmake in " + buildDirPath);
-                logOutput->append(cmakeProcess->readAllStandardError());
-                delete cmakeProcess;
-                compileSuccessful = false;
-                continue;
-            }
-            logOutput->append(cmakeProcess->readAllStandardOutput());
-            logOutput->append(cmakeProcess->readAllStandardError());
-            delete cmakeProcess;
-
-            // Run make
-            QProcess *makeProcess = new QProcess(this);
-            makeProcess->setWorkingDirectory(buildDirPath);
-            makeProcess->start("make", QStringList());
-            connect(
-                makeProcess,
-                QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                this, &MainWindow::processFinished);
-
-            if (!makeProcess->waitForFinished()) {
-                guiLogger.logMessage(
-                    logger::LogLevel::ERROR,
-                    "Failed to compile in " + buildDirPath.toStdString());
-                logOutput->append("Failed to compile in " + buildDirPath);
-                logOutput->append(makeProcess->readAllStandardError());
-                delete makeProcess;
-                compileSuccessful = false;
-                continue;
-            }
-            logOutput->append(makeProcess->readAllStandardOutput());
-            logOutput->append(makeProcess->readAllStandardError());
-            guiLogger.logMessage(
-                logger::LogLevel::INFO,
-                "Successfully compiled " + buildDirPath.toStdString());
-            logOutput->append("Successfully compiled " + buildDirPath);
-            delete makeProcess;
-        }
+        uniquePaths.insert(executionFilePath);
     }
 
-    // Enable the run button only if the compilation was successful
+    for (QString executionFilePath : uniquePaths) {
+        Compiler *compiler =
+            new Compiler(executionFilePath, &compileSuccessful, this);
+        connect(compiler, &Compiler::logMessage, this,
+                [this](const QString &message) {
+                    guiLogger.logMessage(logger::LogLevel::ERROR,
+                                         message.toStdString());
+                });
+        compiler->start();
+        threads.append(compiler);
+    }
+
+    // Wait for all threads to finish
+    for (QThread *thread : threads) {
+        thread->wait();
+        delete thread;  // Clean up threads after completion
+    }
+
     if (compileSuccessful) {
         runButton->setEnabled(true);
         logOutput->append(
@@ -739,7 +605,6 @@ void MainWindow::runProjects()
         QString executionFilePath = square->getProcess()->getExecutionFile();
 
         if (executionFilePath.endsWith(".sh")) {
-            // Run the shell script
             QProcess *scriptProcess = new QProcess(this);
             scriptProcess->start("bash", QStringList() << executionFilePath);
             connect(
@@ -754,13 +619,15 @@ void MainWindow::runProjects()
                 });
         }
         else {
-            // Run the compiled program
-            QDir cmakeDir = QFileInfo(executionFilePath).absoluteDir();
-            QString buildDirPath = cmakeDir.absoluteFilePath("build");
+            QDir cmakeDir(
+                QFileInfo(executionFilePath)
+                    .absolutePath());  // Get the directory containing CMakeLists.txt
+            QString buildDirPath = cmakeDir.absoluteFilePath(
+                "build");  // Updated build directory outside the source
+            QDir buildDir(buildDirPath);
 
-            if (!QDir(buildDirPath).exists()) {
-                // Create the build directory if it does not exist
-                if (!cmakeDir.mkpath(buildDirPath)) {
+            if (!buildDir.exists()) {
+                if (!buildDir.mkpath(buildDirPath)) {
                     guiLogger.logMessage(logger::LogLevel::ERROR,
                                          "Failed to create build directory: " +
                                              buildDirPath.toStdString());
@@ -770,12 +637,10 @@ void MainWindow::runProjects()
                 }
             }
 
-            QDir buildDir(buildDirPath);
             QString exeFile = getExecutableName(buildDirPath);
             QString executablePath = buildDir.absoluteFilePath(exeFile);
             QProcess *runProcess = new QProcess(this);
             runProcess->setWorkingDirectory(buildDirPath);
-
             connect(runProcess, &QProcess::readyReadStandardOutput,
                     [this, runProcess]() {
                         logOutput->append(runProcess->readAllStandardOutput());

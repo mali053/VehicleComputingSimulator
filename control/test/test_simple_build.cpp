@@ -7,7 +7,7 @@ TEST(SensorsBuild, SensorsTest)
 {
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
-    EXPECT_EQ(instanceGP.sensors.size(), 2);
+    EXPECT_EQ(instanceGP.sensors.size(), 4);
 }
 
 #pragma region Basic Condition Test
@@ -15,7 +15,9 @@ TEST(SensorsBuild, SensorsTest)
 // Insert BasicCondition into instanceGP.conditions
 TEST(EqualCondition, BasicConditionTest)
 {
-    testCondition("[5]=(code,500)", 5, "code", "500");
+    int *num = new int(500);
+    void *vptr = &num;
+    testCondition("[1]=(code,500)", 1, "code", vptr, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -33,7 +35,9 @@ TEST(SimpleUpdateStatus, UpdateTest)
 // Check the update status with BasicConditionNotEqual
 TEST(NotEqualCondition, BasicConditionTest)
 {
-    testCondition("[5]!=(code,500)", 5, "code", "800");
+    int *num = new int(800);
+    void *vptr = &num;
+    testCondition("[1]!=(code,500)", 1, "code", vptr, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -43,7 +47,9 @@ TEST(NotEqualCondition, BasicConditionTest)
 // Check the update status with BasicConditionLetter
 TEST(LetterCondition, BasicConditionTest)
 {
-    testCondition("[5]<(code,500)", 5, "code", "500");
+    int *num = new int(500);
+    void *vptr = &num;
+    testCondition("[1]<(code,500)", 1, "code", vptr, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -53,7 +59,9 @@ TEST(LetterCondition, BasicConditionTest)
 // Check the update status with BasicConditionBigger
 TEST(BiggerCondition, BasicConditionTest)
 {
-    testCondition("[5]>(code,500)", 5, "code", "800");
+    int *num = new int(800);
+    void *vptr = &num;
+    testCondition("[1]>(code,500)", 1, "code", vptr, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -67,7 +75,10 @@ TEST(BiggerCondition, BasicConditionTest)
 // Check building Or operator
 TEST(OrCondition, ComplexConditionTest)
 {
-    testCondition("[5]|(=(code,500),=(msg,aaa))", 5, "code", "500");
+    int *num = new int(500);
+    void *vptr = &num;
+    testCondition("[1]|(=(code,500),=(msg,aaa))", 1, "code", vptr,
+                  FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -78,7 +89,10 @@ TEST(OrCondition, ComplexConditionTest)
 // Check building And operator
 TEST(AndCondition, ComplexConditionTest)
 {
-    testCondition("[5]&(=(code,500),=(msg,\"aaa\"))", 5, "code", "500");
+    int *num = new int(500);
+    void *vptr = &num;
+    testCondition("[1]&(=(code,500),=(msg,\"aaa\"))", 1, "code", vptr,
+                  FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -89,9 +103,11 @@ TEST(AndCondition, ComplexConditionTest)
 // Check building And operator
 TEST(OrAndCondition, ComplexConditionTest)
 {
+    int *num = new int(800);
+    void *vptr = &num;
     testCondition(
-        "|([5]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[8]=(code,800))",
-        8, "code", "800");
+        "|([1]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[2]=(code,800))",
+        2, "code", vptr, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 

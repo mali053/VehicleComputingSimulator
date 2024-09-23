@@ -8,9 +8,9 @@
 #include "input.h"
 #include "full_condition.h"
 #include "global_properties.h"
-using namespace std;
 
 // Tests a condition by resetting global state and updating sensor values
-void testCondition(string condition, int sensorId, string field, string value);
+void testCondition(string condition, int sensorId, string field, void *value,
+                   FieldType type);
 
 #endif  // TEST_HELPER_H

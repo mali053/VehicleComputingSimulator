@@ -1,4 +1,5 @@
 #include "operator_node.h"
+using namespace std;
 
 // Function that updates the status of all nodes that should change
 void OperatorNode::updateTree()

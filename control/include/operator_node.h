@@ -5,7 +5,6 @@
 #include <vector>
 #include <optional>
 #include "node.h"
-using namespace std;
 
 // Abstract class that present an internal node in the tree
 class OperatorNode : public Node {
@@ -13,7 +12,6 @@ public:
     // conditions: contains all the sub conditions that this condition consists of- the children of the node
     vector<Condition *> conditions;
 
-    // Virtual D-tor to allow inheritance
     virtual ~OperatorNode() = default;
 
     // Function that updates the status of all nodes that should change

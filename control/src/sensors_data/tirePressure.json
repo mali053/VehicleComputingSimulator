@@ -1,0 +1,15 @@
+{
+    "endianness": "little",
+    "fields": [
+        {
+            "size": 32,
+            "type": "float_fixed",
+            "name": "Temperature"
+        },
+        {
+            "size": 32,
+            "type": "float_fixed",
+            "name": "Pressure"
+        }
+    ]
+}

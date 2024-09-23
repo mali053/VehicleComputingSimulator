@@ -13,10 +13,8 @@ public:
     Condition *firstCondition;
 
     // C-tor that gets an id and initializes the conditionId
-    Root(int id, Condition *firstCondition) : conditionId(id)
-    {
-        this->firstCondition = firstCondition;
-    }
+    Root(int id, Condition *firstCondition)
+        : conditionId(id), firstCondition(firstCondition){};
 
     // Function that updates the status of all nodes that should change
     void updateTree() override;

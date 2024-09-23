@@ -9,6 +9,6 @@ Condition *createCondition(OperatorTypes operatorType)
     else if (operatorType == OperatorTypes::a)
         conditionPtr = new AndOperator();
     else
-        conditionPtr = new BasicCondition();
+        conditionPtr = new BasicCondition(operatorType);
     return conditionPtr;
 }

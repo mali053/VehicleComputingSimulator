@@ -8,12 +8,15 @@ using namespace std;
 
 class Node;
 
-// Abstract class that present a node in the tree
+// status: stores the boolean result of evaluating this subtree.
+// It represents whether the subtree rooted at this node is currently "true" or "false."
 class Condition {
 public:
     // status: contains what is the boolean value of this subtree
     bool status = false;
-    // parents: contains pointers to all parents I'm their son- reduce same subtrees in the tree
+    // parents: stores pointers to all parent nodes that reference this node as a child.
+    // This helps in optimizing the tree by allowing multiple parents to share the same subtree,
+    // preventing duplication of identical subtrees across different parts of the tree.
     vector<Node *> parents;
 
     virtual ~Condition() = default;

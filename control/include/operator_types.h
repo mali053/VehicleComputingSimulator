@@ -1,5 +1,5 @@
-#ifndef __ENUMS_H__
-#define __ENUMS_H__
+#ifndef __OPERATOR_TYPES_H__
+#define __OPERATOR_TYPES_H__
 
 #include <string>
 #include <unordered_map>
@@ -20,10 +20,4 @@ enum OperatorTypes {
 // Function that take a string and return the corresponding operator type
 OperatorTypes convertStringToOperatorTypes(string operatorType);
 
-// An enum that contains all possible sensor types
-enum SensorsTypes { Speed, TirePressure, Light, UnknownSensorType };
-
-// Function that take a string and return the corresponding sensor type
-SensorsTypes convertStringToSensorsTypes(string type);
-
-#endif  // _ENUMS_H_
+#endif  // __OPERATOR_TYPES_H__

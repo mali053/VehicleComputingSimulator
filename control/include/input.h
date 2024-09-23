@@ -9,11 +9,7 @@
 #include <unordered_map>
 
 #include "sensor.h"
-#include "speed_sensor.h"
-#include "tire_pressure_sensor.h"
 #include "full_condition.h"
-
-using namespace std;
 
 class Input {
 public:

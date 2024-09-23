@@ -1,11 +1,14 @@
 #include "input.h"
+using namespace std;
+
 // Function that builds the sensors according to the BSON file
 void Input::s_buildSensors(unordered_map<int, Sensor *> &sensors)
 {
     // Get "Sensors" array from the BSON document.
     // If the "Sensors" array is not found or it is not a valid array, log an error and return.
     bson_iter_t iter;
-    if (!bson_iter_init_find(&iter, document, "Sensors") && BSON_ITER_HOLDS_ARRAY(&iter)) {
+    if (!bson_iter_init_find(&iter, document, "Sensors") &&
+        BSON_ITER_HOLDS_ARRAY(&iter)) {
         cerr << "Failed to find 'Sensors' array or it is not an array!" << endl;
         return;
     }
@@ -37,7 +40,7 @@ void Input::s_buildSensors(unordered_map<int, Sensor *> &sensors)
 
         string name;  // Sensor name/type.
         int id;       // Sensor ID.
-        
+
         // Iterate over the keys in the current sensor document.
         while (bson_iter_next(&docIter)) {
             const char *key = bson_iter_key(&docIter);  // Get the current key.
@@ -45,32 +48,14 @@ void Input::s_buildSensors(unordered_map<int, Sensor *> &sensors)
             if (strcmp(key, "id") == 0)
                 id = bson_iter_int32(&docIter);  // Extract the sensor ID.
             else if (strcmp(key, "name") == 0)
-                name = bson_iter_utf8(&docIter, NULL);  // Extract the sensor name/type.
+                name = bson_iter_utf8(&docIter,
+                                      NULL);  // Extract the sensor name/type.
         }
 
-        // Convert the string to a sensor type enum.
-        SensorsTypes sensorType = convertStringToSensorsTypes(name);
-        Sensor *sensorPtr = nullptr;  // Pointer to the sensor object.
-        
-        // Create the appropriate sensor object based on the sensor type.
-        switch (sensorType) {
-            case SensorsTypes::Speed: {
-                sensorPtr = new SpeedSensor(id);  // Create a SpeedSensor.
-                break;
-            }
-            case SensorsTypes::TirePressure: {
-                sensorPtr = new TirePressureSensor(id);  // Create a TirePressureSensor.
-                break;
-            }
-            default: {
-                sensorPtr = new Sensor(id);  // Create a generic Sensor.
-                break;
-            }
-        }
-
-        // Add the sensor pointer to the map if it was successfully created.
-        if (sensorPtr != nullptr)
-            sensors[sensorPtr->id] = sensorPtr;
+        Sensor *sensorPtr = new Sensor(id, name);  // Create a generic Sensor.
+        cout << "SENSOR: id: " << id << ", name: " << name << endl;
+        sensors[sensorPtr->id] =
+            sensorPtr;  // Add the sensor pointer to the map
     }
 
     // Clean up by destroying the BSON object.
@@ -86,8 +71,10 @@ void Input::s_buildConditions()
     // Get "Conditions" array from the BSON document.
     // If the "Conditions" array is not found or it is not valid, log an error and return.
     bson_iter_t iter;
-    if (!bson_iter_init_find(&iter, document, "Conditions") || !BSON_ITER_HOLDS_ARRAY(&iter)) {
-        cerr << "Failed to find 'Conditions' array or it is not an array!" << endl;
+    if (!bson_iter_init_find(&iter, document, "Conditions") ||
+        !BSON_ITER_HOLDS_ARRAY(&iter)) {
+        cerr << "Failed to find 'Conditions' array or it is not an array!"
+             << endl;
         return;
     }
 
@@ -97,7 +84,8 @@ void Input::s_buildConditions()
     bson_iter_array(&iter, &conditionsLength, &conditionsData);
 
     // Create a BSON object from the extracted array data.
-    bson_t *bsonConditions = bson_new_from_data(conditionsData, conditionsLength);
+    bson_t *bsonConditions =
+        bson_new_from_data(conditionsData, conditionsLength);
 
     // Initialize an iterator to iterate over the "Conditions" array.
     bson_iter_t arrayIter;
@@ -117,7 +105,7 @@ void Input::s_buildConditions()
         bson_iter_recurse(&arrayIter, &docIter);
 
         string conditionStr = "";  // The "if" condition string.
-        vector<pair<int, string>> actions = {{5, "nothing"}};  // Default action with ID 5.
+        vector<pair<int, string>> actions;
 
         // Iterate over the keys in the current condition document.
         while (bson_iter_next(&docIter)) {
@@ -159,22 +147,26 @@ void Input::s_buildConditions()
                     bson_iter_t docSendIter;
                     bson_iter_recurse(&arraySendIter, &docSendIter);
 
-                    int id = -1;  // Action ID.
+                    int id = -1;          // Action ID.
                     string message = "";  // Action message.
-                    
+
                     // Iterate over the keys in the current action document.
                     while (bson_iter_next(&docSendIter)) {
-                        const char *keySend = bson_iter_key(&docSendIter);  // Get the current key.
+                        const char *keySend = bson_iter_key(
+                            &docSendIter);  // Get the current key.
 
                         if (strcmp(keySend, "id") == 0)
-                            id = bson_iter_int32(&docSendIter);  // Extract the action ID.
+                            id = bson_iter_int32(
+                                &docSendIter);  // Extract the action ID.
                         else if (strcmp(keySend, "message") == 0)
-                            message = bson_iter_utf8(&docSendIter, NULL);  // Extract the action message.
+                            message = bson_iter_utf8(
+                                &docSendIter,
+                                NULL);  // Extract the action message.
                     }
 
                     // If a valid ID was found, add the action to the list.
                     if (id != -1)
-                        actions.push_back({ id, message });
+                        actions.push_back({id, message});
                 }
 
                 // Clean up the BSON object for the "send" array.
@@ -184,10 +176,10 @@ void Input::s_buildConditions()
 
         // Create a new FullCondition object with the condition string and actions.
         FullCondition *cond = new FullCondition(conditionStr, actions);
-        
+
         // Add the condition to the global conditions map using its ID as the key.
         instanceGP.conditions[cond->id] = cond;
-        
+
         // Clear the actions vector for the next iteration.
         actions.clear();
     }
@@ -199,7 +191,7 @@ void Input::s_buildConditions()
 // Function that read the bson file
 bson_t *Input::s_readData()
 {
-    string fileName = "my_bson.bson";
+    string fileName = "conditions.bson";
     ifstream file(fileName, ios::binary);
     if (file.is_open()) {
         // Get the file size
@@ -217,7 +209,6 @@ bson_t *Input::s_readData()
             // Output the BSON document as JSON for debugging (before destroying BSON)
             char *str = bson_as_canonical_extended_json(bson, NULL);
             if (str != NULL) {
-                // cout << "BSON Document: " << str << endl;
                 bson_free(str);
                 file.close();
                 return bson;

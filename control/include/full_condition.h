@@ -15,8 +15,6 @@
 #include "root.h"
 #include "condition_factory.h"
 
-using namespace std;
-
 class Root;
 
 class FullCondition {
@@ -39,6 +37,8 @@ public:
 
     // Constructor: Initializes the FullCondition object, parses the condition string, and builds the condition tree.
     FullCondition(string condition, vector<pair<int, string>> &actions);
+
     void activateActions();
 };
+
 #endif  // _FULL_CONDITION_H_

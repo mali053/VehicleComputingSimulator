@@ -4,16 +4,21 @@
 
 #include <map>
 #include <string>
+#include <bitset>
 #include "operator_node.h"
-#include "enums.h"
+#include "operator_types.h"
+#include "../../parser_json/src/packet_parser.h"
 
 using namespace std;
 
 // Class that present a leaf - basic condition
 class BasicCondition : public Condition {
 public:
-    string value;
+    void *value;
     OperatorTypes operatorType;
+    BasicCondition(OperatorTypes ot) : operatorType(ot) {}
+
+    void setValue(string value, FieldType type);
 };
 
 #endif  // _BASIC_CONDITION_H_

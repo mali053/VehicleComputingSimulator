@@ -1,4 +1,5 @@
 #include "full_condition.h"
+using namespace std;
 
 // Global pointer to the current sensor on which the condition is conditional
 Sensor *currentSensor;
@@ -95,14 +96,21 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
     else if (BasicCondition *basicCondition =
                  dynamic_cast<BasicCondition *>(conditionPtr)) {
         // Fill the fields in BasicCondition
-        basicCondition->operatorType = operatorType;
         int commaIndex = find(condition.begin() + index, condition.end(), ',') -
                          condition.begin();
         string name = condition.substr(openBracketIndex + 1,
                                        commaIndex - openBracketIndex - 1);
         int closeBracket = bracketIndexes[openBracketIndex];
-        basicCondition->value =
+
+        // Extract the substring
+        string valueStr =
             condition.substr(commaIndex + 1, closeBracket - commaIndex - 1);
+
+        // Convert the string to a void pointer
+        basicCondition->value = static_cast<void *>(new string(valueStr));
+        basicCondition->setValue(valueStr,
+                                 currentSensor->parser->getFieldType(
+                                     currentSensor->fieldsMap[name].type));
 
         // Add the sensor reference to this leaf
         currentSensor->fields[name].second.push_back(basicCondition);
@@ -136,7 +144,8 @@ map<int, int> findBrackets(string condition)
 }
 
 // Constructor: Builds the condition tree.
-FullCondition::FullCondition(string condition, vector<pair<int, string>> &actions)
+FullCondition::FullCondition(string condition,
+                             vector<pair<int, string>> &actions)
     : actions(actions)
 {
     // Sets a unique ID for the condition and creates the root of the condition tree
@@ -158,7 +167,11 @@ void FullCondition::activateActions()
     // Activates all actions associated with the `FullCondition`
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
     for (pair<int, string> action : this->actions) {
-        Sensor *destinationSensor = instanceGP.sensors[action.first];
-        destinationSensor->doAction(action.second);
+        // Sending the message
+        const char *message = action.second.c_str();
+        size_t dataSize = strlen(message) + 1;
+        uint32_t destID = action.first;
+        instanceGP.comm->sendMessage((void *)message, dataSize, destID,
+                                     instanceGP.srcID, false);
     }
 }

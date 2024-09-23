@@ -149,34 +149,56 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
     return 1;
 }
 
-void Manager::drawOutput()
+void Manager::drawOutput() 
 {
     for (ObjectInformation objectInformation : currentOutput) {
-        int bottomRightX =
-            objectInformation.position.x + objectInformation.position.width;
-        int bottomRightY =
-            objectInformation.position.y + objectInformation.position.height;
         int topLeftX = objectInformation.position.x;
         int topLeftY = objectInformation.position.y;
-        rectangle(*currentFrame, objectInformation.position, Scalar(0, 255, 0),
-                  2);
-        // Define the text to write
-        std::string text = to_string(objectInformation.distance);
-        // Specify font properties
+
+        // Draw rectangle around object
+        Scalar boxColor = (objectInformation.distance <(alerter.MIN_LEGAL_DISTANCE) ) ? Scalar(0, 0, 255) : Scalar(0, 255, 0);
+        rectangle(*currentFrame, objectInformation.position, boxColor, 2);
+
+        // Define text for distance and speed
+        std::stringstream ssDistance, ssSpeed;
+        ssDistance << std::fixed << std::setprecision(2) << objectInformation.distance;
+        ssSpeed << std::fixed << std::setprecision(2) << 0;//velothity;
+
+        std::string distanceText = ssDistance.str();
+        std::string speedText = ssSpeed.str();
+
+        // Font properties
         int fontFace = FONT_HERSHEY_SIMPLEX;
-        double fontScale = 1;
-        int thickness = 2;
+        double fontScale = 0.6;
+        int thickness = 1;
         int baseline = 0;
-        // Get the size of the text
-        Size textSize =
-            getTextSize(text, fontFace, fontScale, thickness, &baseline);
-        // Calculate the position to write the text at the center of the rectangle
-        Point textOrg((bottomRightX + topLeftX - textSize.width) / 2,
-                      (bottomRightY + topLeftY + textSize.height) / 2);
-        // Write the text on the image
-        putText(*currentFrame, text, textOrg, fontFace, fontScale,
-                Scalar(255, 0, 0), thickness);
+
+        // Calculate text sizes
+        Size distanceTextSize = getTextSize(distanceText, fontFace, fontScale, thickness, &baseline);
+        Size speedTextSize = getTextSize(speedText, fontFace, fontScale, thickness, &baseline);
+
+        // Positions for the texts
+        Point distanceTextOrg(topLeftX + 5, topLeftY - speedTextSize.height - 7);  // Above the object
+        Point speedTextOrg(topLeftX + 5, topLeftY - 5);  // Above the object
+
+        // Draw outline for distance text
+        putText(*currentFrame, distanceText, distanceTextOrg, fontFace, fontScale, Scalar(0, 0, 0), thickness + 2);
+        // Write the distance text
+        putText(*currentFrame, distanceText, distanceTextOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
+        
+        // Draw outline for speed text
+        putText(*currentFrame, speedText, speedTextOrg, fontFace, fontScale, Scalar(0, 0, 0), thickness + 2);
+        // Write the speed text
+        putText(*currentFrame, speedText, speedTextOrg, fontFace, fontScale, Scalar(255, 0, 0), thickness);
     }
+
+    // Legend
+    int legendX = 10, legendY = 10;
+    putText(*currentFrame, "Legend:", Point(legendX, legendY), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
+    rectangle(*currentFrame, Point(legendX, legendY + 10), Point(legendX + 10, legendY + 30), Scalar(255, 255, 255), FILLED);
+    putText(*currentFrame, "Distance", Point(legendX + 15, legendY + 25), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
+    rectangle(*currentFrame, Point(legendX, legendY + 35), Point(legendX + 10, legendY + 55), Scalar(255, 0, 0), FILLED);
+    putText(*currentFrame, "Speed", Point(legendX + 15, legendY + 50), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
 }
 
 void Manager::sendAlerts(vector<unique_ptr<char>> &alerts)

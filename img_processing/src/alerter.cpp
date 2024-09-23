@@ -1,5 +1,3 @@
-#define MIN_LEGAL_DISTANCE 5000
-
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>

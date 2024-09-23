@@ -4,10 +4,12 @@ using namespace std;
 void handleMesseage(uint32_t senderId,void *data)
 {
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
-    
+
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "Received message from id " + senderId);
+    cout << "MAIN : I got message from id " << senderId << endl;
+
     char * msg = "I got message";
     size_t dataSize = strlen(msg) + 1;
-    cout << "MAIN : I got message from id " << senderId << endl;
     instanceGP.comm->sendMessage((void*)msg, dataSize, senderId, instanceGP.srcID, false);
     instanceGP.sensors[senderId]->handleMessage(data);
     cout << "\n****************\n" << endl;
@@ -24,28 +26,30 @@ int readIdFromJson()
 
     // Check if the input is correct
     if (!f.is_open())
-        cerr << "Failed to open config.json" << endl;
-
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to open config.json");
     json *data = NULL;
 
     // Try parse to json type
     try {
         data = new json(json::parse(f));
+        f.close();
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "The id was successfully read from config.json");
     }
     catch (exception e) {
-        cout << e.what() << endl;
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
     }
-    catch (...) {
-        cout << "My Unknown Exception" << endl;
-    }
+
     return (*data)["ID"];
 }
 
 // Initializes the sensors based on a JSON file
 GlobalProperties::GlobalProperties()
 {
+    controlLogger.logMessage(logger::LogLevel::INFO, "Initializing...");
+    
     // Build the sensors according the json file
     Input::s_buildSensors(sensors);
+    controlLogger.logMessage(logger::LogLevel::INFO, "Sensors built successfully");
 
     srcID = readIdFromJson();
     // Creating the communication object with the callback function to process the data
@@ -72,3 +76,4 @@ void GlobalProperties::resetInstance()
 
 // Static member to hold the single instance of `GlobalProperties`
 unique_ptr<GlobalProperties> GlobalProperties::instance = nullptr;
+logger GlobalProperties::controlLogger("Control");

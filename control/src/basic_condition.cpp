@@ -2,6 +2,7 @@
 
 void BasicCondition::setValue(string valueStr, FieldType type)
 {
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "SetValue in BasicCondition to " + valueStr);
     switch (type) {
         case FieldType::UNSIGNED_INT: {
             unsigned int *uintPtr = new unsigned int();

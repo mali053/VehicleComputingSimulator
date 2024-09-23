@@ -73,8 +73,7 @@ void Input::s_buildConditions()
     bson_iter_t iter;
     if (!bson_iter_init_find(&iter, document, "Conditions") ||
         !BSON_ITER_HOLDS_ARRAY(&iter)) {
-        cerr << "Failed to find 'Conditions' array or it is not an array!"
-             << endl;
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to find 'Conditions' array or it is not an array!");
         return;
     }
 
@@ -118,7 +117,7 @@ void Input::s_buildConditions()
             else if (strcmp(key, "send") == 0) {
                 // Process the "send" array which contains action messages.
                 if (!BSON_ITER_HOLDS_ARRAY(&docIter)) {
-                    cerr << "'send' is not an array!" << endl;
+                    GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "'send' is not an array!");
                     continue;  // Skip to the next key if "send" is not an array.
                 }
 
@@ -174,8 +173,11 @@ void Input::s_buildConditions()
             }
         }
 
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "The condition \"" + conditionStr + "\" was successfully read from the BSON file");
+
         // Create a new FullCondition object with the condition string and actions.
         FullCondition *cond = new FullCondition(conditionStr, actions);
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "The condition \"" + conditionStr + "\" built successfully");
 
         // Add the condition to the global conditions map using its ID as the key.
         instanceGP.conditions[cond->id] = cond;
@@ -186,6 +188,7 @@ void Input::s_buildConditions()
 
     // Clean up by destroying the BSON object.
     bson_destroy(bsonConditions);
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "Conditions built successfully");
 }
 
 // Function that read the bson file

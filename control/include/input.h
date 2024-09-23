@@ -8,13 +8,15 @@
 #include <fstream>
 #include <unordered_map>
 
-#include "sensor.h"
 #include "full_condition.h"
+
+// Forward declaration instead of #include
+class Sensor;
 
 class Input {
 public:
     // Function that builds the sensors according to the bjson file
-    static void s_buildSensors(unordered_map<int, Sensor *> &sensors);
+    static void s_buildSensors(std::unordered_map<int, Sensor *> &sensors);
     // Function that builds the conditions according to the bson file
     static void s_buildConditions();
 

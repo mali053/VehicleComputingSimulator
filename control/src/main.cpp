@@ -14,6 +14,7 @@ int main()
     // Build the conditions from the bson file
     Input::s_buildConditions();
 
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "Initialized successfully");
     cout << "Starting Communication\n..." << endl;
     // Starting communication with the server
     instanceGP.comm->startConnection();
@@ -22,6 +23,8 @@ int main()
     while (true) {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    GlobalProperties::controlLogger.cleanUp();
 
 #pragma region previous
     // vector<pair<int, string>> vec1 = {{5, "slow down"}, {8, "ccc"}};

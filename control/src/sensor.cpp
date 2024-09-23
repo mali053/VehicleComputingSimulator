@@ -7,6 +7,8 @@ void Sensor::handleMessage(void *msg)
 
     for (auto field : fieldsMap) {
         string fieldName = field.first;
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Processing field: " + fieldName);
+
         cout << "----------------\nfieldName: " << fieldName << endl;
         cout << "field type: " << field.second.type << endl;
         updateTrueRoots(fieldName, parser->getFieldValue(fieldName),
@@ -64,6 +66,7 @@ void Sensor::updateTrueRoots(string field, void *value, FieldType type)
             }
             default: {
                 cout << "DEFAULT" << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Invalid FieldType encountered");
                 break;
             }
         }
@@ -73,11 +76,14 @@ void Sensor::updateTrueRoots(string field, void *value, FieldType type)
 
         // If the condition's status has changed
         if (flag != prevStatus) {
+            GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Condition status changed for field: " + field);
+
             // Update parent conditions and check if the root condition is true
             for (Node *parent : bc->parents) {
                 (bc->status) ? parent->countTrueConditions++
                              : parent->countTrueConditions--;
                 parent->updateTree();
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "Updated parent tree for field: " + field);
             }
         }
     }

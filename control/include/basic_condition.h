@@ -7,6 +7,8 @@
 #include <bitset>
 #include "operator_node.h"
 #include "operator_types.h"
+#include "global_properties.h"
+
 #include "../../parser_json/src/packet_parser.h"
 
 using namespace std;

@@ -21,16 +21,19 @@ void defineCurrentSensor(const string &condition, int &index)
     int id = stoi(numStr);
     index = closeBracket + 1;
     currentSensor = instanceGP.sensors[id];
+
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "The current sensor id is: " + to_string(id));
 }
 
 // Recursively builds the condition tree from the condition string.
 Condition *FullCondition::buildNode(const string &condition, int &index,
                                     map<int, int> bracketIndexes)
 {
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Entering buildNode function, condition[index] = " + condition[index]);
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
     if (condition.empty())
-        cout << "Condition string is empty!" << endl;
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Condition string is empty");
 
     // Handling sensor reference
     if (condition[index] == '[')
@@ -45,8 +48,12 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
         (currentSensor ? to_string(currentSensor->id) : "") +
         condition.substr(index, bracketIndexes[openBracketIndex] - index + 1);
 
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Generated condition key: " + key);
+
     // Check if the key already exists in the existingConditions map
     if (s_existingConditions.find(key) != s_existingConditions.end()) {
+        instanceGP.controlLogger.logMessage(logger::LogLevel::DEBUG, "Condition key already exists: " + key);
+
         index = bracketIndexes[openBracketIndex] + 1;
         if (condition[index] == ',')
             index++;
@@ -57,6 +64,9 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
     // Creating a new node
     OperatorTypes operatorType = convertStringToOperatorTypes(
         condition.substr(index, openBracketIndex - index));
+
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Operator type: " + std::to_string(operatorType));
+
     Condition *conditionPtr = createCondition(operatorType);
 
     s_existingConditions[key] = conditionPtr;
@@ -100,6 +110,9 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
                          condition.begin();
         string name = condition.substr(openBracketIndex + 1,
                                        commaIndex - openBracketIndex - 1);
+
+        GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Field name: " + name);
+
         int closeBracket = bracketIndexes[openBracketIndex];
 
         // Extract the substring
@@ -126,6 +139,7 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
 // Maps the positions of opening bracket indexes to their corresponding closing bracket indexes
 map<int, int> findBrackets(string condition)
 {
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Generate a map with the brackets indexes");
     map<int, int> mapIndexes;
     stack<int> stackIndexes;
     // Scans the input string for brackets and uses a stack to keep track of their positions
@@ -157,6 +171,9 @@ FullCondition::FullCondition(string condition,
     Condition *firstCondition =
         this->buildNode(condition, index, bracketsIndexes);
     root = new Root(this->id, firstCondition);
+
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "The tree created successfully ");
+
     firstCondition->parents.push_back(root);
     currentSensor = nullptr;
 }

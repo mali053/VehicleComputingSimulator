@@ -14,10 +14,13 @@
 #include "full_condition.h"
 
 #include "../../communication/src/communication.h"
+#include "../../logger/logger.h"
 
 using json = nlohmann::json;
 
 class FullCondition;
+// Forward declaration instead of #include
+class Sensor;
 
 // Singleton class managing global properties
 class GlobalProperties {
@@ -34,16 +37,18 @@ public:
     static void resetInstance();
 
     // Map of sensors by ID
-    unordered_map<int, Sensor *> sensors;
+    std::unordered_map<int, Sensor *> sensors;
     // Map of conditions by ID
-    unordered_map<int, FullCondition *> conditions;
+    std::unordered_map<int, FullCondition *> conditions;
     // Set of true condition IDs
-    unordered_set<int> trueConditions;
+    std::unordered_set<int> trueConditions;
 
     // Communication
     uint32_t srcID = 1;
     // Creating the communication object with the callback function to process the data
     Communication *comm;
+    
+    static logger controlLogger;
 };
 
 #endif  // _GLOBAL_PROPERTIES_H_

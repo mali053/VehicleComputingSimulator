@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project("CMakeProject" LANGUAGES CXX)
+project("MainControl" LANGUAGES CXX)
 
 # Path to local GoogleTest directory
 set(GOOGLETEST_PATH "${CMAKE_SOURCE_DIR}/googletest")
@@ -23,8 +23,8 @@ file(GLOB PARSER "../parser_json/src/*.*")
 
 # Main executable
 add_executable(${PROJECT_NAME} ${SOURCES} ${SOURCES_COMMUNICATION} ${HEADERS_COMMUNICATION} ${PARSER} ../logger/logger.h ../logger/logger.cpp src/main.cpp)
-target_include_directories(CMakeProject PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(CMakeProject PRIVATE ${BSON_LIBRARIES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${BSON_LIBRARIES})
 
 # Test executable, including additional source files
 file(GLOB TEST_SOURCES "test/*.cpp")

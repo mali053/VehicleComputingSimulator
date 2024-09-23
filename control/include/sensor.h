@@ -7,25 +7,28 @@
 #include <unordered_map>
 #include <set>
 #include <optional>
-#include "basic_condition.h"
 #include "operator_types.h"
+#include "global_properties.h"
+
 #include "../../parser_json/src/packet_parser.h"
+
+class BasicCondition;
 
 class Sensor {
 public:
     int id;
-    string name;
+    std::string name;
     PacketParser *parser;
-    map<string, Field> fieldsMap;
+    std::map<std::string, Field> fieldsMap;
 
     // Contains the current values of various fields and a list of basic conditions associated with each field
-    map<string, pair<void *, vector<BasicCondition *>>> fields;
+    std::map<std::string, std::pair<void *, std::vector<BasicCondition *>>> fields;
 
     // C-tor initializes the id member variable.
     Sensor(int id, string name) : id(id), name(name)
     {
         parser = new PacketParser("./sensors_data/" + name + ".json");
-        vector<Field> tempFields = parser->getFields();
+        std::vector<Field> tempFields = parser->getFields();
         // cout << "tempFields:" << endl;
         for (auto field : tempFields) {
             cout << field.name << " : " << field.type << endl;
@@ -34,7 +37,7 @@ public:
     }
 
     // Updates the condition status according to the received field and returns the  list of the full conditions whose root is true
-    void updateTrueRoots(string field, void *value, FieldType type);
+    void updateTrueRoots(std::string field, void *value, FieldType type);
 
     void handleMessage(void *msg);
 

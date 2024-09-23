@@ -19,6 +19,7 @@ void Manager::init()
     bool isCuda = false;
     detector.init(isCuda);
     dynamicTracker.init();
+    velocity.init(0.04);
 }
 
 void Manager::mainDemo()
@@ -129,6 +130,8 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
 
     // add distance to detection objects
     distance.findDistance(this->currentOutput);
+    velocity.returnVelocities(this->currentOutput);
+    //send allerts to main control
 
     // send allerts to main control
     vector<unique_ptr<char>> alerts = alerter.sendAlerts(this->currentOutput);
@@ -156,16 +159,20 @@ void Manager::drawOutput()
         int topLeftY = objectInformation.position.y;
 
         // Draw rectangle around object
-        Scalar boxColor = (objectInformation.distance <(alerter.MIN_LEGAL_DISTANCE) ) ? Scalar(0, 0, 255) : Scalar(0, 255, 0);
+        Scalar boxColor =
+            (objectInformation.distance < (alerter.MIN_LEGAL_DISTANCE))
+                ? Scalar(0, 0, 255)
+                : Scalar(0, 255, 0);
         rectangle(*currentFrame, objectInformation.position, boxColor, 2);
 
-        // Define text for distance and speed
-        std::stringstream ssDistance, ssSpeed;
-        ssDistance << std::fixed << std::setprecision(2) << objectInformation.distance;
-        ssSpeed << std::fixed << std::setprecision(2) << 0;//velothity;
+        // Define text for distance and velocity
+        std::stringstream ssDistance, ssVelocity;
+        ssDistance << std::fixed << std::setprecision(2)
+                   << objectInformation.distance;
+        ssVelocity << std::fixed << std::setprecision(2) << objectInformation.velocity;
 
         std::string distanceText = ssDistance.str();
-        std::string speedText = ssSpeed.str();
+        std::string velocityText = ssVelocity.str();
 
         // Font properties
         int fontFace = FONT_HERSHEY_SIMPLEX;
@@ -174,31 +181,43 @@ void Manager::drawOutput()
         int baseline = 0;
 
         // Calculate text sizes
-        Size distanceTextSize = getTextSize(distanceText, fontFace, fontScale, thickness, &baseline);
-        Size speedTextSize = getTextSize(speedText, fontFace, fontScale, thickness, &baseline);
+        Size distanceTextSize = getTextSize(distanceText, fontFace, fontScale,
+                                            thickness, &baseline);
+        Size velocityTextSize =
+            getTextSize(velocityText, fontFace, fontScale, thickness, &baseline);
 
         // Positions for the texts
-        Point distanceTextOrg(topLeftX + 5, topLeftY - speedTextSize.height - 7);  // Above the object
-        Point speedTextOrg(topLeftX + 5, topLeftY - 5);  // Above the object
+        Point distanceTextOrg(topLeftX + 5, topLeftY - velocityTextSize.height -
+                                                7);      // Above the object
+        Point velocityTextOrg(topLeftX + 5, topLeftY - 5);  // Above the object
 
         // Draw outline for distance text
-        putText(*currentFrame, distanceText, distanceTextOrg, fontFace, fontScale, Scalar(0, 0, 0), thickness + 2);
+        putText(*currentFrame, distanceText, distanceTextOrg, fontFace,
+                fontScale, Scalar(0, 0, 0), thickness + 2);
         // Write the distance text
-        putText(*currentFrame, distanceText, distanceTextOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
-        
-        // Draw outline for speed text
-        putText(*currentFrame, speedText, speedTextOrg, fontFace, fontScale, Scalar(0, 0, 0), thickness + 2);
-        // Write the speed text
-        putText(*currentFrame, speedText, speedTextOrg, fontFace, fontScale, Scalar(255, 0, 0), thickness);
+        putText(*currentFrame, distanceText, distanceTextOrg, fontFace,
+                fontScale, Scalar(255, 255, 255), thickness);
+
+        // Draw outline for velocity text
+        putText(*currentFrame, velocityText, velocityTextOrg, fontFace, fontScale,
+                Scalar(0, 0, 0), thickness + 2);
+        // Write the velocity text
+        putText(*currentFrame, velocityText, velocityTextOrg, fontFace, fontScale,
+                Scalar(255, 0, 0), thickness);
     }
 
     // Legend
     int legendX = 10, legendY = 10;
-    putText(*currentFrame, "Legend:", Point(legendX, legendY), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
-    rectangle(*currentFrame, Point(legendX, legendY + 10), Point(legendX + 10, legendY + 30), Scalar(255, 255, 255), FILLED);
-    putText(*currentFrame, "Distance", Point(legendX + 15, legendY + 25), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
-    rectangle(*currentFrame, Point(legendX, legendY + 35), Point(legendX + 10, legendY + 55), Scalar(255, 0, 0), FILLED);
-    putText(*currentFrame, "Speed", Point(legendX + 15, legendY + 50), FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
+    putText(*currentFrame, "Legend:", Point(legendX, legendY),
+            FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
+    rectangle(*currentFrame, Point(legendX, legendY + 10),
+              Point(legendX + 10, legendY + 30), Scalar(255, 255, 255), FILLED);
+    putText(*currentFrame, "Distance", Point(legendX + 15, legendY + 25),
+            FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
+    rectangle(*currentFrame, Point(legendX, legendY + 35),
+              Point(legendX + 10, legendY + 55), Scalar(255, 0, 0), FILLED);
+    putText(*currentFrame, "velocity", Point(legendX + 15, legendY + 50),
+            FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
 }
 
 void Manager::sendAlerts(vector<unique_ptr<char>> &alerts)

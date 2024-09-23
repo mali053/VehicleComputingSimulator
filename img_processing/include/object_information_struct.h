@@ -9,7 +9,10 @@ struct ObjectInformation {
     ObjectType type;
     cv::Rect prevPosition;
     cv::Rect position;
-    double distance;
+    double prevDistance;
+    double distance = -1.0;
+    double prevVelocity;
+    double velocity;
 };
 
 #endif  // __OBJECT_INFORMATION_STRUCT_H__

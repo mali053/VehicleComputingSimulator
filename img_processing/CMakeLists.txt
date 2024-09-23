@@ -16,7 +16,7 @@ file(GLOB SOURCES "src/*.cpp" "../logger/*.cpp" "tests/utils.cpp")
 add_library(ImageProcessingLib ${SOURCES})
 
 # create test execute
-add_executable(runTests tests/main.cpp tests/test_serialize.cpp tests/test_detector.cpp tests/test_dynamic_tracker.cpp tests/test_distance.cpp tests/test_manager.cpp)
+add_executable(runTests tests/main.cpp tests/test_serialize.cpp tests/test_detector.cpp tests/test_dynamic_tracker.cpp tests/test_distance.cpp tests/test_manager.cpp tests/test_velocity.cpp)
 
 target_link_libraries(runTests ImageProcessingLib ${OpenCV_LIBS} ${GTEST_LIBRARIES} pthread)
 

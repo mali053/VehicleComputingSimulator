@@ -61,6 +61,7 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             imageSize = objectInformation.position.width;
         }
         // Calculate the distance in meters
+        objectInformation.prevDistance = objectInformation.distance;
         objectInformation.distance =
             (focalLength * knownSize / imageSize) / 1000;
     }

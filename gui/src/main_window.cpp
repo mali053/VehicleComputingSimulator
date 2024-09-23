@@ -131,28 +131,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), timer(nullptr)
         "}";
 
     Process *mainProcess =
-        new Process(id, "Main", "../src/dummy_program1/CMakeLists.txt", "QEMUPlatform");
+        new Process(id, "Bus_Manager", "../../main_bus/CMakeLists.txt", "QEMUPlatform");
     addProcessSquare(
         mainProcess,
         QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
         sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *hsmProcess =
-        new Process(id, "HSM", "../src/dummy_program2/CMakeLists.txt", "QEMUPlatform");
+        new Process(id, "HSM", "path/to/hsm/directory/CMakeLists.txt", "QEMUPlatform");
     addProcessSquare(
         hsmProcess,
         QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
         sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *logsDbProcess =
-        new Process(id, "LogsDb", "../src/dummy_program1/CMakeLists.txt", "QEMUPlatform");
+        new Process(id, "LogsDb", "path/to/LogsDb/directory/CMakeLists.txt", "QEMUPlatform");
     addProcessSquare(
         logsDbProcess,
         QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),
         sizeSquare, sizeSquare, styleSheet);
     addId(id++);
     Process *busManagerProcess =
-        new Process(id, "Bus_Manager", "../src/dummy_program2/CMakeLists.txt", "QEMUPlatform");
+        new Process(id, "Main", "path/to/Main/directory/CMakeLists.txt", "QEMUPlatform");
     addProcessSquare(
         busManagerProcess,
         QPoint((id % 2) * (sizeSquare + 10), (id / 2) * (sizeSquare + 10)),

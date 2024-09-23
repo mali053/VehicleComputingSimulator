@@ -38,7 +38,7 @@ void TestMainWindow::testCreateNewProcess()
 {
     int newProcessId = 6;
     QString processName = "NewProcess";
-    QString cmakeProject = "../src/dummy_program1";
+    QString cmakeProject = "../dummy_program1";
     QString qemuPlatform = "QEMUPlatform";
 
     Process *newProcess =
@@ -59,7 +59,7 @@ void TestMainWindow::testCreateNewProcess()
 void TestMainWindow::testAddProcessSquare()
 {
     Process *newProcess =
-        new Process(5, "Test Process", "../src/dummy_program1", "QEMUPlatform");
+        new Process(5, "Test Process", "../dummy_program1", "QEMUPlatform");
     window->addProcessSquare(newProcess);
     QCOMPARE(window->squares.size(), 5);  // Check if square is added
 
@@ -94,7 +94,7 @@ void TestMainWindow::testEndProcesses()
 
 void TestMainWindow::testDeleteSquare()
 {
-    QString cmakeProject = "../src/dummy_program1";
+    QString cmakeProject = "../dummy_program1";
     Process *process =
         new Process(5, "Test Process", cmakeProject, "QEMUPlatform");
     window->addProcessSquare(process);

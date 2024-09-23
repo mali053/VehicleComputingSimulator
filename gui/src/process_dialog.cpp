@@ -26,11 +26,6 @@ ProcessDialog::ProcessDialog(QWidget *parent) : QDialog(parent)
     layout->addWidget(nameLabel);
     layout->addWidget(nameEdit);
 
-    QLabel *cmakeProjectLabel = new QLabel("CMake Project:");
-    cmakeProjectEdit = new QLineEdit(this);
-    layout->addWidget(cmakeProjectLabel);
-    layout->addWidget(cmakeProjectEdit);
-
     QLabel *executableFileLabel = new QLabel("Executable File:");
     executionFile = new QLineEdit(this);
     executionFile->setReadOnly(true);

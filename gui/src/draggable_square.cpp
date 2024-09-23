@@ -52,6 +52,8 @@ DraggableSquare::DraggableSquare(QWidget *parent, const QString &color,
     QVBoxLayout *layout = new QVBoxLayout(this);
     layout->addWidget(label);
     layout->addWidget(stopButton);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->setSpacing(0);
     setLayout(layout);
     stopButton->hide();
     connect(stopButton, &QPushButton::clicked, this,

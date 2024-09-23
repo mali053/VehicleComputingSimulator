@@ -340,8 +340,11 @@ void MainWindow::endProcesses()
             process->terminate();
             process->waitForFinished();
         }
-
-        delete process;
+        // Check if the process is already marked for deletion by deleteLater
+        if (process && !process->parent()) {
+            // Only delete if it hasn't already been marked for deletion
+            delete process;
+        }
     }
     runningProcesses.clear();
 }
@@ -360,7 +363,6 @@ void MainWindow::stopProcess(int deleteId)
             }
 
             process->deleteLater();
-            runningProcesses.removeAt(i);
             break;
         }
     }

@@ -124,8 +124,7 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
 
     if (isTrack(isTravel)) {
         // send the frame to track
-        dynamicTracker.tracking(this->currentFrame);
-        this->currentOutput = dynamicTracker.getOutput();
+        dynamicTracker.tracking(this->currentFrame,this->currentOutput);
     }
 
     // add distance to detection objects

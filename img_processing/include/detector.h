@@ -11,7 +11,7 @@ class Detector {
     void init(bool isCuda);
     std::vector<ObjectInformation> getOutput() const;
     void detect(const std::shared_ptr<cv::Mat> &frame, bool isTravel);
-
+    int getIdCounter();
    private:
     int helperForDetect;
     std::shared_ptr<cv::Mat> prevFrame;
@@ -33,6 +33,7 @@ class Detector {
     std::vector<cv::Rect> findDifference();
     std::vector<cv::Rect> unionOverlappingRectangels(
         std::vector<cv::Rect> allChanges);
+    int idCounter;
 };
 
 #endif  // __DETECTOR_H__

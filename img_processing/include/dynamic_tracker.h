@@ -10,13 +10,11 @@ class DynamicTracker {
     void init();
     void startTracking(const std::shared_ptr<cv::Mat> &frame,
                        const std::vector<ObjectInformation> &detectionOutput);
-    std::vector<ObjectInformation> getOutput() const;
-    void tracking(const std::shared_ptr<cv::Mat> &frame);
+    void tracking(const std::shared_ptr<cv::Mat> &frame,
+        std::vector<ObjectInformation> &objectInformation);
 
    private:
-    int id_counter = 0;
     std::shared_ptr<cv::Mat> frame;
-    std::vector<ObjectInformation> output;
     std::vector<cv::Ptr<cv::Tracker>> trackers;
     std::vector<int> failedCount;
     int maxFailures = 1;

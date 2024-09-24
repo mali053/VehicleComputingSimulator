@@ -131,7 +131,6 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
     // add distance to detection objects
     distance.findDistance(this->currentOutput);
     velocity.returnVelocities(this->currentOutput);
-    //send allerts to main control
 
     // send allerts to main control
     vector<unique_ptr<char>> alerts = alerter.sendAlerts(this->currentOutput);

@@ -11,5 +11,6 @@ class Velocity {
    private:
     double frameTimeDiff;
     void calculateVelocity(ObjectInformation &object);
+    double averageDistanceChange(ObjectInformation obj) const;
 };
 #endif

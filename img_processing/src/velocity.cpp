@@ -16,19 +16,20 @@ void Velocity::returnVelocities(vector<ObjectInformation> &objects)
 }
 void Velocity::calculateVelocity(ObjectInformation &object)
 {
-    //if(object.prevPosition.y < object.position.y){
-    // Calculate the centers of the objects
-    // cv::Point2f prevCenter(object.prevPosition.x,
-    //   object.prevPosition.y);
-    //cv::Point2f currentCenter(object.position.x ,
-    //  object.position.y );
-    // std::cout << "Prev Center: " << prevCenter << ", Current Center: " << currentCenter << std::endl;
-    // Calculation of the distance between the centers
-    //double distance = cv::norm(currentCenter - prevCenter);
-    if (object.prevDistance == -1.0)
-        return;
-    double distance = object.distance - object.prevDistance;
-    double velocity = distance / this->frameTimeDiff;
-    object.prevVelocity = object.velocity;
-    object.velocity = velocity;
+    double distanceAvg = averageDistanceChange(object);
+    if(distanceAvg!=-1){
+        double velocity = distanceAvg / this->frameTimeDiff;
+        object.velocity = velocity;
+    }
+}
+
+double Velocity:: averageDistanceChange(ObjectInformation obj) const
+{
+    if (obj.prevDistances.size() < 2)
+        return -1;
+    double totalChange = 0.0;
+    for (size_t i = 1; i < obj.prevDistances.size(); ++i) {
+        totalChange += (obj.prevDistances[i] - obj.prevDistances[i - 1]);
+    }
+    return totalChange / (obj.prevDistances.size() - 1); 
 }

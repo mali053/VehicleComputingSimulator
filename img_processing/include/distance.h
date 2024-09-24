@@ -20,6 +20,7 @@ class Distance {
     Distance(const Distance &) = delete;
     Distance &operator=(const Distance &) = delete;
     void findFocalLength(const cv::Mat &image);
+    void addDistance(double distance,ObjectInformation& obj);
 };
 
 #endif  //__DISTANCE_H__

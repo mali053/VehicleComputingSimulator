@@ -48,7 +48,7 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             if (objectInformation.position.y +
                     objectInformation.position.height >
                 MIN_LEGAL_HEIGHT) {
-                objectInformation.distance = 0;
+                    addDistance(0,objectInformation);
                 return;
             }
             // Find the size of the object in reality and in the picture
@@ -61,9 +61,8 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             imageSize = objectInformation.position.width;
         }
         // Calculate the distance in meters
-        objectInformation.prevDistance = objectInformation.distance;
-        objectInformation.distance =
-            (focalLength * knownSize / imageSize) / 1000;
+        double distance =(focalLength * knownSize / imageSize) / 1000;
+        addDistance(distance,objectInformation);
     }
 }
 
@@ -125,4 +124,11 @@ void Distance::findFocalLength(const cv::Mat &image)
 
     // Calculate focal length in pixels
     this->focalLength = (rectWidth * distanceToCameraMm) / actualLineLengthMm;
+}
+
+void Distance:: addDistance(double distance,ObjectInformation& obj) {
+    if (obj.prevDistances.size() ==MAX_PREV_DISTANCES_SIZE) 
+        obj.prevDistances.pop_front(); 
+    obj.prevDistances.push_back(distance);
+    obj.distance=distance;
 }

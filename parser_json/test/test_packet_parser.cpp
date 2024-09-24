@@ -99,12 +99,7 @@ std::vector<uint8_t> createTestCommunicationBuffer()
                        ((level & 0x07) << 1) |      // Level in bits 1-3
                        ((objectType & 0x0F) << 4);  // ObjectType in bits 4-7
 
-    std::cout<<" ~~~ ";
     buffer.push_back(bitField);
-    for (const auto &byte : buffer) {
-        std::cout << std::bitset<8>(byte) << " ";
-    }
-    std::cout << std::endl;
 
     // ObjectDistance (32 bits, float, little-endian)
     float objectDistance = 123.456f;
@@ -508,12 +503,6 @@ std::vector<uint8_t> createLittleEndianTestBuffer()
     std::memcpy(doubleBytes, &doubleValue, sizeof(double));
     buffer.insert(buffer.end(), doubleBytes, doubleBytes + 8);
 
-    std::cout<<" ~~~ ";
-    for (const auto &byte : buffer) {
-        std::cout << std::bitset<8>(byte) << " ";
-    }
-    std::cout << std::endl;
-
     // Bit field data
     // Sub field 1 (8 bits, unsigned)
     uint8_t subField1 = 1; // Example value
@@ -528,12 +517,6 @@ std::vector<uint8_t> createLittleEndianTestBuffer()
     uint16_t subField3 = 255; // Example value
     buffer.push_back(static_cast<uint8_t>(subField3 & 0xFF));        // Byte 0
     buffer.push_back(static_cast<uint8_t>((subField3 >> 8) & 0xFF)); // Byte 1
-
-    std::cout<<" ~~~ ";
-    for (const auto &byte : buffer) {
-        std::cout << std::bitset<8>(byte) << " ";
-    }
-    std::cout << std::endl;
 
     return buffer;
 }
@@ -651,7 +634,7 @@ TEST(PacketParserTest, BitFieldBuffer)
     EXPECT_EQ(std::get<int32_t>(parser.getFieldValue("int_field")), -123);
     EXPECT_EQ(std::get<std::string>(parser.getFieldValue("char_array_field")),
               "Test");
-
+              
     // Clean up
     cleanupJsonFile(jsonFilePath);
 }

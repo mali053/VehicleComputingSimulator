@@ -48,6 +48,7 @@ public:
     FieldType getFieldType(const std::string &typeName) const;
     void printFieldValues(const std::map<std::string, FieldValue> &fieldValues);
     void setBuffer(const void *buffer);
+    std::vector<Field> getBitFieldFields(const std::string &bitFieldName);
     ~PacketParser();
 
 protected:

@@ -133,6 +133,17 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
 
 }
 
+std::vector<Field> PacketParser::getBitFieldFields(const std::string &bitFieldName)
+{
+    for (const auto &bitField : bitFields) {
+        if (bitField.name == bitFieldName) {
+            return bitField.fields;
+        }
+    }
+
+    throw std::runtime_error("BitField not found: " + bitFieldName);
+}
+
 uint32_t PacketParser::decodeUnsignedInt(const uint8_t *data,
                                          size_t bitLength) const
 {

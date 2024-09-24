@@ -1,5 +1,7 @@
 # include "input.h"
 
+using namespace std;
+
 Input::Input()
 {
     // Read the json file
@@ -7,7 +9,7 @@ Input::Input()
 
     // Check if the input is correct
     if (!f.is_open())
-        cerr << "Failed to open " << fileName << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to open " + fileName);
 
     json *data = NULL;
 
@@ -16,15 +18,17 @@ Input::Input()
         data = new json(json::parse(f));
     }
     catch (exception e) {
-        cout << e.what() << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
         return;
     }
     catch (...) {
-        cout << "My Unknown Exception" << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "My Unknown Exception");
         return;
     }
     sensors = *data;
     fillSensorsFields();
+
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Initialized Input object with sensors data.");
 }
 
 Input &Input::getInstance()
@@ -43,7 +47,8 @@ unique_ptr<Input> Input::instance = NULL;
 // Populate sensor fields list based on JSON file paths
 void Input::fillSensorsFields()
 {
-    for (auto& [sensorId, sensorData] : sensors.items()) {        // sensor["fields"] = getFieldsOfSensor(sensor["pathToJson"]);
+    for (auto& [sensorId, sensorData] : sensors.items()) { 
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, sensorId + " - " + string(sensorData["name"]) + " : " + string(sensorData["pathToJson"]));
         sensorData["fields"] = getFieldsOfSensor("sensors_data/" + sensorData["name"].get<string>() + ".json");
         cout << sensorId << " - " << sensorData["name"] << " : " << sensorData["pathToJson"] << endl;
     }
@@ -57,7 +62,7 @@ json Input::getFieldsOfSensor(string psthToSensorJson)
 
     // Check if the input is correct
     if (!f.is_open())
-        cerr << "Failed to open " << psthToSensorJson << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to open " + psthToSensorJson);
 
     json *data = NULL;
 
@@ -66,10 +71,10 @@ json Input::getFieldsOfSensor(string psthToSensorJson)
         data = new json(json::parse(f));
     }
     catch (exception e) {
-        cout << e.what() << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
     }
     catch (...) {
-        cout << "My Unknown Exception" << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "My Unknown Exception");
     }
 
     // Read the fields and return them

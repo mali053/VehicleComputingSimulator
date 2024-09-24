@@ -8,6 +8,7 @@ using namespace std;
 
 Condition::Condition(MainWindow *mainWindow) : mainWindow(mainWindow)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Initializing Condition window...");
     setupLogicalMembers();
     setupUi();
     connectSignals();
@@ -16,6 +17,7 @@ Condition::Condition(MainWindow *mainWindow) : mainWindow(mainWindow)
 // Destructor for the Condition class: Handles cleanup and saving of conditions
 Condition::~Condition()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Destroying Condition object. Saving condition: " + condition.toStdString());
     // Add the condition to the bson
     cout << "Add the condition to the bson" << endl;
     Output &output = Output::getInstance();
@@ -36,7 +38,7 @@ Condition::~Condition()
 
 // Sets up initial conditions and data structures
 void Condition::setupLogicalMembers()
-{
+{    
     // Initialize condition strings and cursor position
     showCondition = "if (  )";
     condition = "";
@@ -52,9 +54,13 @@ void Condition::setupLogicalMembers()
     // Initialize sensor and operator lists
     Input &input = Input::getInstance();
     for (auto &[sensorId, sensorData] : input.sensors.items()) 
+    {    
         sensorList[QString::fromStdString(sensorData["name"])] = stoi(sensorId);
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added sensor: " + string(sensorData["name"])); 
+    }
     operatorsMap = {{"AND", "&"}, {"OR", "|"}};
     operatorList = {"=", "!=", ">", "<", "<=", ">="};
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Initialized operator map and operator list.");
 }
 
 // Function that set up the UI components and layout for managing conditions and actions in the Condition class
@@ -181,9 +187,11 @@ void Condition::setupUi()
     // Populate combo boxes with sensor and operator lists
     for (const auto &sensor : sensorList) {
         sensors->addItem(sensor.first);
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added sensor to combo box: " + sensor.first.toStdString());
     }
     for (const auto &op : operatorList) {
         operators->addItem(op);
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added operator to combo box: " + op.toStdString());
     }
 }
 
@@ -258,6 +266,7 @@ void Condition::updateDisplay()
 // General function triggered when the Or/And button is clicked
 void Condition::buttonClickHandler(QPushButton *button)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button clicked:" + button->text().toStdString());
     QString buttonText = "";  // Temporary string for the button text
     int tempInd = ind;        // Save the current index
 
@@ -339,6 +348,7 @@ void Condition::skipHandler()
 // Reset all logical members and UI components to their default state
 void Condition::resetButtonState()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Reset clicked.");
     // Reset all logical members and UI components to default states
     setupLogicalMembers();              // Reset condition logic
     sensors->setCurrentIndex(0);        // Reset sensor selection
@@ -359,6 +369,7 @@ void Condition::resetButtonState()
 // Handle sensor selection, updating the condition display and related UI elements based on the selected sensor
 void Condition::sensorSelectionHandler(int index)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO,  "Sensor selected:" + sensors->currentText().toStdString());
     if (index > 0) {
         // Handle sensor selection and update condition display
         QString selectedSensor = sensors->currentText();
@@ -385,6 +396,7 @@ void Condition::sensorSelectionHandler(int index)
         sensorsFields->setCurrentIndex(0);  // Reset fields to default
         Input &input = Input::getInstance();
         for (auto& [key, value] : input.sensors[to_string(typeCurrent.second)]["fields"].items()) {
+            Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Field Name: " + key + ", Value: " + value.begin().key());
             std::cout << "Field Name: " << key << ", Value: " << value.begin().key() << std::endl;
             sensorsFields->addItem(QString::fromStdString(value.begin().key()));  // Add sensor fields to combo box
         }
@@ -400,6 +412,7 @@ void Condition::sensorSelectionHandler(int index)
 // Update the display and sensor combo box state when an operator is selected
 void Condition::operatorSelectionHandler(int index)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG,  "Operator selected:" + operators->currentText().toStdString());
     // If a valid operator is selected, update the display
     if (index > 0)
         updateDisplay();
@@ -452,6 +465,8 @@ void Condition::submitHandler()
 
     updateButtonVisible();  // Update button visibility
     skipHandler();          // Handle the skip button
+
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Submitting condition:" + finalCondition.toStdString());
 }
 
 // Update the state of sensor and condition-related combo boxes and buttons based on the current condition context
@@ -486,10 +501,13 @@ void Condition::updateSensorComboBoxState()
     }
 }
 
+// Update the display when a field is selected
 void Condition::fieldSelectionHandler(int index)
 {
     if (index <= 0)
         return;
+
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG,  "Field selected:" + sensorsFields->currentText().toStdString());
 
     coverInputBoxes();
     textBox->clear();
@@ -596,6 +614,7 @@ void Condition::updateColors()
     }
 }
 
+// Update the right input box to be visible
 void Condition::coverInputBoxes()
 {
     textBox->setVisible(false);

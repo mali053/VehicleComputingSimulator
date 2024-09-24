@@ -19,6 +19,8 @@
 #include <QDoubleSpinBox>
 #include <QSpinBox>
 
+#include <nlohmann/json.hpp>
+
 #include <map>
 #include <stack>
 #include <iostream>
@@ -27,11 +29,9 @@
 #include <math.h>
 #include "main_window.h"
 #include "input.h"
-
-#include "json.hpp"
+#include "output.h"
 
 using json = nlohmann::json;
-using namespace std;
 class MainWindow;
 
 // Class that will be a layout in the main window
@@ -44,9 +44,9 @@ private:
     // Father window pointer
     MainWindow *mainWindow;
     // Variables contains the sensors and operators
-    map<QString, int> sensorList;
-    map<QString, QString> operatorsMap;
-    vector<QString> operatorList;
+    std::map<QString, int> sensorList;
+    std::map<QString, QString> operatorsMap;
+    std::vector<QString> operatorList;
     // Internal and showing conditions
     QString showCondition;
     QString condition;
@@ -56,11 +56,9 @@ private:
     bool isCursorVisible;
 
     // Variables contains the sensor and the operator types
-    pair<QString, int> typeCurrent;
-    stack<pair<QString, int>> layersStack;
-
-    // Q type - UI members
-
+    std::pair<QString, int> typeCurrent;
+    std::stack<std::pair<QString, int>> layersStack;
+    
     // Labels for showing the conditions
     QTextEdit *label;
     QLabel *label1;
@@ -89,6 +87,8 @@ private:
     QPushButton *selectActions;
 
 public:
+    static logger controlLogger;
+
     // C-tor that setup the layout
     explicit Condition(MainWindow *mainWindow);
    

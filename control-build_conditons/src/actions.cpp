@@ -5,6 +5,7 @@ using namespace std;
 
 Actions::Actions(MainWindow *mainWindow, QString showCondition) : mainWindow(mainWindow)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Initializing Actions window...");
     setupLogicalMembers();
     setupUi(showCondition);
     connectSignals();
@@ -13,6 +14,7 @@ Actions::Actions(MainWindow *mainWindow, QString showCondition) : mainWindow(mai
 //  Destructor for Actions class.
 Actions::~Actions()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Destroying Actions object");
     QLayoutItem *item;    
     // Loop through and remove all items from the layout
     while ((item = this->takeAt(0)) != nullptr) {
@@ -26,7 +28,6 @@ Actions::~Actions()
     delete addCond;  // Delete the 'Add Condition' button
 }
 
-
 // Sets up the initial logical members for the Actions class.
 void Actions::setupLogicalMembers()
 {
@@ -37,7 +38,6 @@ void Actions::setupLogicalMembers()
     currentSensor = -1; // No sensor selected
     currentMessage = ""; // No message yet
 }
-
 
  // Sets up the UI components of the Actions window.
 void Actions::setupUi(QString showCondition)
@@ -149,10 +149,11 @@ void Actions::setupUi(QString showCondition)
     this->addLayout(nextLayout);
 
     // Populate the sensor dropdown with available sensors
-    for (const auto &sensor : sensorList)
+    for (const auto &sensor : sensorList) {
         sensors->addItem(sensor.first);
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added sensor to combo box: " + sensor.first.toStdString());
+    }
 }
-
 
 // Connects signals and slots for the various UI components.
 void Actions::connectSignals()
@@ -165,10 +166,10 @@ void Actions::connectSignals()
     connect(finishBtn, &QPushButton::clicked, this, &Actions::finishBtnHandler);
 }
 
-
- // Updates the current action with the selected sensor and enables further options.
+// Updates the current action with the selected sensor and enables further options.
 void Actions::sensorSelectionHandler(int index)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO,  "Sensor selected:" + sensors->currentText().toStdString());
     if (index > 0) {
         int selectedSensor = sensorList[sensors->currentText()];
         currentSensor = selectedSensor;
@@ -187,10 +188,10 @@ void Actions::sensorSelectionHandler(int index)
     }
 }
 
-
 //Updates the action with the message entered by the user.
 void Actions::OKBtnHandler()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button OK clicked");
     QString enteredText = textBox->text();
     textBox->setText("");
     currentMessage = enteredText.toStdString();
@@ -211,6 +212,7 @@ void Actions::OKBtnHandler()
 // Appends the current action to the actions list and resets the UI for the next action.
 void Actions::addBtnHandler()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button add action clicked");
     actions->append(action);
     messages.push_back({currentSensor, currentMessage});
     currentSensor = -1;
@@ -225,10 +227,11 @@ void Actions::addBtnHandler()
     sensors->setCurrentIndex(0);
 }
 
-
 // Adds the current set of actions to the last condition.
 void Actions::addCondHandler()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button add condition clicked");
+
     messages.push_back({currentSensor, currentMessage});
 
     // Add the actions to the condition in the bson
@@ -239,10 +242,11 @@ void Actions::addCondHandler()
     mainWindow->goNext();
 }
 
-
 // Finalizes the current condition and saves it to a BSON file.
 void Actions::finishBtnHandler()
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button finish create conditions");
+
     messages.push_back({currentSensor, currentMessage});
 
     // Add the actions to the condition in the bson

@@ -12,5 +12,7 @@ int main(int argc, char *argv[])
     window.resize(800, 600);
     window.show();
 
+    Output::controlLogger.cleanUp();
+
     return app.exec();
 }

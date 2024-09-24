@@ -10,7 +10,8 @@
 #include <string>
 #include <map>
 
-using namespace std;
+#include "output.h"
+
 using json = nlohmann::json;
 
 // Singleton class which import from sensors.json
@@ -19,14 +20,14 @@ private:
     // Private constructor
     Input();
     // Single instance of the class
-    static unique_ptr<Input> instance;
+    static std::unique_ptr<Input> instance;
 
     // Name of the file to which the information will be saved
-    string fileName = "sensors.json";
+    std::string fileName = "sensors.json";
 
     // Functions for initialize the sensors fields
     void fillSensorsFields();
-    json getFieldsOfSensor(string psthToSensorJson);
+    json getFieldsOfSensor(std::string psthToSensorJson);
 
 public:
     json sensors;

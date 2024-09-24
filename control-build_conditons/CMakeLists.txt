@@ -24,7 +24,7 @@ file(GLOB_RECURSE HEADERS "include/*.h")
 list(REMOVE_ITEM SOURCES "${CMAKE_SOURCE_DIR}/src/main.cpp")
 
 # Add the executable target
-add_executable(${PROJECT_NAME} ${SOURCES}  src/main.cpp ${HEADERS})
+add_executable(${PROJECT_NAME} ${SOURCES}  src/main.cpp ${HEADERS} ../logger/logger.h ../logger/logger.cpp)
 
 # Include directories for the project
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -49,7 +49,7 @@ enable_testing()
 file(GLOB_RECURSE TEST_SOURCES "test/*.cpp")
 
 # Add the test executable
-add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES} ${SOURCES} ${HEADERS})
+add_executable(${PROJECT_NAME}_tests ${TEST_SOURCES} ${SOURCES} ${HEADERS} ../logger/logger.h ../logger/logger.cpp)
 
 # Link GoogleTest libraries
 target_link_libraries(${PROJECT_NAME}_tests PRIVATE gtest gtest_main Qt5::Widgets ${LIBBSON_LIBRARIES})

@@ -46,6 +46,8 @@ Output &Output::getInstance()
 // Static member to hold the single instance of `Output`
 unique_ptr<Output> Output::instance = NULL;
 
+logger Output::controlLogger("Control_gui");
+
 // Functions to open bson for reading
 // Use for checking right writing to BSON file
 #pragma region helper
@@ -103,6 +105,7 @@ void printJson(QJsonObject jsonObject)
 // Initialize a new BSON document for a condition and append it with a given condition string
 void Output::addNewCondition(string strCondition)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Add the `" + strCondition + "` condition to the BSON document.");
     currentCond =
         new bson_t();  // Initialize a new BSON document for the condition
     char key[16];
@@ -118,6 +121,7 @@ void Output::addNewCondition(string strCondition)
 // Add an array of actions (ID and message) to the last condition in the BSON document
 void Output::addActionsToLastCondition(vector<pair<int, string>> actions)
 {
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Add actions to the last condition in BSON document.");
     bson_t send;
     BSON_APPEND_ARRAY_BEGIN(
         currentCond, "send",
@@ -160,11 +164,10 @@ void Output::saveToFile()
         file.write(reinterpret_cast<char *>(buf),
                    length);  // Write BSON data to file
         file.close();
-        cout << "Successfully saved data to " << fileName << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::INFO, "Successfully saved data to " + fileName);
     }
     else {
-        cerr << "Failed to open file for writing: " << fileName
-                  << endl;  // Error handling
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to open file for writing: " + fileName);
     }
 
     bson_free(buf);  // Free the BSON buffer

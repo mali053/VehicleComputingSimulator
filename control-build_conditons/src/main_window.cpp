@@ -21,6 +21,8 @@ void MainWindow::setupUi()
     layout->addWidget(box); // Add the QGroupBox to the main layout.
 
     this->setLayout(layout); //  Set the main layout for the window.
+
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Initialize MainWindow");
 }
 
 void MainWindow::saveCondition(QString condition)
@@ -42,4 +44,6 @@ void MainWindow::goNext()
     box->setLayout(boxLayout);//  Set the new layout inside the QGroupBox.
 
     isConditionsWindow = !isConditionsWindow; // Toggle the state of isConditionsWindow.
+
+    Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "MainWindow::goNext");
 }

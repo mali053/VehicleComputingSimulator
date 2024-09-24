@@ -1,6 +1,6 @@
 #include "real_socket.h"
 
-logger RealSocket::log = logger("communication");
+logger RealSocket::log("communication");
 
 RealSocket::RealSocket(){}
 

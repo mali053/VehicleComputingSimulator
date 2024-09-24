@@ -1,5 +1,6 @@
 #pragma once
 #include <unordered_map>
+#include <csignal>
 #include "client_connection.h"
 #include "../sockets/Isocket.h"
 #include "error_code.h"

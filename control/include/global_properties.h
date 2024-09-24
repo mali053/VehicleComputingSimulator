@@ -13,7 +13,7 @@
 #include "input.h"
 #include "full_condition.h"
 
-#include "../../communication/src/communication.h"
+#include "../../communication/include/communication.h"
 #include "../../logger/logger.h"
 
 using json = nlohmann::json;

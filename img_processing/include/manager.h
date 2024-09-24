@@ -6,9 +6,8 @@
 #include "detector.h"
 #include "distance.h"
 #include "dynamic_tracker.h"
-#include "log_manager.h" 
+#include "log_manager.h"
 #include "velocity.h"
-
 
 class Manager {
    public:

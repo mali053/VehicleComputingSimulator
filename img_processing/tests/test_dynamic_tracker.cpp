@@ -123,7 +123,7 @@ TEST(Track, track_video)
         // cv::waitKey(0);
         for (int i = 0; i < 10; i++) {
             capture.read(frame);
-            if (frame.empty()){
+            if (frame.empty()) {
                 LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
             }
@@ -161,13 +161,13 @@ TEST(Track, calculate_execution_time)
 
         for (int i = 0; i < 10; i++) {
             capture.read(frame);
-            if (frame.empty()){
+            if (frame.empty()) {
                 LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
             }
             // auto start = std::chrono::high_resolution_clock::now();
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
-            tracker.tracking(frame1,output);
+            tracker.tracking(frame1, output);
         }
         capture.read(frame);
     }
@@ -212,23 +212,23 @@ TEST(Track, calculate_iou)
         auto trackingOutput = vector<ObjectInformation>();
         detector.detect(f1, true);
         detectionOutput = detector.getOutput();
-        trackingOutput=detector.getOutput();
+        trackingOutput = detector.getOutput();
         tracker.startTracking(f1, detectionOutput);
 
         for (int i = 0; i < 50; i++) {
             capture.read(frame);
-            if (frame.empty()){
+            if (frame.empty()) {
                 LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
             }
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
-            tracker.tracking(frame1,trackingOutput);
+            tracker.tracking(frame1, trackingOutput);
             detector.detect(f1, true);
             detectionOutput = detector.getOutput();
             rectangle(*frame1, trackingOutput[0].position, Scalar(256, 0, 0),
                       3);
-            rectangle(*frame1, detectionOutput[0].position,
-                      Scalar(0, 0, 256), 3);
+            rectangle(*frame1, detectionOutput[0].position, Scalar(0, 0, 256),
+                      3);
             imshow("frame1", *frame1);
             //waitKey(0);
             float iou = calculateIoU((detectionOutput)[0].position,
@@ -261,14 +261,13 @@ TEST(Track, track_with_few_detection)
     while (!frame.empty()) {
         capture.read(frame);
         shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
-        tracker.tracking(frame1,trackingOutput);
+        tracker.tracking(frame1, trackingOutput);
         detector.detect(f1, true);
         detectionOutput = detector.getOutput();
 
         for (int i = 0; i < trackingOutput.size(); i++) {
             Rect pos = trackingOutput[i].position;
-            if (0 <= pos.x && 0 <= pos.y &&
-                pos.x + pos.width <= frame1->cols &&
+            if (0 <= pos.x && 0 <= pos.y && pos.x + pos.width <= frame1->cols &&
                 pos.y + pos.height <= frame1->rows) {
                 rectangle(*frame1, pos, Scalar(256, 0, 0), 2);
             }
@@ -276,8 +275,7 @@ TEST(Track, track_with_few_detection)
 
         for (int i = 0; i < detectionOutput.size(); i++) {
             Rect pos = detectionOutput[i].position;
-            if (0 <= pos.x && 0 <= pos.y &&
-                pos.x + pos.width <= frame1->cols &&
+            if (0 <= pos.x && 0 <= pos.y && pos.x + pos.width <= frame1->cols &&
                 pos.y + pos.height <= frame1->rows) {
                 rectangle(*frame1, pos, Scalar(256, 0, 0), 2);
             }
@@ -312,12 +310,12 @@ TEST(Track, calculate_detection_per_frames)
         for (int i = 0; i < 20; i++) {
             capture.read(frame);
             cnt++;
-            if (frame.empty()){
+            if (frame.empty()) {
                 LogManager::logInfoMessage(InfoType::MEDIA_FINISH);
                 return;
             }
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
-            tracker.tracking(frame1,trackingOutput);
+            tracker.tracking(frame1, trackingOutput);
             detector.detect(f1, true);
             detectionOutput = detector.getOutput();
 

@@ -10,7 +10,7 @@ using namespace std;
 using namespace cv;
 
 // or true
-bool is_cuda = false;  
+bool is_cuda = false;
 
 // Helper function to load an image from a file
 Mat loadImage(const string &filename)

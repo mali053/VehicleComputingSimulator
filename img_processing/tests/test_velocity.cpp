@@ -2,9 +2,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
 #include <gtest/gtest.h>
-#include "../include/velocity.h"
-#include "../include/dynamic_tracker.h"
-#include "../include/detector.h"
+#include "velocity.h"
+#include "dynamic_tracker.h"
+#include "detector.h"
 #include "distance.h"
 
 using namespace std;

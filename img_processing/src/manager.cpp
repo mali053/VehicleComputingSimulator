@@ -125,7 +125,7 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
 
     if (isTrack(isTravel)) {
         // send the frame to track
-        dynamicTracker.tracking(this->currentFrame,this->currentOutput);
+        dynamicTracker.tracking(this->currentFrame, this->currentOutput);
     }
 
     // add distance to detection objects
@@ -151,7 +151,7 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
     return 1;
 }
 
-void Manager::drawOutput() 
+void Manager::drawOutput()
 {
     for (ObjectInformation objectInformation : currentOutput) {
         int topLeftX = objectInformation.position.x;
@@ -168,7 +168,8 @@ void Manager::drawOutput()
         std::stringstream ssDistance, ssVelocity;
         ssDistance << std::fixed << std::setprecision(2)
                    << objectInformation.distance;
-        ssVelocity << std::fixed << std::setprecision(2) << objectInformation.velocity;
+        ssVelocity << std::fixed << std::setprecision(2)
+                   << objectInformation.velocity;
 
         std::string distanceText = ssDistance.str();
         std::string velocityText = ssVelocity.str();
@@ -182,12 +183,12 @@ void Manager::drawOutput()
         // Calculate text sizes
         Size distanceTextSize = getTextSize(distanceText, fontFace, fontScale,
                                             thickness, &baseline);
-        Size velocityTextSize =
-            getTextSize(velocityText, fontFace, fontScale, thickness, &baseline);
+        Size velocityTextSize = getTextSize(velocityText, fontFace, fontScale,
+                                            thickness, &baseline);
 
         // Positions for the texts
         Point distanceTextOrg(topLeftX + 5, topLeftY - velocityTextSize.height -
-                                                7);      // Above the object
+                                                7);         // Above the object
         Point velocityTextOrg(topLeftX + 5, topLeftY - 5);  // Above the object
 
         // Draw outline for distance text
@@ -198,11 +199,11 @@ void Manager::drawOutput()
                 fontScale, Scalar(255, 255, 255), thickness);
 
         // Draw outline for velocity text
-        putText(*currentFrame, velocityText, velocityTextOrg, fontFace, fontScale,
-                Scalar(0, 0, 0), thickness + 2);
+        putText(*currentFrame, velocityText, velocityTextOrg, fontFace,
+                fontScale, Scalar(0, 0, 0), thickness + 2);
         // Write the velocity text
-        putText(*currentFrame, velocityText, velocityTextOrg, fontFace, fontScale,
-                Scalar(255, 0, 0), thickness);
+        putText(*currentFrame, velocityText, velocityTextOrg, fontFace,
+                fontScale, Scalar(255, 0, 0), thickness);
     }
 
     // Legend

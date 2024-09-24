@@ -21,8 +21,10 @@ Distance &Distance::getInstance(const cv::Mat &image)
 {
     if (!instance) {
         if (image.empty()) {
-            LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, "Could not load image");
-            throw std::runtime_error("Could not load image. Distance instance creation failed.");
+            LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                        "Could not load image");
+            throw std::runtime_error(
+                "Could not load image. Distance instance creation failed.");
         }
         else
             instance = new Distance(image);
@@ -48,7 +50,7 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             if (objectInformation.position.y +
                     objectInformation.position.height >
                 MIN_LEGAL_HEIGHT) {
-                    addDistance(0,objectInformation);
+                addDistance(0, objectInformation);
                 return;
             }
             // Find the size of the object in reality and in the picture
@@ -61,8 +63,8 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             imageSize = objectInformation.position.width;
         }
         // Calculate the distance in meters
-        double distance =(focalLength * knownSize / imageSize) / 1000;
-        addDistance(distance,objectInformation);
+        double distance = (focalLength * knownSize / imageSize) / 1000;
+        addDistance(distance, objectInformation);
     }
 }
 
@@ -70,9 +72,10 @@ void Distance::findFocalLength(const cv::Mat &image)
 {
     // Check if the input image is empty
     if (image.empty()) {
-        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR, "Could not load image");
+        LogManager::logErrorMessage(ErrorType::IMAGE_ERROR,
+                                    "Could not load image");
         //throw std::runtime_error("Could not open or find the image");
-        return;    
+        return;
     }
 
     // Convert the input image to grayscale
@@ -126,9 +129,10 @@ void Distance::findFocalLength(const cv::Mat &image)
     this->focalLength = (rectWidth * distanceToCameraMm) / actualLineLengthMm;
 }
 
-void Distance:: addDistance(double distance,ObjectInformation& obj) {
-    if (obj.prevDistances.size() ==MAX_PREV_DISTANCES_SIZE) 
-        obj.prevDistances.pop_front(); 
+void Distance::addDistance(double distance, ObjectInformation &obj)
+{
+    if (obj.prevDistances.size() == MAX_PREV_DISTANCES_SIZE)
+        obj.prevDistances.pop_front();
     obj.prevDistances.push_back(distance);
-    obj.distance=distance;
+    obj.distance = distance;
 }

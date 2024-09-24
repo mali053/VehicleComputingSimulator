@@ -88,6 +88,7 @@ void Alerter::makeFileJSON()
         output_file.close();
     }
     else {
-        LogManager::logErrorMessage(ErrorType::FILE_ERROR, "open file for writing");
+        LogManager::logErrorMessage(ErrorType::FILE_ERROR,
+                                    "open file for writing");
     }
 }

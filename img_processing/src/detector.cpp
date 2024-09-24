@@ -1,6 +1,6 @@
+#include <string>
 #include "detector.h"
 #include "manager.h"
-#include <string>
 
 using namespace std;
 using namespace cv;
@@ -9,7 +9,7 @@ using namespace dnn;
 void Detector::detect(const shared_ptr<Mat> &frame, bool isTravel)
 {
     // intialize variables
-    idCounter=0;
+    idCounter = 0;
     output.clear();
     this->prevFrame = this->currentFrame;
     this->currentFrame = frame;
@@ -110,7 +110,7 @@ void Detector::detectObjects(const shared_ptr<Mat> &frame,
         // While ObjectType Only keeps 3 organs
         result.type = static_cast<ObjectType>(classIds[idx]);
         result.position = boxes[idx];
-        result.id=idCounter++;
+        result.id = idCounter++;
         output.push_back(result);
     }
 }

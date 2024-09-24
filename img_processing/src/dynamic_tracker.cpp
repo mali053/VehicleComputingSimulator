@@ -26,7 +26,7 @@ void DynamicTracker::startTracking(
 }
 
 void DynamicTracker::tracking(const shared_ptr<Mat> &frame,
-    std::vector<ObjectInformation> &objectInformation)
+                              std::vector<ObjectInformation> &objectInformation)
 {
     this->frame = frame;
     Rect bbox;

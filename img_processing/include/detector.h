@@ -12,6 +12,7 @@ class Detector {
     std::vector<ObjectInformation> getOutput() const;
     void detect(const std::shared_ptr<cv::Mat> &frame, bool isTravel);
     int getIdCounter();
+
    private:
     int helperForDetect;
     std::shared_ptr<cv::Mat> prevFrame;

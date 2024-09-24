@@ -1,4 +1,5 @@
 #include "log_manager.h"
+
 using namespace std;
 
 logger LogManager::imgLogger("img_processing");

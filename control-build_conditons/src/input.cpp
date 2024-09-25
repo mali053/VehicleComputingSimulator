@@ -41,6 +41,14 @@ Input &Input::getInstance()
     return *instance;
 }
 
+void Input::setPathToSensors(std::string path)
+{
+    fileName = path;
+    Output::controlLogger.logMessage(logger::LogLevel::INFO, "Updated file path to sensors.json: " + fileName);
+    // Recreate the singleton instance
+    instance.reset(new Input());
+}
+
 // Static member to hold the single instance of `Output`
 unique_ptr<Input> Input::instance = NULL;
 
@@ -49,8 +57,7 @@ void Input::fillSensorsFields()
 {
     for (auto& [sensorId, sensorData] : sensors.items()) { 
         Output::controlLogger.logMessage(logger::LogLevel::DEBUG, sensorId + " - " + string(sensorData["name"]) + " : " + string(sensorData["pathToJson"]));
-        sensorData["fields"] = getFieldsOfSensor("sensors_data/" + sensorData["name"].get<string>() + ".json");
-        cout << sensorId << " - " << sensorData["name"] << " : " << sensorData["pathToJson"] << endl;
+        sensorData["fields"] = getFieldsOfSensor(sensorData["pathToJson"]);
     }
 }
 

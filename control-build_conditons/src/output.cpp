@@ -65,7 +65,7 @@ QJsonObject convertBsonToQJsonObject(const string &fileName)
 {
     ifstream file(fileName, ios::binary | ios::ate);
     if (!file.is_open()) {
-        cerr << "Failed to open file: " << fileName << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to open file: " + fileName);
         return QJsonObject();  // Return an empty QJsonObject
     }
 
@@ -83,11 +83,11 @@ QJsonObject convertBsonToQJsonObject(const string &fileName)
             return jsonObject;
         }
         else {
-            cerr << "Failed to parse BSON document" << endl;
+            Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to create BSON document");
         }
     }
     else {
-        cerr << "Failed to read file: " << fileName << endl;
+        Output::controlLogger.logMessage(logger::LogLevel::ERROR, "Failed to create file: " + fileName);
     }
     file.close();
     return QJsonObject();  // Return an empty QJsonObject
@@ -97,7 +97,6 @@ void printJson(QJsonObject jsonObject)
 {
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonBytes = jsonDoc.toJson();
-    cout << jsonBytes.toStdString() << endl;
 }
 
 #pragma endregion
@@ -157,7 +156,6 @@ void Output::saveToFile()
     uint32_t length;
     uint8_t *buf = bson_destroy_with_steal(document, true,
                                            &length);  // Steal buffer for saving
-    cout << "Document size: " << length << " bytes" << endl;
 
     ofstream file(fileName, ios::binary | ios::trunc);  // Open file to save data
     if (file.is_open()) {

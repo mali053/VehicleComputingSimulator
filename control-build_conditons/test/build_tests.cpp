@@ -20,6 +20,7 @@ public:
     }
 
     virtual void TearDown() override {
+        Output::controlLogger.cleanUp();
         delete app;
     }
 };
@@ -46,19 +47,19 @@ TEST(oneOperatorDifferentSensors, buildCondition)
     condition->buttonClickHandler(condition->orBtn);
     
     condition->sensors->setCurrentIndex(2);
-    condition->operators->setCurrentIndex(1);      
-    condition->sensorsFields->setCurrentIndex(1);      
-    condition->textBox->setText("50");
+    condition->sensorsFields->setCurrentIndex(1); 
+    condition->operators->setCurrentIndex(1);     
+    condition->spinBox->setValue(50);
     condition->submitHandler();
 
     condition->sensors->setCurrentIndex(1);
     condition->operators->setCurrentIndex(2);      
     condition->sensorsFields->setCurrentIndex(2);      
-    condition->textBox->setText("40");
+    condition->spinBox->setValue(40);
 
     condition->submitHandler();
 
-    EXPECT_EQ(condition->condition.toStdString() , "|([3]=(Status,50),[4]!=(Distance,40))");
+    EXPECT_EQ(condition->condition.toStdString() , "|([3]=(Status,50),[4]!=(Level,40))");
 }
 
 TEST(operatorInOperator, buildCondition)
@@ -146,7 +147,7 @@ TEST(oneOperatorOneSensor, buildCondition)
     condition->submitHandler();  
 
     // Validate that the final condition matches the expected format
-    EXPECT_EQ(condition->condition.toStdString(), "[4]&(=(Msg,aaa),<(Distance,10))");
+    EXPECT_EQ(condition->condition.toStdString(), "[4]&(=(MessageType,aaa),<(Level,10))");
 }
 
 TEST(oneAction,buildActions)
@@ -184,6 +185,8 @@ TEST(someActions,buildActions)
 
 int main(int argc, char **argv)
 {
+    Input &input = Input::getInstance();
+    input.setPathToSensors("../test/sensors.json");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }

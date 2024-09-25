@@ -235,7 +235,6 @@ void Actions::addCondHandler()
     messages.push_back({currentSensor, currentMessage});
 
     // Add the actions to the condition in the bson
-    cout << "Add the actions to the condition in the bson" << endl;
     Output &output = Output::getInstance();
     output.addActionsToLastCondition(messages);
 
@@ -250,12 +249,10 @@ void Actions::finishBtnHandler()
     messages.push_back({currentSensor, currentMessage});
 
     // Add the actions to the condition in the bson
-    cout << "Add the actions to the condition in the bson" << endl;
     Output &output = Output::getInstance();
     output.addActionsToLastCondition(messages);
 
     // Save the conditions to a bson file
-    cout << "Save the conditions to a bson file" << endl;
     output.saveToFile();
 
     mainWindow->close();

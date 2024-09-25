@@ -1,0 +1,6 @@
+{
+    "1" : {
+        "name" : "speed",
+        "pathToJson" : "../test/sensors_data/speed.json"
+    }
+}

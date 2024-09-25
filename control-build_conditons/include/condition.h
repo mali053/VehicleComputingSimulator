@@ -61,7 +61,7 @@ private:
     
     // Labels for showing the conditions
     QTextEdit *label;
-    QLabel *label1;
+
     // Cursor for label- for coloring it
     QTextCursor *cursor;
 
@@ -79,6 +79,7 @@ private:
     QLineEdit *textBox;
     QSpinBox *spinBox;
     QDoubleSpinBox *doubleSpinBox;
+    QComboBox *boolBox;
     QPushButton *submit;
     QComboBox *operators;
     QComboBox *sensors;
@@ -115,6 +116,7 @@ private:
     void updateButtonVisible();
     void updateColors();
     void coverInputBoxes();
+    void updateOperatorComboBox();
 
 
     friend class basicCondition_buildCondition_Test ;

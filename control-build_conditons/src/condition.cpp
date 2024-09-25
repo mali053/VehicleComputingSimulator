@@ -19,7 +19,6 @@ Condition::~Condition()
 {
     Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Destroying Condition object. Saving condition: " + condition.toStdString());
     // Add the condition to the bson
-    cout << "Add the condition to the bson" << endl;
     Output &output = Output::getInstance();
     output.addNewCondition(condition.toStdString());
 
@@ -72,10 +71,6 @@ void Condition::setupUi()
     QFont font("Arial", 25);
     label->setFont(font);
 
-    // Create another label with the same font
-    label1 = new QLabel("");
-    label1->setFont(font);
-
     // Set up a text cursor and color formats
     cursor = new QTextCursor(label->document());
     formatRed.setForeground(Qt::red);
@@ -86,7 +81,6 @@ void Condition::setupUi()
     QGroupBox *screenBox = new QGroupBox("");
     QVBoxLayout *screenLayout = new QVBoxLayout;
     screenLayout->addWidget(label);
-    screenLayout->addWidget(label1);
     screenBox->setLayout(screenLayout);
 
     // Initialize buttons, text box, and combo boxes
@@ -97,6 +91,14 @@ void Condition::setupUi()
     textBox = new QLineEdit();
     spinBox = new QSpinBox();
     doubleSpinBox = new QDoubleSpinBox();
+    boolBox = new QComboBox();
+    boolBox->addItem("true/false");  // Placeholder
+    boolBox->setItemData(0, QVariant(0),
+                        Qt::UserRole - 1);  // Disable placeholder
+    boolBox->setCurrentIndex(0);
+    boolBox->addItem("true");
+    boolBox->addItem("false");
+
     submit = new QPushButton("add to condition");
 
     sensors = new QComboBox();
@@ -112,10 +114,6 @@ void Condition::setupUi()
     sensorsFields->setCurrentIndex(0);
 
     operators = new QComboBox();
-    operators->addItem("Operators");  // Placeholder
-    operators->setItemData(0, QVariant(0),
-                           Qt::UserRole - 1);  // Disable placeholder
-    operators->setCurrentIndex(0);
 
     // Create a keyboard section (QGroupBox) with buttons
     QGroupBox *keyboardBox = new QGroupBox("");
@@ -138,6 +136,7 @@ void Condition::setupUi()
     textLayout->addWidget(textBox);
     textLayout->addWidget(spinBox);
     textLayout->addWidget(doubleSpinBox);
+    textLayout->addWidget(boolBox);
     basicConditionLayout->addLayout(textLayout);
     basicConditionLayout->addWidget(submit);
     basicConditionBox->setLayout(basicConditionLayout);
@@ -179,20 +178,19 @@ void Condition::setupUi()
     doubleSpinBox->setRange(-200, 2000);
     doubleSpinBox->setValue(0);
     doubleSpinBox->setFixedHeight(30);
+    boolBox->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
 
     textBox->setVisible(false);
     spinBox->setVisible(false);
     doubleSpinBox->setVisible(false);
+    boolBox->setVisible(false);
 
     // Populate combo boxes with sensor and operator lists
     for (const auto &sensor : sensorList) {
         sensors->addItem(sensor.first);
         Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added sensor to combo box: " + sensor.first.toStdString());
     }
-    for (const auto &op : operatorList) {
-        operators->addItem(op);
-        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added operator to combo box: " + op.toStdString());
-    }
+    updateOperatorComboBox();
 }
 
 // Function that connect signals to their corresponding slots or handlers
@@ -248,9 +246,6 @@ void Condition::updateDisplay()
         displayedShowCondition);  // Update the label with modified text
     updateColors();               // Update color formatting
     label->show();                // Display updated label
-
-    label1->setText(
-        condition);  // Update the secondary label with the condition text
 
     // Control visibility of selectActions button based on condition length and cursor position
     bool enableSelectActions =
@@ -354,6 +349,7 @@ void Condition::resetButtonState()
     sensors->setCurrentIndex(0);        // Reset sensor selection
     sensorsFields->setCurrentIndex(0);  // Reset sensor fields
     operators->setCurrentIndex(0);      // Reset operator selection
+    boolBox->setCurrentIndex(0);        // Reset boolBox selection
     textBox->clear();                   // Clear input field
     sensorSelectionHandler(0);          // Reset sensor handler
     updateButtonVisible();              // Update button visibility
@@ -361,6 +357,7 @@ void Condition::resetButtonState()
     updateSkipButtonState();            // Update skip button state
     updateDisplay();                    // Refresh the display
     coverInputBoxes();
+    updateOperatorComboBox();
 
     skip->setVisible(false);
     selectActions->setVisible(false);
@@ -397,7 +394,6 @@ void Condition::sensorSelectionHandler(int index)
         Input &input = Input::getInstance();
         for (auto& [key, value] : input.sensors[to_string(typeCurrent.second)]["fields"].items()) {
             Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Field Name: " + key + ", Value: " + value.begin().key());
-            std::cout << "Field Name: " << key << ", Value: " << value.begin().key() << std::endl;
             sensorsFields->addItem(QString::fromStdString(value.begin().key()));  // Add sensor fields to combo box
         }
 
@@ -441,9 +437,12 @@ void Condition::submitHandler()
         enteredText = textBox->text();
     else if (type == "unsigned_int" || type == "signed_int")
         enteredText = QString::number(spinBox->value());
+    else if (type == "boolean") {
+        updateOperatorComboBox();
+        enteredText = boolBox->currentText();
+    }
     else
         enteredText = QString::number(doubleSpinBox->value());
-    // else if (type == "boolean")
 
     // Form the final condition string and update the display condition
     QString finalCondition =
@@ -479,12 +478,12 @@ void Condition::updateSensorComboBoxState()
         !(layersStack.size() <= 1 && typeCurrent.first == "Basic");
 
     
-    bool valueFull = (!textBox->text().isEmpty() || spinBox->value() != 0 || doubleSpinBox->value() != 0);
+    bool valueFull = (!textBox->text().isEmpty() || spinBox->value() != 0 || doubleSpinBox->value() != 0) || boolBox->isVisible();
 
     // Enable the submit button if all conditions for submission are met
     bool enableSUbmit =
         typeCurrent.second != -1 && sensorsFields->currentIndex() != 0 &&
-        operators->currentIndex() != 0 && valueFull;
+        operators->currentIndex() != 0 && valueFull && (!boolBox->isVisible() || boolBox->currentIndex() != 0);
 
     sensors->setEnabled(typeCurrent.second ==
                         -1);  // Enable sensors if applicable
@@ -513,6 +512,7 @@ void Condition::fieldSelectionHandler(int index)
     textBox->clear();
     spinBox->setValue(0);
     doubleSpinBox->setValue(0);
+    boolBox->setCurrentIndex(0);
 
     Input &input = Input::getInstance();
     auto fields = input.sensors[to_string(typeCurrent.second)]["fields"];
@@ -534,7 +534,17 @@ void Condition::fieldSelectionHandler(int index)
         doubleSpinBox->setVisible(true);
     else if (type == "char_array")
         textBox->setVisible(true);
-    // else if (type == "boolean")
+    else if (type == "boolean") {
+        operators->clear();
+        operators->addItem("Operators");  // Placeholder
+        operators->setItemData(0, QVariant(0),
+                            Qt::UserRole - 1);  // Disable placeholder
+        operators->setCurrentIndex(0);
+        operators->addItem("=");
+        operators->addItem("!=");
+        boolBox->setVisible(true);
+        boolBox->setCurrentIndex(0);
+    }
 }
 
 // Update the visibility of the skip button depending on the cursor position and current condition
@@ -620,4 +630,19 @@ void Condition::coverInputBoxes()
     textBox->setVisible(false);
     spinBox->setVisible(false);
     doubleSpinBox->setVisible(false);
+    boolBox->setVisible(false);
+}
+
+void Condition::updateOperatorComboBox()
+{
+    operators->clear();
+    operators->addItem("Operators");  // Placeholder
+    operators->setItemData(0, QVariant(0),
+                           Qt::UserRole - 1);  // Disable placeholder
+    operators->setCurrentIndex(0);
+
+    for (const auto &op : operatorList) {
+        operators->addItem(op);
+        Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Added operator to combo box: " + op.toStdString());
+    }
 }

@@ -23,7 +23,7 @@ private:
     static std::unique_ptr<Input> instance;
 
     // Name of the file to which the information will be saved
-    std::string fileName = "sensors.json";
+    std::string fileName = "../sensors.json";
 
     // Functions for initialize the sensors fields
     void fillSensorsFields();
@@ -34,6 +34,8 @@ public:
 
     // Gets the singleton instance
     static Input &getInstance();
+
+    void setPathToSensors(std::string path);
 };
 
 #endif  // INPUT

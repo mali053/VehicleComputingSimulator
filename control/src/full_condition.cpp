@@ -120,7 +120,7 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
             condition.substr(commaIndex + 1, closeBracket - commaIndex - 1);
 
         // Convert the string to a void pointer
-        basicCondition->value = static_cast<void *>(new string(valueStr));
+        basicCondition->value = valueStr;
         basicCondition->setValue(valueStr,
                                  currentSensor->parser->getFieldType(
                                      currentSensor->fieldsMap[name].type));

@@ -12,6 +12,7 @@
 #include <nlohmann/json.hpp>
 #include "input.h"
 #include "full_condition.h"
+#include "sensor.h"
 
 #include "../../communication/include/communication.h"
 #include "../../logger/logger.h"

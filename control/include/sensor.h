@@ -22,22 +22,13 @@ public:
     std::map<std::string, Field> fieldsMap;
 
     // Contains the current values of various fields and a list of basic conditions associated with each field
-    std::map<std::string, std::pair<void *, std::vector<BasicCondition *>>> fields;
+    std::map<std::string, std::pair<FieldValue, std::vector<BasicCondition *>>> fields;
 
     // C-tor initializes the id member variable.
-    Sensor(int id, string name) : id(id), name(name)
-    {
-        parser = new PacketParser("./sensors_data/" + name + ".json");
-        std::vector<Field> tempFields = parser->getFields();
-        // cout << "tempFields:" << endl;
-        for (auto field : tempFields) {
-            cout << field.name << " : " << field.type << endl;
-            fieldsMap[field.name] = field;
-        }
-    }
+    Sensor(int id, string name);
 
     // Updates the condition status according to the received field and returns the  list of the full conditions whose root is true
-    void updateTrueRoots(std::string field, void *value, FieldType type);
+    void updateTrueRoots(std::string field, FieldValue value, FieldType type);
 
     void handleMessage(void *msg);
 

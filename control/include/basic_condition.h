@@ -16,7 +16,7 @@ using namespace std;
 // Class that present a leaf - basic condition
 class BasicCondition : public Condition {
 public:
-    void *value;
+    FieldValue value;
     OperatorTypes operatorType;
     BasicCondition(OperatorTypes ot) : operatorType(ot) {}
 

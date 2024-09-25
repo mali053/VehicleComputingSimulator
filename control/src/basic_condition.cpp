@@ -5,74 +5,66 @@ void BasicCondition::setValue(string valueStr, FieldType type)
     GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "SetValue in BasicCondition to " + valueStr);
     switch (type) {
         case FieldType::UNSIGNED_INT: {
-            unsigned int *uintPtr = new unsigned int();
+            unsigned int uintVal;
             try {
-                *uintPtr = stoi(valueStr);
+                uintVal = stoi(valueStr);
             }
             catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
             }
-            value = static_cast<void *>(uintPtr);
+            value = uintVal;
             break;
         }
         case FieldType::SIGNED_INT: {
-            int *intPtr = new int();
+            int intVal;
             try {
-                *intPtr = stoi(valueStr);
+                intVal = stoi(valueStr);
             }
             catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
             }
-            value = static_cast<void *>(intPtr);
+            value = intVal;
             break;
         }
         case FieldType::CHAR_ARRAY: {
-            std::string *buffer = new std::string(valueStr);
-            value = static_cast<void *>(buffer);
+            value = valueStr;
             break;
         }
         case FieldType::FLOAT_FIXED: {
-            float *floatPtr = new float();
+            float floatVal;
             try {
-                *floatPtr = stof(valueStr);
+                floatVal = stof(valueStr);
             }
             catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
             }
-            value = static_cast<void *>(floatPtr);
+            value = floatVal;
             break;
         }
         case FieldType::FLOAT_MANTISSA: {
-            float *floatPtr = new float();
+            float floatVal;
             try {
-                *floatPtr = stof(valueStr);
+                floatVal = stof(valueStr);
             }
             catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
             }
-            value = static_cast<void *>(floatPtr);
+            value = floatVal;
             break;
         }
-        case FieldType::BIT_FIELD: {
-            unsigned long bitValue;
-            try {
-                bitValue = stoul(valueStr, nullptr, 2);
-            }
-            catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
-            }
-            unsigned long *bitPtr = &bitValue;
-            value = static_cast<void *>(bitPtr);
+        case FieldType::BOOLEAN: {
+            bool boolVal = (valueStr == "true") ? true : false;
+            value = boolVal;
         }
         case FieldType::DOUBLE: {
-            double *doublePtr = new double();
+            double doubleVal;
             try {
-                *doublePtr = stod(valueStr);
+                doubleVal = stod(valueStr);
             }
             catch (const exception &e) {
-                cerr << "Error: " << e.what() << endl;
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, e.what());
             }
-            value = static_cast<void *>(doublePtr);
+            value = doubleVal;
             break;
         }
         default:

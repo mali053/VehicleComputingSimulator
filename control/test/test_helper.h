@@ -10,7 +10,7 @@
 #include "global_properties.h"
 
 // Tests a condition by resetting global state and updating sensor values
-void testCondition(string condition, int sensorId, string field, void *value,
+void testCondition(string condition, int sensorId, string field, FieldValue value,
                    FieldType type);
 
 #endif  // TEST_HELPER_H

@@ -1,6 +1,26 @@
 #include "sensor.h"
 using namespace std;
 
+// C-tor initializes the id member variable.
+Sensor::Sensor(int id, string name) : id(id), name(name)
+{
+    parser = new PacketParser("./sensors_data/" + name + ".json");
+    std::vector<Field> tempFields = parser->getFields();
+    // cout << "tempFields:" << endl;
+    for (auto field : tempFields) {
+        if (field.type == "bit_field") 
+            for (auto subField : parser->getBitFieldFields(field.name)) {
+                GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, subField.name + " : " + subField.type);
+                cout << subField.name << " : " << subField.type << endl;
+                fieldsMap[subField.name] = field;
+            }
+        else
+            GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, field.name + " : " + field.type);
+            cout << field.name << " : " << field.type << endl;
+            fieldsMap[field.name] = field;
+    }
+}
+
 void Sensor::handleMessage(void *msg)
 {
     parser->setBuffer(msg);
@@ -17,7 +37,7 @@ void Sensor::handleMessage(void *msg)
 }
 
 //Updates the condition status according to the received field and returns the  list of the full conditions whose root is true
-void Sensor::updateTrueRoots(string field, void *value, FieldType type)
+void Sensor::updateTrueRoots(string field, FieldValue value, FieldType type)
 {
     // Update the field value in the sensor
     this->fields[field].first = value;
@@ -25,44 +45,44 @@ void Sensor::updateTrueRoots(string field, void *value, FieldType type)
     // Evaluate each condition related to the field
     for (BasicCondition *bc : this->fields[field].second) {
         bool flag = false, prevStatus = bc->status;
-        void *bcValue = bc->value;
+        FieldValue bcValue = bc->value;
         OperatorTypes op = bc->operatorType;
 
         switch (type) {
             case FieldType::UNSIGNED_INT: {
                 flag =
-                    applyComparison(*static_cast<unsigned int *>(value),
-                                    *static_cast<unsigned int *>(bcValue), op);
+                    applyComparison(get<unsigned int>(value),
+                                    get<unsigned int>(bcValue), op);
                 break;
             }
             case FieldType::SIGNED_INT: {
-                flag = applyComparison(*static_cast<int *>(value),
-                                       *static_cast<int *>(bcValue), op);
+                flag = applyComparison(get<int>(value),
+                                       get<int>(bcValue), op);
                 break;
             }
             case FieldType::CHAR_ARRAY: {
-                flag = applyComparison(*static_cast<char **>(value),
-                                       *static_cast<char **>(bcValue), op);
+                flag = applyComparison(get<string>(value),
+                                       get<string>(bcValue), op);
                 break;
             }
             case FieldType::FLOAT_FIXED: {
-                flag = applyComparison(*static_cast<float *>(value),
-                                       *static_cast<float *>(bcValue), op);
+                flag = applyComparison(get<float>(value),
+                                       get<float>(bcValue), op);
                 break;
             }
             case FieldType::FLOAT_MANTISSA: {
-                flag = applyComparison(*static_cast<float *>(value),
-                                       *static_cast<float *>(bcValue), op);
+                flag = applyComparison(get<float>(value),
+                                       get<float>(bcValue), op);
                 break;
             }
-            case FieldType::BIT_FIELD: {
-                flag = applyComparison(*static_cast<int *>(value),
-                                       *static_cast<int *>(bcValue), op);
+            case FieldType::BOOLEAN: {
+                flag = applyComparison(get<bool>(value),
+                                       get<bool>(bcValue), op);
                 break;
             }
             case FieldType::DOUBLE: {
-                flag = applyComparison(*static_cast<double *>(value),
-                                       *static_cast<double *>(bcValue), op);
+                flag = applyComparison(get<double>(value),
+                                       get<double>(bcValue), op);
             }
             default: {
                 cout << "DEFAULT" << endl;

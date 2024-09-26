@@ -2,22 +2,21 @@
 using namespace std;
 
 // C-tor initializes the id member variable.
-Sensor::Sensor(int id, string name) : id(id), name(name)
+Sensor::Sensor(int id, string name, string jsonFilePath) : id(id), name(name)
 {
-    parser = new PacketParser("./sensors_data/" + name + ".json");
+    parser = new PacketParser(jsonFilePath);
     std::vector<Field> tempFields = parser->getFields();
-    // cout << "tempFields:" << endl;
+
     for (auto field : tempFields) {
         if (field.type == "bit_field") 
             for (auto subField : parser->getBitFieldFields(field.name)) {
                 GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, subField.name + " : " + subField.type);
-                cout << subField.name << " : " << subField.type << endl;
-                fieldsMap[subField.name] = field;
+                fieldsMap[subField.name] = subField;
             }
-        else
+        else {
             GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, field.name + " : " + field.type);
-            cout << field.name << " : " << field.type << endl;
             fieldsMap[field.name] = field;
+        }  
     }
 }
 
@@ -29,8 +28,6 @@ void Sensor::handleMessage(void *msg)
         string fieldName = field.first;
         GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Processing field: " + fieldName);
 
-        cout << "----------------\nfieldName: " << fieldName << endl;
-        cout << "field type: " << field.second.type << endl;
         updateTrueRoots(fieldName, parser->getFieldValue(fieldName),
                         parser->getFieldType(field.second.type));
     }
@@ -65,7 +62,7 @@ void Sensor::updateTrueRoots(string field, FieldValue value, FieldType type)
                                        get<string>(bcValue), op);
                 break;
             }
-            case FieldType::FLOAT_FIXED: {
+            case FieldType::FLOAT_FIXED: {  
                 flag = applyComparison(get<float>(value),
                                        get<float>(bcValue), op);
                 break;
@@ -85,7 +82,6 @@ void Sensor::updateTrueRoots(string field, FieldValue value, FieldType type)
                                        get<double>(bcValue), op);
             }
             default: {
-                cout << "DEFAULT" << endl;
                 GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Invalid FieldType encountered");
                 break;
             }
@@ -113,25 +109,20 @@ void Sensor::updateTrueRoots(string field, FieldValue value, FieldType type)
 template <typename T>
 bool Sensor::applyComparison(T a, T b, OperatorTypes op)
 {
-    cout << "applyComparison" << endl;
-    cout << "a: " << a << ", b: " << b << endl;
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "applyComparison");
     switch (op) {
         case OperatorTypes::e:
             return a == b;
         case OperatorTypes::ne:
             return a != b;
-        case OperatorTypes::l: {
-            cout << "(" << a << " < " << b << ") ? " << ((a < b) ? "V" : "X") << endl;
+        case OperatorTypes::l:
             return a < b;
-        }
-        case OperatorTypes::b: {
-            cout << "(" << a << " > " << b << ") ? " << ((a > b) ? "V" : "X") << endl;
+        case OperatorTypes::b:
             return a > b;
-        }
         case OperatorTypes::le:
             return a <= b;
         case OperatorTypes::be:
             return a >= b;
-    }
+    }  
     return false;
 }

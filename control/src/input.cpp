@@ -38,6 +38,7 @@ void Input::s_buildSensors(unordered_map<int, Sensor *> &sensors)
         bson_iter_t docIter;
         bson_iter_recurse(&arrayIter, &docIter);
 
+        string jsonPath;  // Path to the JSON file containing the sensor data.
         string name;  // Sensor name/type.
         int id;       // Sensor ID.
 
@@ -50,10 +51,11 @@ void Input::s_buildSensors(unordered_map<int, Sensor *> &sensors)
             else if (strcmp(key, "name") == 0)
                 name = bson_iter_utf8(&docIter,
                                       NULL);  // Extract the sensor name/type.
+            else if (strcmp(key, "jsonPath") == 0)
+                jsonPath = bson_iter_utf8(&docIter, NULL);
         }
 
-        Sensor *sensorPtr = new Sensor(id, name);  // Create a generic Sensor.
-        cout << "SENSOR: id: " << id << ", name: " << name << endl;
+        Sensor *sensorPtr = new Sensor(id, name, jsonPath);  // Create a generic Sensor.
         sensors[sensorPtr->id] =
             sensorPtr;  // Add the sensor pointer to the map
     }
@@ -194,7 +196,7 @@ void Input::s_buildConditions()
 // Function that read the bson file
 bson_t *Input::s_readData()
 {
-    string fileName = "conditions.bson";
+    string fileName = "../conditions.bson";
     ifstream file(fileName, ios::binary);
     if (file.is_open()) {
         // Get the file size

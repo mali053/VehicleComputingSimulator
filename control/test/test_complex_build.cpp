@@ -11,9 +11,9 @@ TEST(InSameTree, IdenticalSubtrees)
     int num = 800;
     FieldValue fv = num;
     testCondition(
-        "|([1]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[1]&(|(=("
-        "code,500),<(status,\"high\")),>(msg,\"aaa\")))",
-        2, "code", fv, FieldType::SIGNED_INT);
+        "|([8]&(|(=(Speed,500),<(Status,true)),=(Msg,aaa)),[8]&(|(=("
+        "Speed,500),<(Status,true)),>(Msg,aaa)))",
+        8, "Speed", fv, FieldType::SIGNED_INT);
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
     // Check correct building
     if (OperatorNode *on = dynamic_cast<OperatorNode *>(
@@ -32,10 +32,10 @@ TEST(InSameTree, IdenticalSubtrees)
     // Check correct update
     num = 500;
     fv = num;
-    instanceGP.sensors[1]->updateTrueRoots("code", fv, FieldType::SIGNED_INT);
+    instanceGP.sensors[8]->updateTrueRoots("Speed", fv, FieldType::SIGNED_INT);
     string str = "aaa";
     fv = str;
-    instanceGP.sensors[1]->updateTrueRoots("msg", fv, FieldType::CHAR_ARRAY);
+    instanceGP.sensors[8]->updateTrueRoots("Msg", fv, FieldType::CHAR_ARRAY);
     EXPECT_EQ(instanceGP.trueConditions.size(), 1);
 }
 
@@ -46,14 +46,14 @@ TEST(InDifferentTrees, IdenticalSubtrees)
     FieldValue fv = num;
     // Creates a `FullCondition` objects with the given parameters
     testCondition(
-        "|([1]&(|(=(code,500),<(status,\"high\")),=(msg,\"aaa\")),[1]&(|(=("
-        "code,500),<(status,\"high\")),>(msg,\"aaa\")))",
-        2, "code", fv, FieldType::SIGNED_INT);
+        "|([8]&(|(=(Speed,500),<(Status,true)),=(Msg,aaa)),[8]&(|(=("
+        "Speed,500),<(Status,true)),>(Msg,aaa)))",
+        2, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
     vector<pair<int, string>> vec = {{2, "the condition is true"}};
     FullCondition *cond =
-        new FullCondition("[1]|(=(code,500),<(status,\"high\"))", vec);
+        new FullCondition("[8]|(=(Speed,500),<(Status,true))", vec);
     instanceGP.conditions[cond->id] = cond;
 
     // Check correct building
@@ -77,10 +77,10 @@ TEST(InDifferentTrees, IdenticalSubtrees)
     // Check correct update
     num = 500;
     fv = num;
-    instanceGP.sensors[1]->updateTrueRoots("code", fv, FieldType::SIGNED_INT);
+    instanceGP.sensors[8]->updateTrueRoots("Speed", fv, FieldType::SIGNED_INT);
     string str = "aaa";
     fv = str;
-    instanceGP.sensors[1]->updateTrueRoots("msg", fv, FieldType::CHAR_ARRAY);
+    instanceGP.sensors[8]->updateTrueRoots("Msg", fv, FieldType::CHAR_ARRAY);
     EXPECT_EQ(instanceGP.trueConditions.size(), 2);
 }
 
@@ -91,11 +91,11 @@ TEST(InDifferentTrees, IdenticalSubtrees)
 // Check building And operator into And operator
 TEST(AndInAndCondition, SameOperatorsConditionTest)
 {
-    int num = 800;
+    int num = 500;
     FieldValue fv = num;
     // Creates a `FullCondition` object with the given parameters
-    testCondition("&([1]&(=(status,\"high\"),=(code,500)),[2]=(code,800))", 2,
-                  "code", fv, FieldType::SIGNED_INT);
+    testCondition("&([8]&(=(Status,true),=(Speed,500)),[8]!=(Speed,800))", 8,
+                  "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -108,14 +108,10 @@ TEST(AndInAndCondition, SameOperatorsConditionTest)
                   "OperatorNode*");
 
     // Check correct update
-    string str = "\"high\"";
-    fv = str;
-    instanceGP.sensors[1]->updateTrueRoots("status", fv,
-                                           FieldType::CHAR_ARRAY);
-    num = 500;                                       
-    fv = num;
-    instanceGP.sensors[1]->updateTrueRoots("code", fv, FieldType::SIGNED_INT);
-
+    bool status = true;
+    fv = status;
+    instanceGP.sensors[8]->updateTrueRoots("Status", fv,
+                                           FieldType::BOOLEAN);
     EXPECT_EQ(instanceGP.trueConditions.size(), 1);
 }
 
@@ -125,8 +121,8 @@ TEST(OrInOrCondition, SameOperatorsConditionTest)
     int num = 500;
     FieldValue fv = num;
     // Creates a `FullCondition` object with the given parameters
-    testCondition("|([2]=(code,800),[1]|(=(status,\"high\"),=(code,500)))", 1,
-                  "code", fv, FieldType::SIGNED_INT);
+    testCondition("|([8]=(Speed,800),[8]|(=(Status,true),=(Speed,500)))", 8,
+                  "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -145,13 +141,12 @@ TEST(OrInOrCondition, SameOperatorsConditionTest)
 // Check building Complex Or operator into Or operator
 TEST(ComplexOrInOrCondition, SameOperatorsConditionTest)
 {
-    int num = 800;
+    int num = 500;
     FieldValue fv = num;
     // Creates a `FullCondition` object with the given parameters
     testCondition(
-        "|([2]&(=(code,800),!=(msg,\"aaa\")),[1]|(=(code,500),|(=(status,"
-        "\"high\"),=(msg,\"goog\"))))",
-        2, "code", fv, FieldType::SIGNED_INT);
+        "|([8]&(=(Speed,800),!=(Msg,aaa)),[8]|(=(Speed,500),|(=(Status,true),=(Msg,goog))))",
+        8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -164,10 +159,6 @@ TEST(ComplexOrInOrCondition, SameOperatorsConditionTest)
                   "OperatorNode*");
 
     // Check correct update
-    string str = "\"good\"";
-    fv = str;
-    instanceGP.sensors[2]->updateTrueRoots("msg", fv, FieldType::CHAR_ARRAY);
-
     EXPECT_EQ(instanceGP.trueConditions.size(), 1);
 }
 

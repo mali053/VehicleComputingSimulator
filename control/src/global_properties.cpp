@@ -6,13 +6,12 @@ void handleMesseage(uint32_t senderId,void *data)
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
     GlobalProperties::controlLogger.logMessage(logger::LogLevel::INFO, "Received message from id " + senderId);
-    cout << "MAIN : I got message from id " << senderId << endl;
 
     char * msg = "I got message";
     size_t dataSize = strlen(msg) + 1;
     instanceGP.comm->sendMessage((void*)msg, dataSize, senderId, instanceGP.srcID, false);
     instanceGP.sensors[senderId]->handleMessage(data);
-    cout << "\n****************\n" << endl;
+
     for (int cId : instanceGP.trueConditions)
         instanceGP.conditions[cId]->activateActions();
 
@@ -22,7 +21,7 @@ void handleMesseage(uint32_t senderId,void *data)
 int readIdFromJson()
 {
     // Read the json file
-    ifstream f("config.json");
+    ifstream f("../config.json");
 
     // Check if the input is correct
     if (!f.is_open())

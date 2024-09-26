@@ -15,9 +15,9 @@ TEST(SensorsBuild, SensorsTest)
 // Insert BasicCondition into instanceGP.conditions
 TEST(EqualCondition, BasicConditionTest)
 {
-    int num = 500;
+    int num = 100;
     FieldValue fv = num;
-    testCondition("[1]=(code,500)", 1, "code", fv, FieldType::SIGNED_INT);
+    testCondition("[8]=(Speed,100)", 8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -35,9 +35,9 @@ TEST(SimpleUpdateStatus, UpdateTest)
 // Check the update status with BasicConditionNotEqual
 TEST(NotEqualCondition, BasicConditionTest)
 {
-    int num = 800;
+    int num = 100;
     FieldValue fv = num;
-    testCondition("[1]!=(code,500)", 1, "code", fv, FieldType::SIGNED_INT);
+    testCondition("[8]!=(Speed,500)", 8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -49,7 +49,7 @@ TEST(LetterCondition, BasicConditionTest)
 {
     int num = 500;
     FieldValue fv = num;
-    testCondition("[1]<(code,500)", 1, "code", fv, FieldType::SIGNED_INT);
+    testCondition("[8]<(Speed,500)", 8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -61,7 +61,7 @@ TEST(BiggerCondition, BasicConditionTest)
 {
     int num = 800;
     FieldValue fv = num;
-    testCondition("[1]>(code,500)", 1, "code", fv, FieldType::SIGNED_INT);
+    testCondition("[8]>(Speed,500)", 8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 
@@ -77,7 +77,7 @@ TEST(OrCondition, ComplexConditionTest)
 {
     int num = 500;
     FieldValue fv = num;
-    testCondition("[1]|(=(code,500),=(msg,aaa))", 1, "code", fv,
+    testCondition("[8]|(=(Speed,500),=(Message,aaa))", 8, "Speed", fv,
                   FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
@@ -91,7 +91,7 @@ TEST(AndCondition, ComplexConditionTest)
 {
     int num = 500;
     FieldValue fv = num;
-    testCondition("[1]&(=(code,500),=(msg,\"aaa\"))", 1, "code", fv,
+    testCondition("[8]&(=(Speed,500),=(Message,\"aaa\"))", 8, "Speed", fv,
                   FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
@@ -106,8 +106,8 @@ TEST(OrAndCondition, ComplexConditionTest)
     int num = 800;
     FieldValue fv = num;
     testCondition(
-        "|([1]&(=(status,\"high\"),=(code,500),=(msg,\"aaa\")),[2]=(code,800))",
-        2, "code", fv, FieldType::SIGNED_INT);
+        "|([8]&(=(Status,true),=(Speed,500),=(Message,\"aaa\")),[8]=(Speed,800))",
+        8, "Speed", fv, FieldType::SIGNED_INT);
 
     GlobalProperties &instanceGP = GlobalProperties::getInstance();
 

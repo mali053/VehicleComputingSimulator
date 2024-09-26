@@ -25,7 +25,7 @@ public:
     std::map<std::string, std::pair<FieldValue, std::vector<BasicCondition *>>> fields;
 
     // C-tor initializes the id member variable.
-    Sensor(int id, string name);
+    Sensor(int id, string name, string jsonFilePath);
 
     // Updates the condition status according to the received field and returns the  list of the full conditions whose root is true
     void updateTrueRoots(std::string field, FieldValue value, FieldType type);

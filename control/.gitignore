@@ -5,3 +5,4 @@ out/
 build/
 googletest/
 lib/
+conditions.bson

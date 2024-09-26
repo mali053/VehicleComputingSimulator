@@ -22,7 +22,7 @@ void defineCurrentSensor(const string &condition, int &index)
     index = closeBracket + 1;
     currentSensor = instanceGP.sensors[id];
 
-    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "The current sensor id is: " + to_string(id));
+    GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "The current sensor id is: " + to_string(currentSensor->id));
 }
 
 // Recursively builds the condition tree from the condition string.
@@ -45,7 +45,7 @@ Condition *FullCondition::buildNode(const string &condition, int &index,
 
     // Generates a key for the condition with the current sensor's ID (if exists)
     string key =
-        (currentSensor ? to_string(currentSensor->id) : "") +
+        (currentSensor ? to_string(currentSensor->id) : "-") +
         condition.substr(index, bracketIndexes[openBracketIndex] - index + 1);
 
     GlobalProperties::controlLogger.logMessage(logger::LogLevel::DEBUG, "Generated condition key: " + key);

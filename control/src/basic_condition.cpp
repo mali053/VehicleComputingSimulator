@@ -55,6 +55,7 @@ void BasicCondition::setValue(string valueStr, FieldType type)
         case FieldType::BOOLEAN: {
             bool boolVal = (valueStr == "true") ? true : false;
             value = boolVal;
+            break;
         }
         case FieldType::DOUBLE: {
             double doubleVal;
@@ -67,7 +68,9 @@ void BasicCondition::setValue(string valueStr, FieldType type)
             value = doubleVal;
             break;
         }
-        default:
+        default: {
+            GlobalProperties::controlLogger.logMessage(logger::LogLevel::ERROR, "Invalid FieldType encountered");
             break;
+        }
     }
 }

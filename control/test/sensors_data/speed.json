@@ -2,8 +2,8 @@
     "endianness": "little",
     "fields": [
         {
-            "size": 32,
-            "type": "signed_int",
+            "size": 8,
+            "type": "boolean",
             "name": "Status"
         },
         {
@@ -13,7 +13,7 @@
         },
         {
             "size": 32,
-            "type": "float_fixed",
+            "type": "signed_int",
             "name": "Speed"
         }
     ]

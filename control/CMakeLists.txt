@@ -33,10 +33,3 @@ file(GLOB TEST_SOURCES "test/*.cpp")
 add_executable(RunTests ${SOURCES} ${PARSER} ${SOURCES_COMMUNICATION} ${HEADERS_COMMUNICATION} ${SOCKETS_COMMUNICATIONS} ../logger/logger.h ../logger/logger.cpp ${TEST_SOURCES})
 target_include_directories(RunTests PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(RunTests PRIVATE ${BSON_LIBRARIES} gtest_main)
-
-# Copy .json to the build directory
-file(COPY ${CMAKE_SOURCE_DIR}/src/sensors_data DESTINATION ${CMAKE_BINARY_DIR})
-
-# Copy output.bson and config.json to the build directory
-configure_file(${CMAKE_SOURCE_DIR}/../conditions.bson ${CMAKE_BINARY_DIR}/conditions.bson COPYONLY)
-configure_file(${CMAKE_SOURCE_DIR}/config.json ${CMAKE_BINARY_DIR}/config.json COPYONLY)

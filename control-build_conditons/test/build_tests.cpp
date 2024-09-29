@@ -90,7 +90,7 @@ TEST(operatorInOperator, buildCondition)
     condition->textBox->setText("abc");
     condition->submitHandler();
 
-    EXPECT_EQ(condition->condition.toStdString() , "&([2]&(>(Pressure,20),=(Temperature,600)),[1]!=(Msg,abc))");
+    EXPECT_EQ(condition->condition.toStdString() , "&([2]&(>(Pressure,20),=(Temperature,600)),[8]!=(Msg,abc))");
 }
 
 TEST(differentOperatorsDifferentSensors, buildCondition)
@@ -158,7 +158,7 @@ TEST(oneAction,buildActions)
     actions->OKBtnHandler();
     actions->sensors->setCurrentIndex(3);
     actions->addBtnHandler();
-    EXPECT_EQ(actions->messages[0].first,1);
+    EXPECT_EQ(actions->messages[0].first,8);
     EXPECT_EQ(actions->messages[0].second,"do!!");
 }
 
@@ -177,7 +177,7 @@ TEST(someActions,buildActions)
 
     actions->addBtnHandler();
 
-    EXPECT_EQ(actions->messages[0].first,1);
+    EXPECT_EQ(actions->messages[0].first,8);
     EXPECT_EQ(actions->messages[0].second,"do!!");
     EXPECT_EQ(actions->messages[1].first,4);
     EXPECT_EQ(actions->messages[1].second,"go!!!");

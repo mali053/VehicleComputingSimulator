@@ -4,10 +4,7 @@
 using namespace std;
 
 int main(int argc, char *argv[])
-{
-    Input &input = Input::getInstance();
-    input.setPathToSensors("../test/sensors.json");
-    
+{ 
     QApplication app(argc, argv);
 
     MainWindow window;

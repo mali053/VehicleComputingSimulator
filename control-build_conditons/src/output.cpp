@@ -21,6 +21,7 @@ Output::Output(string pathToFileSave) : fileName(pathToFileSave)
 
         BSON_APPEND_INT32(&bsonSensor, "id", stoi(sensorId));
         BSON_APPEND_UTF8(&bsonSensor, "name", string(sensorData["name"]).c_str());
+        BSON_APPEND_UTF8(&bsonSensor, "jsonPath", string(sensorData["pathToJson"]).c_str());
 
         bson_append_document_end(&sensors, &bsonSensor);
     }
@@ -37,7 +38,7 @@ Output &Output::getInstance()
     // Creates the instance if it does not exist
     if (!instance) {
         instance = unique_ptr<Output>(
-            new Output("../conditions.bson"));
+            new Output("../../control/conditions.bson"));
     }
     // return Reference to the singleton `Output` instance
     return *instance;
@@ -97,6 +98,7 @@ void printJson(QJsonObject jsonObject)
 {
     QJsonDocument jsonDoc(jsonObject);
     QByteArray jsonBytes = jsonDoc.toJson();
+    cout << jsonBytes.constData() << endl;
 }
 
 #pragma endregion

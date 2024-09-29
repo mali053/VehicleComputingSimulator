@@ -37,6 +37,30 @@ FieldType PacketParser::getFieldType(const std::string &typeStr) const
 PacketParser::PacketParser(const std::string &jsonFilePath)
                         : result(nullptr), numBytes(0)
 {
+    fieldDecoders = {
+        {FieldType::UNSIGNED_INT, [this](const uint8_t* data, int size) {
+            return decodeUnsignedInt(data, size);
+        }},
+        {FieldType::SIGNED_INT, [this](const uint8_t* data, int size) {
+            return decodeSignedInt(data, size);
+        }},
+        {FieldType::CHAR_ARRAY, [this](const uint8_t* data, int size) {
+            return decodeCharArray(data, BITS_TO_BYTES(size));
+        }},
+        {FieldType::FLOAT_FIXED, [this](const uint8_t* data, int size) {
+            return decodeFloat(data, size);
+        }},
+        {FieldType::FLOAT_MANTISSA, [this](const uint8_t* data, int size) {
+            return decodeFloat(data, size);
+        }},
+        {FieldType::DOUBLE, [this](const uint8_t* data, int size) {
+            return decodeDouble(data, size);
+        }},
+        {FieldType::BOOLEAN, [this](const uint8_t* data, int size) {
+            return decodeBoolean(data, size);
+        }}
+    };
+    
     loadJson(jsonFilePath);
     setBuffer(nullptr);
 }
@@ -260,78 +284,53 @@ FieldValue PacketParser::getFieldValue(const std::string &fieldName)
     if (_buffer == nullptr) {
         throw std::runtime_error("Buffer is null");
     }
+
+    // Regular fields processing
     auto it = std::find_if(
         fields.begin(), fields.end(),
         [&fieldName](const Field &field) { return field.name == fieldName; });
 
     if (it != fields.end() && it->type != "bit_field") {
         const Field &field = *it;
-        const uint8_t *data =
-            static_cast<const uint8_t *>(_buffer) + field.offset;
-            
-        switch (getFieldType(field.type)) {
-            case FieldType::UNSIGNED_INT:
-                return decodeUnsignedInt(data, field.size);
-            case FieldType::SIGNED_INT:
-                return decodeSignedInt(data, field.size);
-            case FieldType::CHAR_ARRAY:
-                return decodeCharArray(data, BITS_TO_BYTES(field.size));
-            case FieldType::FLOAT_FIXED:
-            case FieldType::FLOAT_MANTISSA:
-                return decodeFloat(data, field.size);
-            case FieldType::DOUBLE:
-                return decodeDouble(data, field.size);
-            case FieldType::BOOLEAN:
-                return decodeBoolean(data, field.size);
-            case FieldType::UNKNOWN:
-            default:
-                throw std::runtime_error("Unknown field type");
+        const uint8_t *data = static_cast<const uint8_t *>(_buffer) + field.offset;
+        FieldType fieldType = getFieldType(field.type);
+
+        auto decoderIt = fieldDecoders.find(fieldType);
+        if (decoderIt != fieldDecoders.end()) {
+            return decoderIt->second(data, field.size);
+        } else {
+            throw std::runtime_error("Unknown field type");
         }
     }
-    else {
-        for (const auto &bitField : bitFields) {
-            const uint8_t *bitFieldData =
-                static_cast<const uint8_t *>(_buffer) + bitField.offset;
 
-            auto subFieldIt =
-                std::find_if(bitField.fields.begin(), bitField.fields.end(),
-                             [&fieldName](const Field &subField) {
-                                 return subField.name == fieldName;
-                             });
+    // Bit field processing
+    for (const auto &bitField : bitFields) {
+        const uint8_t *bitFieldData = static_cast<const uint8_t *>(_buffer) + bitField.offset;
 
-            if (subFieldIt != bitField.fields.end()) {
-                const Field &subField = *subFieldIt;
+        auto subFieldIt = std::find_if(bitField.fields.begin(), bitField.fields.end(),
+            [&fieldName](const Field &subField) {
+                return subField.name == fieldName;
+            });
 
-                uint8_t *extractedBits =
-                    extractBits(bitFieldData, subField.offset, subField.size);
+        if (subFieldIt != bitField.fields.end()) {
+            const Field &subField = *subFieldIt;
 
-                if (!extractedBits) {
-                    throw std::runtime_error("Failed to extract bits");
-                }
-                
-                switch (getFieldType(subField.type)) {
-                    case FieldType::UNSIGNED_INT:
-                        return decodeUnsignedInt(extractedBits, subField.size);
-                    case FieldType::SIGNED_INT:
-                        return decodeSignedInt(extractedBits, subField.size);
-                    case FieldType::CHAR_ARRAY:
-                        return decodeCharArray(extractedBits, BITS_TO_BYTES(subField.size));
-                    case FieldType::FLOAT_FIXED:
-                    case FieldType::FLOAT_MANTISSA:
-                        return decodeFloat(extractedBits, subField.size);
-                    case FieldType::DOUBLE:
-                        return decodeDouble(extractedBits, subField.size);
-                    case FieldType::BOOLEAN:
-                        return decodeBoolean(extractedBits, subField.size);
-                    case FieldType::UNKNOWN:
-                    default:
-                        throw std::runtime_error(
-                            "Unknown field type in bit field");
-                }
+            uint8_t *extractedBits = extractBits(bitFieldData, subField.offset, subField.size);
+            if (!extractedBits) {
+                throw std::runtime_error("Failed to extract bits");
+            }
+
+            FieldType fieldType = getFieldType(subField.type);
+
+            auto decoderIt = fieldDecoders.find(fieldType);
+            if (decoderIt != fieldDecoders.end()) {
+                return decoderIt->second(extractedBits, subField.size);
+            } else {
+                throw std::runtime_error("Unknown field type in bit field");
             }
         }
-
     }
+
     throw std::runtime_error("Field not found in any bit field");
 }
 

@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <variant>
+#include <functional>
 #include <vector>
 
 #define BITS_TO_BYTES(bits) (((bits) + 7) / 8)
@@ -62,6 +63,7 @@ private:
     const void *_buffer;
     uint8_t *result;
     size_t numBytes;
+    std::map<FieldType, std::function<FieldValue(const uint8_t*, int)>> fieldDecoders;
 
     void validateFieldSize(const std::string &type, size_t bitLength) const;
     void loadJson(const std::string &jsonFilePath);

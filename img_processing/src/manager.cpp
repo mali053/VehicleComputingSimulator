@@ -6,8 +6,24 @@
 using namespace std;
 using namespace cv;
 
+void processData(uint32_t srcId, void *data) {}
+
+Manager::Manager(int processID)
+    : processID(processID), communication(processID, processData)
+{}
+
 void Manager::init()
 {
+    string message = "Hello, I'm img_processing " + to_string(processID) +
+                     " sending to process " + to_string(destID);
+    size_t dataSize = message.length() + 1;
+    destID = 1;
+    // Starting communication with the server
+    communication.startConnection();
+    // Sending the message
+    communication.sendMessage((void *)message.c_str(), dataSize, destID,
+                              processID, false);
+
     // calibration
     Mat calibrationImage = imread("../tests/images/black_line.JPG");
     if (calibrationImage.empty()) {
@@ -222,8 +238,10 @@ void Manager::drawOutput()
 
 void Manager::sendAlerts(vector<unique_ptr<char>> &alerts)
 {
-    for (const std::unique_ptr<char> &alertBuffer : alerts) {
-        // use send communication function
+    for (std::unique_ptr<char> &alertBuffer : alerts) {
+        void *buffer = static_cast<void *>(alertBuffer.release());
+        communication.sendMessage(buffer, sizeof(alertBuffer), destID,
+                                  processID, false);
     }
 }
 

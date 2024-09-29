@@ -8,19 +8,20 @@
 #include "dynamic_tracker.h"
 #include "log_manager.h"
 #include "velocity.h"
-
+#include "communication.h"
 class Manager {
    public:
     static logger imgLogger;
-    Manager() {}
+    Manager(int processID);
     // Gets the currentFrame and sends it for detection and then tracking,
     // finally if necessary sends a alert
     int processing(const cv::Mat &newFrame, bool mode);
     void mainDemo();
-    // init all variabels and creat the firs instance of distance
+    // init all variabels and creat the instance of distance
     void init();
 
    private:
+    Communication communication;
     std::shared_ptr<cv::Mat> prevFrame;
     std::shared_ptr<cv::Mat> currentFrame;
     std::vector<ObjectInformation> prevOutput;
@@ -30,6 +31,8 @@ class Manager {
     DynamicTracker dynamicTracker;
     Alerter alerter;
     int iterationCnt;
+    uint32_t destID;
+    uint32_t processID;
 
     // Moves the current image to the prevFrame
     // and clears the memory of the currentFrame;
@@ -40,5 +43,6 @@ class Manager {
     bool isTrack(bool isTravel);
     void sendAlerts(std::vector<std::unique_ptr<char>> &alerts);
     void runOnVideo(std::string videoPath);
+    int readIdFromJson(const char *target);
 };
 #endif  //__MANAGER_H__

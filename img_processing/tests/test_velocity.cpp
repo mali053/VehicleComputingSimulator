@@ -55,9 +55,8 @@ TEST(TVelocity, calculate_TVelocity)
                 rectangle(*frame1, (*trackingOutput)[i].position,
                           Scalar(256, 0, 0), 2);
 
-                Point textPosition(
-                    (*trackingOutput)[i].position.x,
-                    (*trackingOutput)[i].position.y - 10); 
+                Point textPosition((*trackingOutput)[i].position.x,
+                                   (*trackingOutput)[i].position.y - 10);
 
                 // putText(*frame1, "Speed: " + std::to_string((*trackingOutput)[i].speed), textPosition,
                 /// FONT_HERSHEY_SIMPLEX, 1, Scalar(255, 0, 0), 2);

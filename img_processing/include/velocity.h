@@ -16,4 +16,4 @@ class Velocity {
     double averageDistanceChange(ObjectInformation obj) const;
     void updateVelocity(double newVelocity, ObjectInformation &obj);
 };
-#endif //__VELOCITY_H__
+#endif  //__VELOCITY_H__

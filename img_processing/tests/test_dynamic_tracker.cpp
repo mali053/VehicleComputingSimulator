@@ -60,12 +60,12 @@ TEST(Track, twoCars)
     prevOutput = detector.getOutput();
     detector.detect(currentFrame, true);
     detectionOutput = detector.getOutput();
-    trackingOutput=detector.getOutput();
+    trackingOutput = detector.getOutput();
 
     // check time - start
     auto start = std::chrono::high_resolution_clock::now();
     tracker.startTracking(prevFrame, trackingOutput);
-    tracker.tracking(currentFrame,trackingOutput);
+    tracker.tracking(currentFrame, trackingOutput);
     // check time - end
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = end - start;
@@ -73,7 +73,7 @@ TEST(Track, twoCars)
                                to_string(elapsed.count()) + " ms");
     int i = 0;
     float result;
-    
+
     for (const auto &tracktion : trackingOutput) {
         LogManager::logInfoMessage(
             InfoType::TRACKING,
@@ -101,7 +101,7 @@ TEST(Track, track_video)
         shared_ptr<Mat> f1 = make_shared<Mat>(frame);
         auto output = vector<ObjectInformation>();
         detector.detect(f1, true);
-        output=detector.getOutput();
+        output = detector.getOutput();
         vector<Scalar> colours = {
             Scalar(255, 0, 0),     // Blue
             Scalar(0, 255, 0),     // Green
@@ -129,7 +129,7 @@ TEST(Track, track_video)
             }
             // auto start = std::chrono::high_resolution_clock::now();
             shared_ptr<Mat> frame1 = make_shared<Mat>(frame);
-            tracker.tracking(frame1,output);
+            tracker.tracking(frame1, output);
             for (int j = 0; j < (output).size(); j++) {
                 rectangle(frame, (output)[j].position, colours[j]);
             }
@@ -205,7 +205,7 @@ TEST(Track, calculate_iou)
     VideoCapture capture("../tests/images/close_cars.mov");
     Mat frame;
     capture.read(frame);
-    
+
     for (int z = 0; z < 5; z++) {
         shared_ptr<Mat> f1 = make_shared<Mat>(frame);
         auto detectionOutput = vector<ObjectInformation>();

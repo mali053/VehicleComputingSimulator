@@ -5,12 +5,12 @@ using namespace std;
 
 Alert::Alert(){};
 
-Alert::Alert(bool messageType, int level, int type, double distance,
-             int carSpeed, int objectSpeed)
-    : alertDetails{messageType, level, type},
+Alert::Alert(bool messageType, int level, int type, float distance,
+             float relativeVelocity)
+    : alertDetails{messageType, static_cast<char>(level),
+                   static_cast<char>(type)},
       objectDistance(distance),
-      carSpeed(carSpeed),
-      objectSpeed(objectSpeed){};
+      relativeVelocity(relativeVelocity){};
 
 int Alert::getMessageType() const
 {
@@ -27,26 +27,21 @@ int Alert::getLevel() const
     return alertDetails.level;
 };
 
-double Alert::getObjectDistance() const
+float Alert::getObjectDistance() const
 {
     return objectDistance;
 };
 
-int Alert::getCarSpeed() const
+float Alert::getRelativeVelocity() const
 {
-    return carSpeed;
-};
-
-int Alert::getObjectSpeed() const
-{
-    return objectSpeed;
-};
+    return relativeVelocity;
+}
 
 vector<char> Alert::serialize()
 {
     vector<char> buffer;
     // determine the size of the buffer
-    buffer.reserve(sizeof(AlertDetails) + sizeof(double) + sizeof(int) * 2);
+    buffer.reserve(sizeof(AlertDetails) + sizeof(float) * 2);
 
     // serialize alertDetails
     char *alertDetailsPtr = reinterpret_cast<char *>(&alertDetails);
@@ -55,15 +50,12 @@ vector<char> Alert::serialize()
 
     // serialize distance
     char *distancePtr = reinterpret_cast<char *>(&objectDistance);
-    buffer.insert(buffer.end(), distancePtr, distancePtr + sizeof(double));
+    buffer.insert(buffer.end(), distancePtr, distancePtr + sizeof(float));
 
-    // serialize carSpeed
-    char *carSpeedPtr = reinterpret_cast<char *>(&carSpeed);
-    buffer.insert(buffer.end(), carSpeedPtr, carSpeedPtr + sizeof(int));
-
-    // serialize objectSpeed
-    char *objectSpeedPtr = reinterpret_cast<char *>(&objectSpeed);
-    buffer.insert(buffer.end(), objectSpeedPtr, objectSpeedPtr + sizeof(int));
+    // serialize relativeVelocity
+    char *relativeVelocityPtr = reinterpret_cast<char *>(&relativeVelocity);
+    buffer.insert(buffer.end(), relativeVelocityPtr,
+                  relativeVelocityPtr + sizeof(float));
 
     return buffer;
 };
@@ -76,13 +68,9 @@ void Alert::deserialize(const char *buffer)
     place += sizeof(AlertDetails);
 
     // Deserialize distance
-    memcpy(&objectDistance, buffer + place, sizeof(double));
-    place += sizeof(double);
+    memcpy(&objectDistance, buffer + place, sizeof(float));
+    place += sizeof(float);
 
-    // Deserialize carSpeed
-    memcpy(&carSpeed, buffer + place, sizeof(int));
-    place += sizeof(int);
-
-    // Deserialize objectSpeed
-    memcpy(&objectSpeed, buffer + place, sizeof(int));
+    // Deserialize relativeVelocity
+    memcpy(&relativeVelocity, buffer + place, sizeof(float));
 };

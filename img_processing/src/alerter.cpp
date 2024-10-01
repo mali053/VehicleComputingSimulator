@@ -9,9 +9,9 @@ using json = nlohmann::json;
 using namespace std;
 
 // create buffer from alert object
-char *Alerter::makeAlertBuffer(int type, double distance)
+char *Alerter::makeAlertBuffer(int type, float distance, float relativeVelocity)
 {
-    Alert alert(false, (int)distance, type, distance);
+    Alert alert(false, 1, type, distance, relativeVelocity);
     vector<char> serialized = alert.serialize();
     char *buffer = new char[serialized.size()];
     copy(serialized.begin(), serialized.end(), buffer);
@@ -30,9 +30,10 @@ vector<unique_ptr<char>> Alerter::sendAlerts(
     vector<unique_ptr<char>> alerts;
     for (const ObjectInformation &objectInformation : output) {
         if (isSendAlert(objectInformation)) {
-            char *alertBuffer =
-                makeAlertBuffer(static_cast<int>(objectInformation.type),
-                                objectInformation.distance);
+            // char *alertBuffer = makeAlertBuffer(
+            //     static_cast<int>(objectInformation.type),
+            //     objectInformation.distance, objectInformation.velocity);
+            char *alertBuffer = makeAlertBuffer(2, 12.2, -12.5);
             alerts.push_back(unique_ptr<char>(alertBuffer));
         }
     }
@@ -68,18 +69,12 @@ void Alerter::makeFileJSON()
     objectDistanceJson["size"] = 32;
     objectDistanceJson["type"] = "float_fixed";
     j["fields"].push_back(objectDistanceJson);
-    // add CarSpeed
-    json carSpeedJson;
-    carSpeedJson["name"] = "CarSpeed";
-    carSpeedJson["size"] = 32;
-    carSpeedJson["type"] = "unsigned_int";
-    j["fields"].push_back(carSpeedJson);
-    // add ObjectSpeed
-    json objectSpeedJson;
-    objectSpeedJson["name"] = "ObjectSpeed";
-    objectSpeedJson["size"] = 32;
-    objectSpeedJson["type"] = "unsigned_int";
-    j["fields"].push_back(objectSpeedJson);
+    // add relativeVelocity
+    json relativeVelocityJson;
+    relativeVelocityJson["name"] = "relativeVelocity";
+    relativeVelocityJson["size"] = 32;
+    relativeVelocityJson["type"] = "float_fixed";
+    j["fields"].push_back(relativeVelocityJson);
     // Write the JSON to the file
     ofstream output_file("../alert.json");
     if (output_file.is_open()) {

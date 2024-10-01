@@ -13,7 +13,7 @@ class Velocity {
    private:
     double frameTimeDiff;
     void calculateVelocity(ObjectInformation &object);
-    double averageDistanceChange(ObjectInformation obj) const;
-    void updateVelocity(double newVelocity, ObjectInformation &obj);
+    float averageDistanceChange(ObjectInformation obj) const;
+    void updateVelocity(float newVelocity, ObjectInformation &obj);
 };
 #endif  //__VELOCITY_H__

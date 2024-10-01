@@ -15,18 +15,18 @@ void Velocity::returnVelocities(vector<ObjectInformation> &objects)
 }
 void Velocity::calculateVelocity(ObjectInformation &object)
 {
-    double distanceAvg = averageDistanceChange(object);
+    float distanceAvg = averageDistanceChange(object);
     if (distanceAvg != -1) {
-        double velocity = distanceAvg / this->frameTimeDiff;
+        float velocity = distanceAvg / this->frameTimeDiff;
         updateVelocity(velocity, object);
     }
 }
 
-double Velocity::averageDistanceChange(ObjectInformation obj) const
+float Velocity::averageDistanceChange(ObjectInformation obj) const
 {
     if (obj.prevDistances.size() < 2)
         return -1;
-    double totalChange = 0.0;
+    float totalChange = 0.0;
     for (size_t i = 1; i < obj.prevDistances.size(); ++i) {
         totalChange += (obj.prevDistances[i] - obj.prevDistances[i - 1]);
     }
@@ -34,11 +34,11 @@ double Velocity::averageDistanceChange(ObjectInformation obj) const
 }
 
 //Function to update velocity while maintaining the last two velocities
-void Velocity::updateVelocity(double newVelocity, ObjectInformation &obj)
+void Velocity::updateVelocity(float newVelocity, ObjectInformation &obj)
 {
     // If we have at least one previous velocity
     if (!obj.prevVelocities.empty()) {
-        double lastVelocity =
+        float lastVelocity =
             obj.prevVelocities.back();  // Get the last velocity
         // Check if the sign of the new velocity matches the last one
         if ((newVelocity >= 0 && lastVelocity >= 0) ||
@@ -50,7 +50,7 @@ void Velocity::updateVelocity(double newVelocity, ObjectInformation &obj)
             // If the signs are different, we need to investigate further
             if (obj.prevVelocities.size() > 1) {
                 // We look at the second-last velocity to check for consistency
-                double secondLastVelocity =
+                float secondLastVelocity =
                     obj.prevVelocities[obj.prevVelocities.size() - 2];
 
                 // Check if the new velocity matches the sign of the second-last velocity

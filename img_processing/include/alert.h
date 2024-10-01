@@ -18,23 +18,21 @@ struct AlertDetails {
 
 class Alert {
    public:
-    Alert(bool messageType, int level, int type, double distance,
-          int carSpeed = 0, int objectSpeed = 0);
+    Alert(bool messageType, int level, int type, float distance,
+          float relativeVelocity = 0.0);
     Alert();
     int getMessageType() const;
     int getLevel() const;
     int getObjectType() const;
-    double getObjectDistance() const;
-    int getCarSpeed() const;
-    int getObjectSpeed() const;
+    float getObjectDistance() const;
+    float getRelativeVelocity() const;
     std::vector<char> serialize();
     void deserialize(const char *buffer);
 
    private:
     AlertDetails alertDetails;
-    double objectDistance;
-    int carSpeed;
-    int objectSpeed;
+    float objectDistance;
+    float relativeVelocity;
 };
 
 #endif  //__ALERT_H__

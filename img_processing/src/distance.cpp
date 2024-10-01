@@ -63,7 +63,7 @@ void Distance::findDistance(std::vector<ObjectInformation> &objectInformations)
             imageSize = objectInformation.position.width;
         }
         // Calculate the distance in meters
-        double distance = (focalLength * knownSize / imageSize) / 1000;
+        float distance = (focalLength * knownSize / imageSize) / 1000;
         addDistance(distance, objectInformation);
     }
 }
@@ -129,7 +129,7 @@ void Distance::findFocalLength(const cv::Mat &image)
     this->focalLength = (rectWidth * distanceToCameraMm) / actualLineLengthMm;
 }
 
-void Distance::addDistance(double distance, ObjectInformation &obj)
+void Distance::addDistance(float distance, ObjectInformation &obj)
 {
     if (obj.prevDistances.size() == MAX_PREV_DISTANCES_SIZE)
         obj.prevDistances.pop_front();

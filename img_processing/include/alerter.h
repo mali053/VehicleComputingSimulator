@@ -11,7 +11,7 @@ class Alerter {
     static const int MIN_LEGAL_DISTANCE = 5000;
 
    private:
-    char *makeAlertBuffer(int type, double distance);
+    char *makeAlertBuffer(int type, float distance, float relativeVelocity);
     bool isSendAlert(const ObjectInformation &objectInformation);
     void destroyAlertBuffer(char *buffer);
 };

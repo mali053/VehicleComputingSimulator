@@ -12,10 +12,10 @@ struct ObjectInformation {
     ObjectType type;
     cv::Rect prevPosition;
     cv::Rect position;
-    std::deque<double> prevDistances;
-    double distance;
-    std::deque<double> prevVelocities;
-    double velocity;
+    std::deque<float> prevDistances;
+    float distance;
+    std::deque<float> prevVelocities;
+    float velocity;
 };
 
 #endif  // __OBJECT_INFORMATION_STRUCT_H__

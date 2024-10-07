@@ -10,7 +10,8 @@ void processData(uint32_t srcId, void *data) {}
 
 Manager::Manager(int processID)
     : processID(processID), communication(processID, processData)
-{}
+{
+}
 
 void Manager::init()
 {
@@ -149,7 +150,7 @@ int Manager::processing(const Mat &newFrame, bool isTravel)
     velocity.returnVelocities(this->currentOutput);
 
     // send allerts to main control
-    vector<unique_ptr<char>> alerts = alerter.sendAlerts(this->currentOutput);
+    vector<vector<uint8_t>> alerts = alerter.sendAlerts(this->currentOutput);
     sendAlerts(alerts);
 
     // update of the iterationCnt
@@ -236,12 +237,11 @@ void Manager::drawOutput()
             FONT_HERSHEY_SIMPLEX, 0.6, Scalar(255, 255, 255), 1);
 }
 
-void Manager::sendAlerts(vector<unique_ptr<char>> &alerts)
+void Manager::sendAlerts(vector<vector<uint8_t>> &alerts)
 {
-    for (std::unique_ptr<char> &alertBuffer : alerts) {
-        void *buffer = static_cast<void *>(alertBuffer.release());
-        communication.sendMessage(buffer, sizeof(alertBuffer), destID,
-                                  processID, false);
+    for (std::vector<uint8_t> &alertBuffer : alerts) {
+        communication.sendMessage(alertBuffer.data(), alertBuffer.size(),
+                                  destID, processID, false);
     }
 }
 

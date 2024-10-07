@@ -9,13 +9,12 @@ using json = nlohmann::json;
 using namespace std;
 
 // create buffer from alert object
-char *Alerter::makeAlertBuffer(int type, float distance, float relativeVelocity)
+vector<uint8_t> Alerter::makeAlertBuffer(int type, float distance,
+                                         float relativeVelocity)
 {
     Alert alert(false, 1, type, distance, relativeVelocity);
-    vector<char> serialized = alert.serialize();
-    char *buffer = new char[serialized.size()];
-    copy(serialized.begin(), serialized.end(), buffer);
-    return buffer;
+    vector<uint8_t> serialized = alert.serialize();
+    return serialized;
 }
 
 void Alerter::destroyAlertBuffer(char *buffer)
@@ -24,17 +23,16 @@ void Alerter::destroyAlertBuffer(char *buffer)
 }
 
 // create alerts buffer to send
-vector<unique_ptr<char>> Alerter::sendAlerts(
+vector<vector<uint8_t>> Alerter::sendAlerts(
     const vector<ObjectInformation> &output)
 {
-    vector<unique_ptr<char>> alerts;
+    vector<vector<uint8_t>> alerts;
     for (const ObjectInformation &objectInformation : output) {
         if (isSendAlert(objectInformation)) {
-            // char *alertBuffer = makeAlertBuffer(
-            //     static_cast<int>(objectInformation.type),
-            //     objectInformation.distance, objectInformation.velocity);
-            char *alertBuffer = makeAlertBuffer(2, 12.2, -12.5);
-            alerts.push_back(unique_ptr<char>(alertBuffer));
+            vector<uint8_t> alertBuffer = makeAlertBuffer(
+                objectInformation.type, objectInformation.distance,
+                objectInformation.velocity);
+            alerts.push_back(alertBuffer);
         }
     }
     return alerts;

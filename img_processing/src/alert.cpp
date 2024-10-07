@@ -37,28 +37,29 @@ float Alert::getRelativeVelocity() const
     return relativeVelocity;
 }
 
-vector<char> Alert::serialize()
+std::vector<uint8_t> Alert::serialize()
 {
-    vector<char> buffer;
-    // determine the size of the buffer
-    buffer.reserve(sizeof(AlertDetails) + sizeof(float) * 2);
-
-    // serialize alertDetails
-    char *alertDetailsPtr = reinterpret_cast<char *>(&alertDetails);
-    buffer.insert(buffer.end(), alertDetailsPtr,
-                  alertDetailsPtr + sizeof(AlertDetails));
-
-    // serialize distance
-    char *distancePtr = reinterpret_cast<char *>(&objectDistance);
-    buffer.insert(buffer.end(), distancePtr, distancePtr + sizeof(float));
-
-    // serialize relativeVelocity
-    char *relativeVelocityPtr = reinterpret_cast<char *>(&relativeVelocity);
-    buffer.insert(buffer.end(), relativeVelocityPtr,
-                  relativeVelocityPtr + sizeof(float));
-
+    std::vector<uint8_t> buffer;
+    // Serialize messageType, level, and objectType from AlertDetails
+    char detailsByte = 0;
+    detailsByte |= (alertDetails.messageType & 0x01)
+                   << 7;                              // messageType (1 bit)
+    detailsByte |= (alertDetails.level & 0x07) << 4;  // level (3 bits)
+    detailsByte |= alertDetails.objectType & 0x0F;    // objectType (4 bits)
+    buffer.push_back(detailsByte);
+    // Serialize objectDistance (32 bits, float, little-endian)
+    float distance = objectDistance;
+    uint8_t distanceBytes[4];
+    std::memcpy(distanceBytes, &distance, sizeof(float));
+    buffer.insert(buffer.end(), distanceBytes, distanceBytes + 4);
+    // Serialize relativeVelocity (32 bits, float, little-endian)
+    float velocity = relativeVelocity;
+    uint8_t velocityBytes[4];
+    std::memcpy(velocityBytes, &velocity, sizeof(float));
+    buffer.insert(buffer.end(), velocityBytes, velocityBytes + 4);
+    // Ensure the total size is as expected based on your format
     return buffer;
-};
+}
 
 void Alert::deserialize(const char *buffer)
 {

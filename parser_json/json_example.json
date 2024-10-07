@@ -1,10 +1,13 @@
 {
-  "description": "This JSON file describes the format for defining packet fields. Each field type has specific rules, especially for 'bit_field' types which can contain nested fields.",
+  "description": "This JSON file describes the format for defining packet fields.",
   "endianness": "Indicates the byte order of the data. Use either 'little' or 'big'.",
   "rules": {
     "endianness": {
       "description": "Specifies the byte order of the data.",
-      "allowed_values": ["little", "big"]
+      "allowed_values": [
+        "little",
+        "big"
+      ]
     },
     "fields": {
       "description": "An array of field definitions. Each field has the following properties:",
@@ -31,8 +34,12 @@
           "description": "The size of the field in bits. Must be a multiple of 8, or 16, 32, 64, etc.",
           "example": 32
         },
+        "default_value": {
+          "description": "Specifies the default value of the field. This field is optional and may be omitted entirely if not needed.",
+          "example": 100
+        },
         "fields": {
-          "description": "An array of sub-fields for composite bit fields. This property is only applicable for fields of type 'bit_field'. For all other field types, the 'fields' property should be omitted.",
+          "description": "An array of sub-fields for composite bit fields.",
           "properties": {
             "name": {
               "description": "The name of the sub-field.",
@@ -55,18 +62,24 @@
             "size": {
               "description": "The size of the sub-field in bits.",
               "example": 32
+            },
+            "default_value": {
+              "description": "Specifies the default value for the sub-field. This field is optional and may be omitted.",
+              "example": 1
             }
           },
           "example": [
             {
               "name": "FloatField1",
               "type": "float_fixed",
-              "size": 32
+              "size": 32,
+              "default_value": 100.0
             },
             {
               "name": "DoubleField1",
               "type": "double",
-              "size": 64
+              "size": 64,
+              "default_value": 50.5
             }
           ]
         }
@@ -75,12 +88,14 @@
         {
           "name": "CharArrayField",
           "type": "char_array",
-          "size": 64
+          "size": 64,
+          "default_value": "DefaultString"
         },
         {
           "name": "FloatField",
           "type": "float_fixed",
-          "size": 32
+          "size": 32,
+          "default_value": 100.0
         },
         {
           "name": "DoubleField",
@@ -90,22 +105,26 @@
         {
           "name": "SignedIntField",
           "type": "signed_int",
-          "size": 32
+          "size": 32,
+          "default_value": -10
         },
         {
           "name": "UnsignedIntField",
           "type": "unsigned_int",
-          "size": 32
+          "size": 32,
+          "default_value": 10
         },
         {
           "name": "FloatMantissaField",
           "type": "float_mantissa",
-          "size": 32
+          "size": 32,
+          "default_value": 1.23
         },
         {
           "name": "BoolField",
           "type": "boolean",
-          "size": 8
+          "size": 8,
+          "default_value": true
         },
         {
           "name": "BitFieldExample1",
@@ -120,12 +139,19 @@
             {
               "name": "UnsignedIntField1",
               "type": "unsigned_int",
-              "size": 32
+              "size": 32,
+              "default_value": 10
             }
           ]
+        },
+        {
+          "name": "NoDefaultField",
+          "type": "signed_int",
+          "size": 32
         }
       ]
     }
   },
-  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define nested sub-fields. For all other field types ('char_array', 'float_fixed', 'float_mantissa', 'double', 'signed_int', 'unsigned_int', 'boolean'), the 'fields' property must be omitted. Ensure that 'size' values correspond to the correct bit-widths for the specified types. Additionally, it is recommended to avoid using 'float' and 'double' types within a 'bit_field', as these types are not properly decoded within bit fields and should be parsed separately."
+  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define ",
+  "note2": "Ensure that 'size' values correspond to the correct bit-widths for the types."
 }

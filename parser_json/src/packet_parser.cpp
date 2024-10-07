@@ -98,6 +98,26 @@ void PacketParser::validateFieldSize(const std::string &type,
     }
 }
 
+FieldValue PacketParser::getDefaultValueByType(const std::string &type)
+{
+    static const std::unordered_map<std::string, FieldValue> defaultValues = {
+        {"unsigned_int", 0u},
+        {"signed_int", 0},
+        {"char_array", ""},
+        {"boolean", false},
+        {"float_fixed", 0.0f},
+        {"float_mantissa", 0.0f},
+        {"double", 0.0}
+    };
+
+    auto it = defaultValues.find(type);
+    if (it != defaultValues.end()) {
+        return it->second;
+    }
+
+    throw std::runtime_error("Unknown type for default value: " + type);
+}
+
 void PacketParser::loadJson(const std::string &jsonFilePath)
 {
     std::ifstream jsonFile(jsonFilePath);
@@ -112,18 +132,57 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
 
     size_t currentOffset = 0;
 
+    std::unordered_map<std::string, std::function<void(
+    const json&, Field&)>> typeHandlers = {
+        {"unsigned_int", [](const json& value, Field& field) {
+            field.defaultValue = static_cast<uint32_t>(
+                value.get<int>());
+        }},
+        {"signed_int", [](const json& value, Field& field) {
+            field.defaultValue = static_cast<int32_t>(
+                value.get<int>());
+        }},
+        {"char_array", [](const json& value, Field& field) {
+            field.defaultValue = value.get<std::string>();
+        }},
+        {"boolean", [](const json& value, Field& field) {
+            field.defaultValue = value.get<bool>();
+        }},
+        {"float_fixed", [](const json& value, Field& field) {
+            field.defaultValue = static_cast<float>(
+                value.get<double>());
+        }},
+        {"double", [](const json& value, Field& field) {
+            field.defaultValue = value.get<double>();
+        }},
+    };
+
     for (const auto &fieldJson : jsonData["fields"]) {
         size_t fieldSize = fieldJson["size"];
         std::string fieldType = fieldJson["type"];
+        std::string fieldName = fieldJson["name"];
 
         validateFieldSize(fieldType, fieldSize);
 
         size_t byteLength = BITS_TO_BYTES(fieldSize);
         Field field;
-        field.name = fieldJson["name"];
+        field.name = fieldName;
         field.type = fieldType;
         field.size = fieldSize;
         field.offset = currentOffset;
+
+        if (fieldJson.contains("default_value")) {
+            const auto &defaultValue = fieldJson["default_value"];
+                auto it = typeHandlers.find(fieldType);
+                if (it != typeHandlers.end()) {
+                    it->second(defaultValue, field);
+                } else {
+                    std::cerr << "Warning: Unknown field type '" << fieldType 
+                              << "' for field '" << fieldName << "'." << std::endl;
+                }
+        } else if (field.type != "bit_field") {
+            field.defaultValue = getDefaultValueByType(fieldType);
+        }
 
         fields.push_back(field);
 
@@ -145,6 +204,19 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
                 subField.size = subFieldSize;
                 subField.offset = bitFieldOffset;
 
+                if (subFieldJson.contains("default_value")) {
+                    const auto &defaultValue = fieldJson["default_value"];
+                    auto it = typeHandlers.find(fieldType);
+                    if (it != typeHandlers.end()) {
+                        it->second(defaultValue, field);
+                    } else {
+                    std::cerr << "Warning: Unknown field type '" << fieldType 
+                              << "' for field '" << fieldName << "'." << std::endl;
+                }
+                } else {
+                    subField.defaultValue = getDefaultValueByType(subFieldType);
+                }
+
                 bitField.fields.push_back(subField);
                 bitFieldOffset += subField.size;
             }
@@ -154,7 +226,6 @@ void PacketParser::loadJson(const std::string &jsonFilePath)
 
         currentOffset += byteLength;
     }
-
 }
 
 std::vector<Field> PacketParser::getBitFieldFields(const std::string &bitFieldName)

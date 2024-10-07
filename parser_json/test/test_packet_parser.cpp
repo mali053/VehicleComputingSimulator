@@ -400,6 +400,55 @@ void createTestJson(const std::string &filename)
     jsonFile.close();
 }
 
+// Helper function to create a test JSON file with default values
+void createJsonWithDefaultValues(const std::string &filename)
+{
+    std::ofstream jsonFile(filename);
+    jsonFile << R"(
+    {
+        "endianness": "big",
+        "fields": [
+            {
+                "name": "unsignedIntField",
+                "type": "unsigned_int",
+                "size": 32,
+                "default_value": 100
+            },
+            {
+                "name": "intField",
+                "type": "signed_int",
+                "size": 32,
+                "default_value": -50
+            },
+            {
+                "name": "stringField",
+                "type": "char_array",
+                "size": 64
+            },
+            {
+                "name": "floatField",
+                "type": "float_fixed",
+                "size": 32,
+                "default_value": 3.14
+            },
+            {
+                "name": "doubleField",
+                "type": "double",
+                "size": 64,
+                "default_value": 2.718
+            },
+            {
+                "name": "boolField",
+                "type": "boolean",
+                "size": 8,
+                "default_value": true
+            }
+        ]
+    }
+    )";
+    jsonFile.close();
+}
+
 // Helper function to clean up all generated JSON files
 void cleanupJsonFile(const std::string &filename)
 {
@@ -970,6 +1019,44 @@ TEST(PacketParserTest, PrintFieldValuesWithBitField)
     EXPECT_NE(output.find("sub_field_1 : 1"), std::string::npos);
     EXPECT_NE(output.find("sub_field_2 : 0"), std::string::npos);
     EXPECT_NE(output.find("sub_field_3 : 255"), std::string::npos);
+
+    // Clean up
+    cleanupJsonFile(jsonFilePath);
+}
+
+// Test for loadJson and default values
+TEST(PacketParserTest, LoadJson_And_CheckValues)
+{
+    std::string jsonFilePath = generateUniqueJsonFileName();
+    createJsonWithDefaultValues(jsonFilePath);
+
+    PacketParserTest parser(jsonFilePath);
+
+    // Check if the fields were populated correctly
+    ASSERT_EQ(parser.getFields().size(), 6);  // Should match the number of fields in the JSON
+
+    EXPECT_EQ(parser.getFields()[0].name, "unsignedIntField");
+    EXPECT_EQ(std::get<uint32_t>(parser.getFields()[0].defaultValue), 100);
+
+    EXPECT_EQ(parser.getFields()[1].name, "intField");
+    EXPECT_EQ(std::get<int32_t>(parser.getFields()[1].defaultValue), -50);
+
+    EXPECT_EQ(parser.getFields()[2].name, "stringField");
+    EXPECT_EQ(std::get<std::string>(parser.getFields()[2].defaultValue), "");
+
+    EXPECT_EQ(parser.getFields()[3].name, "floatField");
+    EXPECT_FLOAT_EQ(std::get<float>(parser.getFields()[3].defaultValue), 3.14f);
+
+    EXPECT_EQ(parser.getFields()[4].name, "doubleField");
+    EXPECT_DOUBLE_EQ(std::get<double>(parser.getFields()[4].defaultValue), 2.718);
+
+    EXPECT_EQ(parser.getFields()[5].name, "boolField");
+    EXPECT_EQ(std::get<bool>(parser.getFields()[5].defaultValue), true);
+
+    // Test for an unknown field type to throw an error
+    EXPECT_THROW({
+        FieldValue value = parser.getDefaultValueByType("unknown_type"); 
+    }, std::runtime_error);
 
     // Clean up
     cleanupJsonFile(jsonFilePath);

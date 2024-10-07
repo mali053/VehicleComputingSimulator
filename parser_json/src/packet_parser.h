@@ -28,6 +28,7 @@ enum class FieldType {
 struct Field {
     std::string name;
     std::string type;
+    FieldValue defaultValue;
     size_t size;
     size_t offset;
 };
@@ -50,6 +51,7 @@ public:
     void printFieldValues(const std::map<std::string, FieldValue> &fieldValues);
     void setBuffer(const void *buffer);
     std::vector<Field> getBitFieldFields(const std::string &bitFieldName);
+    FieldValue getDefaultValueByType(const std::string &type);
     ~PacketParser();
 
 protected:

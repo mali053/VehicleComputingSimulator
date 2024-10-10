@@ -9,7 +9,7 @@ sudo apt-get install qtbase5-dev qtdeclarative5-dev qttools5-dev qt5-qmake qttoo
 sudo apt-get install libbson-dev
 sudo apt update
 sudo apt install pkg-config
-
+```
 
 ## Usage
 

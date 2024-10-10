@@ -8,9 +8,13 @@
 #include <QLabel>
 #include <QComboBox>
 #include <QTextEdit>
+#include <QCompleter>
+#include <QStringListModel>
 #include <map>
 #include <vector>
 #include <iostream>
+#include <QAbstractItemView>
+#include <QListView>
 
 #include "main_window.h"
 #include "output.h"
@@ -33,6 +37,9 @@ private:
     QTextEdit *label; 
     QComboBox *sensors; 
     QLineEdit *textBox;
+    QCompleter *completer;
+    QStringList messageHistory;
+    QStringList newMessages;
     QPushButton *OKBtn, *addBtn, *addCond, *finishBtn; 
 
 public:
@@ -66,6 +73,12 @@ private:
 
     // Handles the Finish button click event.
     void finishBtnHandler();
+
+    //  Loads messages from the file into a list in memory.
+    void fillMessageHistory();
+
+    //  Saves new messages to the history file.
+    void addNewMessagesToHistory();
 
     friend class oneAction_buildActions_Test;
     friend class someActions_buildActions_Test;

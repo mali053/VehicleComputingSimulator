@@ -6,6 +6,7 @@ using namespace std;
 Actions::Actions(MainWindow *mainWindow, QString showCondition) : mainWindow(mainWindow)
 {
     Output::controlLogger.logMessage(logger::LogLevel::INFO, "Initializing Actions window...");
+    fillMessageHistory();
     setupLogicalMembers();
     setupUi(showCondition);
     connectSignals();
@@ -14,6 +15,7 @@ Actions::Actions(MainWindow *mainWindow, QString showCondition) : mainWindow(mai
 //  Destructor for Actions class.
 Actions::~Actions()
 {
+    addNewMessagesToHistory();
     Output::controlLogger.logMessage(logger::LogLevel::DEBUG, "Destroying Actions object");
     QLayoutItem *item;    
     // Loop through and remove all items from the layout
@@ -83,6 +85,13 @@ void Actions::setupUi(QString showCondition)
     textBox->setFixedSize(300, 50);
     textBox->setStyleSheet("border: none;");
     textBox->setFont(QFont(FONT_FAMILY, 20));
+
+    completer = new QCompleter(messageHistory);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    textBox->setCompleter(completer);
+
+    QAbstractItemView* popup = completer->popup();
+    popup->setFont(QFont(FONT_FAMILY, 17));
 
     // Create an OK button with an icon
     OKBtn = new QPushButton();
@@ -207,6 +216,12 @@ void Actions::OKBtnHandler()
     label->setText(action);
     OKBtn->setEnabled(false);
     sensors->setCurrentIndex(0);
+
+    if (!messageHistory.contains(enteredText)) {
+        newMessages.append(enteredText); 
+        messageHistory.append(enteredText);  
+        completer->setModel(new QStringListModel(messageHistory, completer));
+    }
 }
 
 // Appends the current action to the actions list and resets the UI for the next action.
@@ -256,4 +271,31 @@ void Actions::finishBtnHandler()
     output.saveToFile();
 
     mainWindow->close();
+}
+
+//  Saves new messages to the history file.
+void Actions::addNewMessagesToHistory() 
+{
+    QFile file("../resources/history.txt");
+    if (file.open(QIODevice::Append | QIODevice::Text)) {
+    QTextStream out(&file);
+    for (const QString& msg : newMessages) 
+        out << msg << "\n";
+
+    file.close();
+}
+}
+
+//  Loads messages from the file into a list in memory.
+void Actions::fillMessageHistory() 
+{
+    QFile file("../resources/history.txt");
+    if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        messageHistory.append(line);
+    }
+    file.close();
+}
 }

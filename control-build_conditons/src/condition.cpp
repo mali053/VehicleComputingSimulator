@@ -1,8 +1,9 @@
 #include "condition.h"
 
-#define BUTTON_SIZE  80, 40
-#define BASE_CON_PART_HEIGHT 30
-#define BASE_CON_PART_WIDTH 200
+#define BUTTON_SIZE  170, 60
+#define BASE_CON_PART_HEIGHT 50
+#define BASE_CON_PART_WIDTH 260
+#define FONT_SIZE 15
 
 using namespace std;
 
@@ -32,6 +33,8 @@ Condition::~Condition()
         delete item;
     }
     delete selectActions;
+    delete basicConditionBox;
+    delete titleLabel;
     mainWindow->saveCondition(showCondition);
 }
 
@@ -65,12 +68,20 @@ void Condition::setupLogicalMembers()
 // Function that set up the UI components and layout for managing conditions and actions in the Condition class
 void Condition::setupUi()
 {
+
     // Create a read-only text label and set font
     label = new QTextEdit("");
     label->setReadOnly(true);
-    QFont font("Arial", 25);
+    QFont font("Arial", 30);
     label->setFont(font);
-
+    label->setStyleSheet(R"(
+    QTextEdit {
+        border:8px solid rgb(254, 254, 254); 
+        border-radius: 8px; 
+        padding: 10px; 
+    }
+    )");
+    
     // Set up a text cursor and color formats
     cursor = new QTextCursor(label->document());
     formatRed.setForeground(Qt::red);
@@ -82,6 +93,7 @@ void Condition::setupUi()
     QVBoxLayout *screenLayout = new QVBoxLayout;
     screenLayout->addWidget(label);
     screenBox->setLayout(screenLayout);
+    screenBox->setStyleSheet("QGroupBox { border: none; }");
 
     // Initialize buttons, text box, and combo boxes
     andBtn = new QPushButton("AND");
@@ -98,92 +110,295 @@ void Condition::setupUi()
     boolBox->setCurrentIndex(0);
     boolBox->addItem("true");
     boolBox->addItem("false");
+    boolBox->setStyleSheet(R"(
+    QComboBox:hover {
+        border: 1px solid #2F75A0;
+    }
+    QComboBox:focus {
+        border: 1px solid #2F75A0; 
+    }
+    QComboBox::item:selected {
+        color: #2F75A0; 
+    }
+    )");
 
     submit = new QPushButton("add to condition");
+    
+    submit->setStyleSheet(R"(
+        QPushButton {
+            background-color:transparent; 
+            color: #28a745; 
+            border: 2px solid #28a745; 
+            padding: 10px 20px; 
+            border-radius: 5px;
+            font-size: 20px; 
+        }
+        QPushButton:hover {
+            background-color:  #28a745;
+            color: rgb(255, 255, 255);
+        }
+        
+        QPushButton:disabled {
+        color: #a3e6a0; 
+        border: 2px solid #a3e6a0; 
+    }
+    )");
 
     sensors = new QComboBox();
+
+    
     sensors->addItem("Sensors");  // Placeholder
     sensors->setItemData(0, QVariant(0),
                          Qt::UserRole - 1);  // Disable placeholder
     sensors->setCurrentIndex(0);
-
+    sensors->setStyleSheet(R"(
+    QComboBox{
+       border: 2px solid rgb(243, 93, 178);
+    }
+    QComboBox:hover {
+        border: 2px solid #2F75A0;
+    }
+    QComboBox:focus {
+        border: 2px solid #2F75A0; 
+    }
+    QComboBox::item:selected {
+        color: #2F75A0;
+    }
+    )");
     sensorsFields = new QComboBox();
     sensorsFields->addItem("sensors fields");  // Placeholder
     sensorsFields->setItemData(0, QVariant(0),
                                Qt::UserRole - 1);  // Disable placeholder
     sensorsFields->setCurrentIndex(0);
 
+    sensorsFields->setStyleSheet(R"(
+    QComboBox{
+       border: 2px solid rgb(243, 93, 178);
+    }
+    QComboBox:hover {
+        border: 1px solid #2F75A0;
+    }
+    QComboBox:focus {
+        border: 1px solid #2F75A0; 
+    }
+    QComboBox::item:selected {
+        color: #2F75A0; 
+    }
+    )");
+
+
     operators = new QComboBox();
+    operators->setStyleSheet(R"(
+    QComboBox{
+       border: 2px solid rgb(243, 93, 178);
+    }
+    QComboBox:hover {
+        border: 1px solid #2F75A0;
+    }
+    QComboBox:focus {
+        border: 1px solid #2F75A0; 
+    }
+    QComboBox::item:selected {
+        color: #2F75A0;
+    }
+    )");
 
     // Create a keyboard section (QGroupBox) with buttons
     QGroupBox *keyboardBox = new QGroupBox("");
     QVBoxLayout *keyboardLayout = new QVBoxLayout;
     QHBoxLayout *buttonLayout = new QHBoxLayout;
+
+    keyboardBox->setFixedSize(850,420);
+    keyboardBox->setStyleSheet("QGroupBox { border: none; }");
+
     buttonLayout->addWidget(andBtn);
     buttonLayout->addWidget(orBtn);
     buttonLayout->addWidget(skip);
     buttonLayout->addWidget(reset);
     keyboardLayout->addLayout(buttonLayout);
-    keyboardLayout->addWidget(sensors);
+
+    keyboardLayout->addSpacing(70);
+
+    QHBoxLayout *sensorsLayout = new QHBoxLayout;
+    sensorsLayout->addStretch(); 
+    sensorsLayout->addWidget(sensors);
+    sensorsLayout->addStretch(); 
+
+    keyboardLayout->addLayout(sensorsLayout);
 
     // Create a condition input section (QGroupBox)
-    QGroupBox *basicConditionBox =
-        new QGroupBox("---create basic condition---");
+    basicConditionBox = new QGroupBox();
     QVBoxLayout *basicConditionLayout = new QVBoxLayout;
     QHBoxLayout *textLayout = new QHBoxLayout;
-    textLayout->addWidget(sensorsFields);
+
+    basicConditionBox->setStyleSheet(R"(
+    QGroupBox {
+        border: 6px solid rgb(254, 254, 254); 
+        border-radius: 8px; 
+        padding: 10px; 
+    }
+    )");
+
+    titleLabel = new QLabel("create basic condition:");
+    titleLabel->setStyleSheet("font-size: 20px; ");
+
+    textLayout->addWidget(sensorsFields,1, Qt::AlignLeft);
     textLayout->addWidget(operators);
     textLayout->addWidget(textBox);
     textLayout->addWidget(spinBox);
     textLayout->addWidget(doubleSpinBox);
     textLayout->addWidget(boolBox);
-    basicConditionLayout->addLayout(textLayout);
-    basicConditionLayout->addWidget(submit);
-    basicConditionBox->setLayout(basicConditionLayout);
-    keyboardLayout->addWidget(basicConditionBox);
 
+    submitLayout = new QHBoxLayout;
+    submitLayout->addStretch(); 
+    submitLayout->addWidget(submit);
+
+    basicConditionLayout->addLayout(textLayout);
+    basicConditionLayout->addLayout(submitLayout);
+    basicConditionBox->setLayout(basicConditionLayout);
+
+    keyboardLayout->addWidget(titleLabel, 0, Qt::AlignLeft | Qt::AlignBottom);
+    keyboardLayout->addWidget(basicConditionBox);
     keyboardBox->setLayout(keyboardLayout);
 
     // Add action button
     selectActions = new QPushButton("Pass to selection of actions");
-    selectActions->setFixedSize(200, 50);
-    selectActions->setVisible(false);
+    selectActions->setFixedHeight(50);
+    selectActions->setEnabled(false);
+
+    selectActions->setStyleSheet(R"(
+        QPushButton {
+            background-color: #17a2b8; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 5px; 
+            font-size: 24px; 
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            background-color: #138496; 
+        }
+        QPushButton:pressed {
+            background-color: #117a8b; 
+        }
+        QPushButton:disabled {
+        background-color: rgba(23, 162, 184, 0.5); 
+        color: rgba(255, 255, 255, 0.5); 
+        border: none; 
+        }
+    )");
+
+
+    QHBoxLayout *keyboardCenterLayout = new QHBoxLayout;
+    keyboardCenterLayout->addStretch();
+    keyboardCenterLayout->addWidget(keyboardBox);
+    keyboardCenterLayout->addStretch();
 
     // Add the screen and keyboard sections to the main layout
     this->addWidget(screenBox);
-    this->addWidget(keyboardBox);
+    this->addLayout(keyboardCenterLayout);  
     this->addWidget(selectActions);
 
     // Style buttons and set sizes
-    andBtn->setStyleSheet(
-        "background-color: #3498db; color: white; font-size: 18px;");
+
+    QFont fontBuidCon("Arial", FONT_SIZE);
+
+   andBtn->setStyleSheet(R"(
+    QPushButton {
+        background-color: #3498db; 
+        color: white; 
+        font-size: 25px;
+        font-weight: bold; 
+        border: none;
+        border-radius: 7px;
+    }
+    QPushButton:hover {
+        background-color: transparent; 
+        color: #3498db; 
+        border: 2px solid #3498db;
+    }
+    )");
     andBtn->setFixedSize(BUTTON_SIZE);
-    orBtn->setStyleSheet(
-        "background-color: #3498db; color: white; font-size: 18px;");
+
+    orBtn->setStyleSheet(R"(
+        QPushButton {
+            background-color: #3498db; 
+            color: white; 
+            font-size: 25px;
+            font-weight: bold; 
+            border: none;
+            border-radius: 7px;
+        }
+        QPushButton:hover {
+            background-color: transparent;
+            color: #3498db; 
+            border: 2px solid #3498db; 
+        }
+    )");
     orBtn->setFixedSize(BUTTON_SIZE);
-    skip->setStyleSheet(
-        "background-color: rgb(13, 206, 13); color: white; font-size: 18px;");
+
+    skip->setStyleSheet(R"(
+        QPushButton {
+            background-color: rgb(13, 206, 13); 
+            color: white; 
+            font-size: 25px; 
+            font-weight: bold;
+            border: none;
+            border-radius: 7px;
+        }
+        QPushButton:hover {
+            background-color: transparent; 
+            color: rgb(13, 206, 13); 
+            border: 2px solid rgb(13, 206, 13); 
+        }
+    )");
     skip->setFixedSize(BUTTON_SIZE);
-    skip->setVisible(false);
-    reset->setStyleSheet(
-        "background-color: rgb(13, 206, 13); color: white; font-size: 18px;");
+
+    reset->setStyleSheet(R"(
+        QPushButton {
+            background-color: rgb(13, 206, 13); 
+            color: white; 
+            font-size: 25px; 
+            font-weight: bold;
+            border: none;
+            border-radius: 7px;
+        }
+        QPushButton:hover {
+            background-color: transparent; 
+            color: rgb(13, 206, 13);
+            border: 2px solid rgb(13, 206, 13);
+        }
+    )");
+    reset->setFixedSize(BUTTON_SIZE);
+
     reset->setFixedSize(BUTTON_SIZE);
     textBox->setFixedHeight(BASE_CON_PART_HEIGHT);
     submit->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
     operators->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
+    operators->setFont(fontBuidCon);
     sensorsFields->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
+    sensorsFields->setFont(fontBuidCon);
     spinBox->setRange(-200, 2000);
     spinBox->setValue(0);
-    spinBox->setFixedHeight(30);
+    spinBox->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
+    spinBox->setFont(fontBuidCon);;
     doubleSpinBox->setRange(-200, 2000);
     doubleSpinBox->setValue(0);
-    doubleSpinBox->setFixedHeight(30);
+    doubleSpinBox->setFont(fontBuidCon);
+    doubleSpinBox->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
     boolBox->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
+    boolBox->setFont(fontBuidCon);;
+    textBox->setFont(fontBuidCon);
+    textBox->setFixedSize(BASE_CON_PART_WIDTH, BASE_CON_PART_HEIGHT);
 
     textBox->setVisible(false);
     spinBox->setVisible(false);
     doubleSpinBox->setVisible(false);
     boolBox->setVisible(false);
+
+    sensors->setFont(fontBuidCon);
+    sensors->setFixedSize(400, 45);
 
     // Populate combo boxes with sensor and operator lists
     for (const auto &sensor : sensorList) {
@@ -252,7 +467,7 @@ void Condition::updateDisplay()
         !condition.isEmpty() && ind >= showCondition.length() - 3 &&
         (showCondition[ind - 1] == ')' || typeCurrent.first == "Basic");
     
-    selectActions->setVisible(enableSelectActions);  // Show/Hide action button
+    selectActions->setEnabled(enableSelectActions);  // Show/Hide action button
 
     label->setTextInteractionFlags(
         Qt::NoTextInteraction);  // Disable text interaction
@@ -360,7 +575,7 @@ void Condition::resetButtonState()
     updateOperatorComboBox();
 
     skip->setVisible(false);
-    selectActions->setVisible(false);
+    selectActions->setEnabled(false);
 }
 
 // Handle sensor selection, updating the condition display and related UI elements based on the selected sensor

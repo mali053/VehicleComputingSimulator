@@ -87,6 +87,10 @@ private:
     // Button for move the other window
     QPushButton *selectActions;
 
+    QLabel *titleLabel;
+    QHBoxLayout *submitLayout;
+    QGroupBox *basicConditionBox;
+
 public:
     static logger controlLogger;
 

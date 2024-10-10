@@ -11,8 +11,11 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 //Sets up the user interface for the MainWindow.
 void MainWindow::setupUi()
 {
+    this->setStyleSheet("background-color: rgb(226, 247, 240);");
     box = new QGroupBox(); // Create a new QGroupBox for the layout.
     boxLayout = new Condition(this); // Initialize with a Condition layout.
+
+    box->setStyleSheet("QGroupBox { border: none; }");
 
     box->setLayout(boxLayout); // Set the Condition layout inside the box.
 

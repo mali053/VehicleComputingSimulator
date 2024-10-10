@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 
     MainWindow window;
     window.setWindowTitle("Build Conditions");
-    window.resize(800, 600);
+    window.resize(1050, 930);
     window.show();
 
     Output::controlLogger.cleanUp();

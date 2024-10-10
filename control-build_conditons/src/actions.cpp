@@ -46,21 +46,35 @@ void Actions::setupUi(QString showCondition)
 {
     // Create a label to show the current condition
     QLabel *condLabel = new QLabel("");
-    QFont fontComd(FONT_FAMILY, 15);
+    QFont fontComd(FONT_FAMILY, 20);
     condLabel->setFont(fontComd);
     condLabel->setText(showCondition);
 
     // Create a read-only QTextEdit to display actions
     actions = new QTextEdit("");
     actions->setReadOnly(true);
-    actions->setFont(QFont(FONT_FAMILY, 10));
+    actions->setFont(QFont(FONT_FAMILY, 15));
+    actions->setStyleSheet(R"(
+    QTextEdit{
+        border: 8px solid rgb(254, 254, 254); 
+        border-radius: 8px; 
+        padding: 10px; 
+    }
+    )");
 
     // Create a label for the current action string
     label = new QTextEdit("");
     label->setReadOnly(true);
-    QFont font(FONT_FAMILY, 25);
+    QFont font(FONT_FAMILY, 30);
     label->setFont(font);
     label->setText(action);
+    label->setStyleSheet(R"(
+    QTextEdit {
+        border:8px solid rgb(254, 254, 254); 
+        border-radius: 8px; 
+        padding: 10px; 
+    }
+    )");
 
     // Create a screen layout to hold the condition and action labels
     QGroupBox *screenBox = new QGroupBox("");
@@ -77,13 +91,39 @@ void Actions::setupUi(QString showCondition)
     sensors->setItemData(0, QVariant(0),
                                    Qt::UserRole - 1);
     sensors->setCurrentIndex(0);
-    sensors->setFixedSize(300, 50);
+    sensors->setFixedSize(370, 76);
     sensors->setFont(fontComd);
+    sensors->setStyleSheet(R"(
+     QComboBox{
+       border: 4px solid rgb(243, 93, 178);
+       border-radius: 8px; 
+    }
+    QComboBox:hover {
+        border: 4px solid #2F75A0;
+    }
+    QComboBox:focus {
+        border: 4px solid #2F75A0; 
+    }
+    QComboBox::item:selected {
+        color: #2F75A0;
+    }
+    )");
 
     // Create a text box for user input (messages)
     textBox = new QLineEdit();
-    textBox->setFixedSize(300, 50);
-    textBox->setStyleSheet("border: none;");
+    textBox->setFixedHeight(50);  
+    textBox->setPlaceholderText("message");
+    textBox->setFocusPolicy(Qt::StrongFocus);
+    textBox->setStyleSheet(R"(
+        QLineEdit {
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+        QLineEdit:focus {
+            border-bottom: 2px solid #2F75A0; 
+        }
+    )");
+
     textBox->setFont(QFont(FONT_FAMILY, 20));
 
     completer = new QCompleter(messageHistory);
@@ -97,16 +137,16 @@ void Actions::setupUi(QString showCondition)
     OKBtn = new QPushButton();
     QIcon iconOK("icons/check.png");
     OKBtn->setIcon(iconOK);
-    OKBtn->setIconSize(QSize(48, 48));
-    OKBtn->setFixedSize(50, 50);
+    OKBtn->setIconSize(QSize(55, 55));
+    OKBtn->setFixedSize(58, 58);
     OKBtn->setStyleSheet("border: none; ");
 
     // Create an Add button with an icon, initially disabled
     addBtn = new QPushButton();
     QIcon iconAdd("icons/add_box.png");
     addBtn->setIcon(iconAdd);
-    addBtn->setIconSize(QSize(78, 78));
-    addBtn->setFixedSize(80, 80);
+    addBtn->setIconSize(QSize(87, 87));
+    addBtn->setFixedSize(90, 90);
     addBtn->setEnabled(false);
     addBtn->setStyleSheet("border: none;");
 
@@ -122,6 +162,12 @@ void Actions::setupUi(QString showCondition)
     messageLayout->addWidget(textBox);
     messageLayout->addWidget(OKBtn);
     messageBox->setLayout(messageLayout);
+    messageBox->setStyleSheet(R"(
+    QGroupBox {
+        border: 4px solid rgb(243, 93, 178); 
+        border-radius: 8px; 
+    }
+    )");
     textLayout->addWidget(messageBox);
 
     // Spacer and add button layout
@@ -139,14 +185,52 @@ void Actions::setupUi(QString showCondition)
     // Create layout for the next buttons (Add Condition and Finish)
     QHBoxLayout *nextLayout = new QHBoxLayout;
     addCond = new QPushButton("add condition");
-    addCond->setFixedSize(180, 50);
+    addCond->setFixedSize(220, 60);
     addCond->setFont(fontComd);
     addCond->setEnabled(false);
 
     finishBtn = new QPushButton("finish create");
-    finishBtn->setFixedSize(180, 50);
+    finishBtn->setFixedSize(220, 60);
     finishBtn->setFont(fontComd);
     finishBtn->setEnabled(false);
+
+    addCond->setStyleSheet(R"(
+        QPushButton {
+            background-color: #17a2b8;
+            color: white;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            border: 2px solid #17a2b8;
+            background-color: transparent;
+            color: #17a2b8;
+        }
+        QPushButton:disabled {
+            background-color: rgba(23, 162, 184, 0.5);
+            color: rgba(255, 255, 255, 0.6);
+        }
+    )");
+
+    finishBtn->setStyleSheet(R"(
+        QPushButton {
+            background-color: #17a2b8;
+            color: white;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            border: 2px solid #17a2b8;
+            background-color: transparent;
+            color: #17a2b8;
+        }
+        QPushButton:disabled {
+            background-color: rgba(23, 162, 184, 0.5);
+            color: rgba(255, 255, 255, 0.6);
+        }
+    )");
 
     nextLayout->addItem(spacer);
     nextLayout->addWidget(addCond);
@@ -201,27 +285,33 @@ void Actions::sensorSelectionHandler(int index)
 void Actions::OKBtnHandler()
 {
     Output::controlLogger.logMessage(logger::LogLevel::INFO, "Button OK clicked");
+    
     QString enteredText = textBox->text();
     textBox->setText("");
     currentMessage = enteredText.toStdString();
-    if (currentSensor != -1) {
-        action += enteredText;
-        addBtn->setEnabled(true);
-        addCond->setEnabled(true);
-        finishBtn->setEnabled(true);
-    }
-    else {
-        action += "message: " + enteredText + " to sensor: ";
-    }
-    label->setText(action);
-    OKBtn->setEnabled(false);
-    sensors->setCurrentIndex(0);
+    if(!enteredText.isEmpty()){
+            
+        if (currentSensor != -1) {
+            action += enteredText;
+            addBtn->setEnabled(true);
+            addCond->setEnabled(true);
+            finishBtn->setEnabled(true);
+        }
+        else {
+            action += "message: " + enteredText + " to sensor: ";
+        }
+        label->setText(action);
+        OKBtn->setEnabled(false);
+        sensors->setCurrentIndex(0);
 
-    if (!messageHistory.contains(enteredText)) {
-        newMessages.append(enteredText); 
-        messageHistory.append(enteredText);  
-        completer->setModel(new QStringListModel(messageHistory, completer));
+        if (!messageHistory.contains(enteredText)) {
+            newMessages.append(enteredText); 
+            messageHistory.append(enteredText);  
+            completer->setModel(new QStringListModel(messageHistory, completer));
+        }
+
     }
+
 }
 
 // Appends the current action to the actions list and resets the UI for the next action.

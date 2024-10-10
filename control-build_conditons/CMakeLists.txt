@@ -40,9 +40,6 @@ pkg_check_modules(LIBBSON REQUIRED libbson-1.0)
 target_include_directories(${PROJECT_NAME} PRIVATE ${LIBBSON_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBSON_LIBRARIES})
 
-# Add GoogleTest
-add_subdirectory(${CMAKE_SOURCE_DIR}/googletest)
-
 enable_testing()
 
 # Collect test source files
@@ -61,4 +58,4 @@ target_include_directories(${PROJECT_NAME}_tests PRIVATE ${CMAKE_SOURCE_DIR}/inc
 add_test(NAME ${PROJECT_NAME}_tests COMMAND ${PROJECT_NAME}_tests)
 
 # Copy the  icon folder into the build folder
-file(COPY ${CMAKE_SOURCE_DIR}/src/icons DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/resources/icons DESTINATION ${CMAKE_BINARY_DIR})

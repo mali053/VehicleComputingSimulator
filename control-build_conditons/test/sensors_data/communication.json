@@ -1,0 +1,20 @@
+{
+    "endianness": "little",
+    "fields": [
+        {
+            "size": 32,
+            "type": "signed_int",
+            "name": "Status"
+        },
+        {
+            "size": 32,
+            "type": "signed_int",
+            "name": "Code"
+        },
+        {
+            "size": 32,
+            "type": "signed_int",
+            "name": "Flags"
+        }
+    ]
+}

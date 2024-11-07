@@ -1,0 +1,59 @@
+# Ignore build files
+/build/
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.dylib
+
+# Ignore CMake specific files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+
+# Ignore log files and user-specific files
+*.log
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Ignore IDE specific files (e.g., Visual Studio Code, CLion)
+.vs/
+.vscode/
+build/
+googletest/
+/.vscode/
+.idea/
+*.iml
+.clang-format
+
+# Ignore OS specific files
+.DS_Store
+Thumbs.db
+
+# Ignore other potential files and directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.class
+
+# Ignore auto-generated documentation
+/docs/html/
+
+alert.json
+
+# Models
+*.caffemodel
+*.prototxt
+*.onnx
+*.model
+json.hpp

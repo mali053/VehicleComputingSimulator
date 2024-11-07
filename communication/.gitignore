@@ -1,0 +1,32 @@
+# Ignore build directories
+BUILD/
+build/
+
+runFile/
+# Ignore log files
+*.log
+
+# Ignore object files and executables
+*.o
+*.a
+*.so
+*.exe
+*.sh
+# Ignore temporary files
+*.tmp
+*.swp
+*.swo
+
+# Ignore IDE-specific files
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+user_1/
+user_2/
+user_3/
+main_bus/

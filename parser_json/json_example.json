@@ -1,0 +1,157 @@
+{
+  "description": "This JSON file describes the format for defining packet fields.",
+  "endianness": "Indicates the byte order of the data. Use either 'little' or 'big'.",
+  "rules": {
+    "endianness": {
+      "description": "Specifies the byte order of the data.",
+      "allowed_values": [
+        "little",
+        "big"
+      ]
+    },
+    "fields": {
+      "description": "An array of field definitions. Each field has the following properties:",
+      "properties": {
+        "name": {
+          "description": "The name of the field. This is a string that will be used to identify the field.",
+          "example": "CharArrayField"
+        },
+        "type": {
+          "description": "The type of the field. Must be one of the following:",
+          "allowed_values": [
+            "char_array",
+            "float_fixed",
+            "float_mantissa",
+            "double",
+            "signed_int",
+            "unsigned_int",
+            "bit_field",
+            "boolean"
+          ],
+          "example": "float_fixed"
+        },
+        "size": {
+          "description": "The size of the field in bits. Must be a multiple of 8, or 16, 32, 64, etc.",
+          "example": 32
+        },
+        "default_value": {
+          "description": "Specifies the default value of the field. This field is optional and may be omitted entirely if not needed.",
+          "example": 100
+        },
+        "fields": {
+          "description": "An array of sub-fields for composite bit fields.",
+          "properties": {
+            "name": {
+              "description": "The name of the sub-field.",
+              "example": "SubFieldName"
+            },
+            "type": {
+              "description": "The type of the sub-field. Must be one of the supported types.",
+              "allowed_values": [
+                "char_array",
+                "float_fixed",
+                "float_mantissa",
+                "double",
+                "signed_int",
+                "unsigned_int",
+                "bit_field",
+                "boolean"
+              ],
+              "example": "float_fixed"
+            },
+            "size": {
+              "description": "The size of the sub-field in bits.",
+              "example": 32
+            },
+            "default_value": {
+              "description": "Specifies the default value for the sub-field. This field is optional and may be omitted.",
+              "example": 1
+            }
+          },
+          "example": [
+            {
+              "name": "FloatField1",
+              "type": "float_fixed",
+              "size": 32,
+              "default_value": 100.0
+            },
+            {
+              "name": "DoubleField1",
+              "type": "double",
+              "size": 64,
+              "default_value": 50.5
+            }
+          ]
+        }
+      },
+      "examples": [
+        {
+          "name": "CharArrayField",
+          "type": "char_array",
+          "size": 64,
+          "default_value": "DefaultString"
+        },
+        {
+          "name": "FloatField",
+          "type": "float_fixed",
+          "size": 32,
+          "default_value": 100.0
+        },
+        {
+          "name": "DoubleField",
+          "type": "double",
+          "size": 64
+        },
+        {
+          "name": "SignedIntField",
+          "type": "signed_int",
+          "size": 32,
+          "default_value": -10
+        },
+        {
+          "name": "UnsignedIntField",
+          "type": "unsigned_int",
+          "size": 32,
+          "default_value": 10
+        },
+        {
+          "name": "FloatMantissaField",
+          "type": "float_mantissa",
+          "size": 32,
+          "default_value": 1.23
+        },
+        {
+          "name": "BoolField",
+          "type": "boolean",
+          "size": 8,
+          "default_value": true
+        },
+        {
+          "name": "BitFieldExample1",
+          "type": "bit_field",
+          "size": 64,
+          "fields": [
+            {
+              "name": "IntField1",
+              "type": "signed_int",
+              "size": 32
+            },
+            {
+              "name": "UnsignedIntField1",
+              "type": "unsigned_int",
+              "size": 32,
+              "default_value": 10
+            }
+          ]
+        },
+        {
+          "name": "NoDefaultField",
+          "type": "signed_int",
+          "size": 32
+        }
+      ]
+    }
+  },
+  "note": "The 'fields' property is exclusively used with the 'bit_field' type to define ",
+  "note2": "Ensure that 'size' values correspond to the correct bit-widths for the types."
+}

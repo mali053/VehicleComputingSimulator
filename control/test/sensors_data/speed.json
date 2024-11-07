@@ -1,0 +1,20 @@
+{
+    "endianness": "little",
+    "fields": [
+        {
+            "size": 8,
+            "type": "boolean",
+            "name": "Status"
+        },
+        {
+            "size": 64,
+            "type": "char_array",
+            "name": "Msg"
+        },
+        {
+            "size": 32,
+            "type": "signed_int",
+            "name": "Speed"
+        }
+    ]
+}
